@@ -12,7 +12,7 @@ Plug 'romgrk/nvim-treesitter-context'
 
 ## Screenshot
 
-![theme](./static/demo.png)
+![theme](./static/demo.gif)
 
 ### Notes
 
