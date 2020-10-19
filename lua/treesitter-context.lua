@@ -26,12 +26,14 @@ local get_line_for_node = function(node, type_patterns, transform_fn)
   if not is_valid then return '' end
 
   -- local node_text = transform_fn(ts_utils.get_node_text(node)[1] or '')
-  return api.nvim_buf_get_lines(0, node:start(), node:start() + 1, false)[1]
+  local line = api.nvim_buf_get_lines(0, node:start(), node:start() + 1, false)[1]
+
+  return line
 end
 
 -- Trim spaces and opening brackets from end
 local transform_line = function(line)
-  return line:gsub('%s*[%[%(%{]*%s*$', '')
+  return line:gsub('%s*[%[%(%{]*%s*$', ''):gsub('\n', '')
 end
 
 local get_context = function(opts)
@@ -92,7 +94,7 @@ local get_gutter_width = function()
   return number_width + fold_width + sign_width
 end
 
-function nvim_augroup(group_name, definitions)
+local nvim_augroup = function(group_name, definitions)
   api.nvim_command('augroup ' .. group_name)
   api.nvim_command('autocmd!')
   for _, def in ipairs(definitions) do
