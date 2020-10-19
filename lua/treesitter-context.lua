@@ -174,18 +174,22 @@ function M.enable()
     {'User',        'SessionSavePre',  'silent lua require("treesitter-context").close()'},
     {'User',        'SessionSavePost', 'silent lua require("treesitter-context").open()'},
   })
+
+  M.update_context()
 end
 
 function M.disable()
   nvim_augroup('treesitter_context', {})
+
+  M.close()
 end
 
 -- Setup
 
 M.enable()
 
-api.nvim_command('command! TSContextEnable  lua require("treesiter-context").enable()')
-api.nvim_command('command! TSContextDisable lua require("treesiter-context").disable()')
+api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable()')
+api.nvim_command('command! TSContextDisable lua require("treesitter-context").disable()')
 
 
 return M
