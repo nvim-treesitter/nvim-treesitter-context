@@ -151,10 +151,15 @@ end
 function M.open()
   if winid == nil or not api.nvim_win_is_valid(winid) then
     local gutter_width = get_gutter_width()
+    local win_width = api.nvim_win_get_width(0) - gutter_width
+
+    if win_width <= 0 then
+      return
+    end
 
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
-      width = api.nvim_win_get_width(0) - gutter_width,
+      width = win_width,
       height = 1,
       row = 0,
       col = gutter_width,
