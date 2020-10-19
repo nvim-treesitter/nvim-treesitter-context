@@ -143,6 +143,11 @@ end
 
 function M.close()
   if winid ~= nil and api.nvim_win_is_valid(winid) then
+    -- Can't close other windows when the command-line window is open
+    if api.nvim_call_function('getcmdwintype', {}) ~= '' then
+      return
+    end
+
     api.nvim_win_close(winid, true)
   end
   winid = nil
