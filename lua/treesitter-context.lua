@@ -156,6 +156,7 @@ end
 
 function M.enable()
   nvim_augroup('treesitter_context', {
+    {'Scroll',      '*',               'silent lua require("treesitter-context").update_context()'},
     {'CursorMoved', '*',               'silent lua require("treesitter-context").update_context()'},
     {'User',        'SessionSavePre',  'silent lua require("treesitter-context").close()'},
     {'User',        'SessionSavePost', 'silent lua require("treesitter-context").open()'},
