@@ -65,33 +65,11 @@ local get_context = function(opts)
 end
 
 local get_gutter_width = function()
-  local width = api.nvim_win_get_width(0)
-  local number_width = math.max(
-    api.nvim_win_get_option(0, 'numberwidth'),
-    #tostring(api.nvim_call_function('line', { '$' })) + 1
-  )
-  local number = api.nvim_win_get_option(0, 'number')
-  local relative_number = api.nvim_win_get_option(0, 'relativenumber')
-  number_width = (number or relative_number) and number_width or 0
-  local fold_width = api.nvim_win_get_option(0, 'foldcolumn')
-
-  local sign_width = 0
-
-  local sign_column = api.nvim_win_get_option(0, 'signcolumn')
-
-  if sign_column == 'yes' then
-    sign_width = 2
-  elseif sign_column == 'auto' then
-    local signs = api.nvim_call_function('execute', {
-      'sign place buffer=' .. api.nvim_get_current_buf(),
-    })
-    local signs = vim.split(signs, '\n', true)
-    sign_width = #signs > 2 and 2 or 0
-  else
-    sign_width = 0
-  end
-
-  return number_width + fold_width + sign_width
+  local old_col = api.nvim_call_function('col', { '.' })
+  api.nvim_call_function('cursor', { 0, 1 })
+  local gutter_width = api.nvim_call_function('wincol', {}) - 1
+  api.nvim_call_function('cursor', { 0, old_col })
+  return gutter_width
 end
 
 local nvim_augroup = function(group_name, definitions)
@@ -157,10 +135,6 @@ function M.open()
   if winid == nil or not api.nvim_win_is_valid(winid) then
     local gutter_width = get_gutter_width()
     local win_width = api.nvim_win_get_width(0) - gutter_width
-
-    if win_width <= 0 then
-      return
-    end
 
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
