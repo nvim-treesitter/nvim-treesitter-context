@@ -95,7 +95,9 @@ function M.get_context(opts)
 end
 
 function M.update_context()
-  if api.nvim_get_option('buftype') ~= '' then
+  if api.nvim_get_option('buftype') ~= '' or
+      vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
+    M.close()
     return
   end
 
@@ -143,10 +145,10 @@ function M.open()
   local start_row = current_node:start()
   local end_row   = current_node:end_()
 
-  if winid == nil or not api.nvim_win_is_valid(winid) then
-    local gutter_width = get_gutter_width()
-    local win_width = api.nvim_win_get_width(0) - gutter_width
+  local gutter_width = get_gutter_width()
+  local win_width = api.nvim_win_get_width(0) - gutter_width
 
+  if winid == nil or not api.nvim_win_is_valid(winid) then
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
       width = win_width,
@@ -156,10 +158,15 @@ function M.open()
       focusable = false,
       style = 'minimal',
     })
-  -- else
-  --   api.nvim_win_set_config(winid, {
-  --     width = #current_node,
-  --   })
+  else
+    api.nvim_win_set_config(winid, {
+      win = api.nvim_get_current_win(),
+      relative = 'win',
+      width = win_width,
+      height = 1,
+      row = 0,
+      col = gutter_width,
+    })
   end
 
   local start_row, start_col = current_node:start()
@@ -208,6 +215,8 @@ function M.enable()
   nvim_augroup('treesitter_context', {
     {'Scroll',      '*',               'silent lua require("treesitter-context").update_context()'},
     {'CursorMoved', '*',               'silent lua require("treesitter-context").update_context()'},
+    {'WinEnter',    '*',               'silent lua require("treesitter-context").update_context()'},
+    {'WinLeave',    '*',               'silent lua require("treesitter-context").update_context()'},
     {'User',        'SessionSavePre',  'silent lua require("treesitter-context").close()'},
     {'User',        'SessionSavePost', 'silent lua require("treesitter-context").open()'},
   })
