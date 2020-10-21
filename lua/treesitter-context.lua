@@ -54,7 +54,7 @@ local nvim_augroup = function(group_name, definitions)
   api.nvim_command('autocmd!')
   for _, def in ipairs(definitions) do
     local command = table.concat({'autocmd', unpack(def)}, ' ')
-    if api.nvim_call_function('exists', {'#' .. def[1]}) ~= 0 then
+    if api.nvim_call_function('exists', {'##' .. def[1]}) ~= 0 then
       api.nvim_command(command)
     end
   end
@@ -141,6 +141,10 @@ function M.close()
 end
 
 function M.open()
+  if current_node == nil then
+    return
+  end
+
   local saved_bufnr = api.nvim_get_current_buf()
   local start_row = current_node:start()
   local end_row   = current_node:end_()
@@ -216,7 +220,8 @@ function M.enable()
     {'Scroll',      '*',               'silent lua require("treesitter-context").update_context()'},
     {'CursorMoved', '*',               'silent lua require("treesitter-context").update_context()'},
     {'WinEnter',    '*',               'silent lua require("treesitter-context").update_context()'},
-    {'WinLeave',    '*',               'silent lua require("treesitter-context").update_context()'},
+    {'WinLeave',    '*',               'silent lua require("treesitter-context").close()'},
+    {'VimResized',  '*',               'silent lua require("treesitter-context").open()'},
     {'User',        'SessionSavePre',  'silent lua require("treesitter-context").close()'},
     {'User',        'SessionSavePost', 'silent lua require("treesitter-context").open()'},
   })
