@@ -54,7 +54,7 @@ local nvim_augroup = function(group_name, definitions)
   api.nvim_command('autocmd!')
   for _, def in ipairs(definitions) do
     local command = table.concat({'autocmd', unpack(def)}, ' ')
-    if api.nvim_call_function('exists', {'#' .. def[1]}) then
+    if api.nvim_call_function('exists', {'#' .. def[1]}) ~= 0 then
       api.nvim_command(command)
     end
   end
