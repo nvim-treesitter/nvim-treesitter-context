@@ -141,6 +141,10 @@ function M.close()
 end
 
 function M.open()
+  if current_node == nil then
+    return
+  end
+
   local saved_bufnr = api.nvim_get_current_buf()
   local start_row = current_node:start()
   local end_row   = current_node:end_()
