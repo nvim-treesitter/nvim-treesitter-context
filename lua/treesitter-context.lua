@@ -216,7 +216,7 @@ function M.enable()
     {'Scroll',      '*',               'silent lua require("treesitter-context").update_context()'},
     {'CursorMoved', '*',               'silent lua require("treesitter-context").update_context()'},
     {'WinEnter',    '*',               'silent lua require("treesitter-context").update_context()'},
-    {'WinLeave',    '*',               'silent lua require("treesitter-context").update_context()'},
+    {'WinLeave',    '*',               'silent lua require("treesitter-context").close()'},
     {'User',        'SessionSavePre',  'silent lua require("treesitter-context").close()'},
     {'User',        'SessionSavePost', 'silent lua require("treesitter-context").open()'},
   })
