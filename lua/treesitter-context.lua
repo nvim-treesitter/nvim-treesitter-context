@@ -12,6 +12,7 @@ local winid = nil
 local bufnr = api.nvim_create_buf(false, true)
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local current_node = nil
+local previous_node = nil
 
 
 -- Helper functions
@@ -131,6 +132,8 @@ function M.update_context()
 end
 
 function M.close()
+  previous_node = nil
+
   if winid ~= nil and api.nvim_win_is_valid(winid) then
     -- Can't close other windows when the command-line window is open
     if api.nvim_call_function('getcmdwintype', {}) ~= '' then
@@ -146,6 +149,12 @@ function M.open()
   if current_node == nil then
     return
   end
+
+  if current_node == previous_node then
+    return
+  end
+
+  previous_node = current_node
 
   local saved_bufnr = api.nvim_get_current_buf()
   local start_row = current_node:start()
@@ -176,14 +185,14 @@ function M.open()
   end
 
   local start_row, start_col = current_node:start()
+  local end_row = start_row + 1
+  local end_col = 0
+
   local lines =
     start_col == 0
       and vim.split(get_text_for_node(current_node), '\n')
       or  get_lines_for_node(current_node)
-  local target_node =
-    start_col == 0
-      and current_node
-      or  current_node:parent()
+  local target_node = current_node
 
   api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
   api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
@@ -192,26 +201,28 @@ function M.open()
 
   for _, highlighter in pairs(Highlighter.active[saved_bufnr] or {}) do
     local iter = highlighter.query:iter_captures(target_node, saved_bufnr, start_row, end_row)
+
     for capture, node in iter do
 
-      local start_row, start_col, end_row, end_col = node:range()
       local hl = highlighter.hl_cache[capture]
 
-      if start_row >= start_row_absolute then
+      local atom_start_row, atom_start_col, atom_end_row, atom_end_col = node:range()
 
-        start_row = start_row - start_row_absolute
-        end_row   = end_row   - start_row_absolute
+      if atom_end_row >= end_row and atom_end_col >= end_col then
+        break
+      end
 
-        -- Sometimes there is an error :/
-        -- but we ignore it :)
-        -- Yay?
-        local ok, err = pcall(function()
-          api.nvim_buf_set_extmark(bufnr, ns, start_row, start_col,
-                                { end_line = end_row, end_col = end_col,
-                                  hl_group = hl,
-                                  -- ephemeral = true
-                                  })
-        end)
+      if atom_start_row >= start_row_absolute then
+
+        local hl_start_row = atom_start_row - start_row_absolute
+        local hl_end_row   = atom_end_row   - start_row_absolute
+        local hl_start_col = atom_start_col
+        local hl_end_col   = atom_end_col
+
+        api.nvim_buf_set_extmark(bufnr, ns,
+          hl_start_row, hl_start_col,
+        { end_line = hl_end_line, end_col = hl_end_col,
+          hl_group = hl })
       end
     end
   end
