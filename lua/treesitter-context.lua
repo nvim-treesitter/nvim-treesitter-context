@@ -230,7 +230,6 @@ end
 
 function M.enable()
   nvim_augroup('treesitter_context', {
-    {'Scroll',      '*',               'silent lua require("treesitter-context").update_context()'},
     {'WinScrolled', '*',               'silent lua require("treesitter-context").update_context()'},
     {'CursorMoved', '*',               'silent lua require("treesitter-context").update_context()'},
     {'BufEnter',    '*',               'silent lua require("treesitter-context").update_context()'},
