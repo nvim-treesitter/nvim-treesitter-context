@@ -43,12 +43,12 @@ local transform_line = function(line)
 end
 
 local get_gutter_width = function()
-  local saved_cursor = api.nvim_call_function('getcurpos', {})
+  local saved_view = api.nvim_call_function('winsaveview', {})
 
   api.nvim_call_function('cursor', { 0, 1 })
   local gutter_width = api.nvim_call_function('wincol', {}) - 1
 
-  api.nvim_call_function('setpos', { '.', saved_cursor })
+  api.nvim_call_function('winrestview', { saved_view })
   return gutter_width
 end
 
