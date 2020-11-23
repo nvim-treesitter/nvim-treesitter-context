@@ -199,12 +199,20 @@ function M.open()
 
   local start_row_absolute = current_node:start()
 
-  for _, highlighter in pairs(Highlighter.active[saved_bufnr] or {}) do
-    local iter = highlighter.query:iter_captures(target_node, saved_bufnr, start_row, end_row)
+  local buf_highlighter = Highlighter.active[saved_bufnr] or nil
+  local buf_queries = {}
+  if buf_highlighter then
+    buf_queries = buf_highlighter._queries
+  end
+  for _, buf_query in pairs(buf_queries) do
+    if buf_query == nil then
+      break
+    end
+    local iter = buf_query:query():iter_captures(target_node, saved_bufnr, start_row, end_row)
 
     for capture, node in iter do
 
-      local hl = highlighter.hl_cache[capture]
+      local hl = buf_query.hl_cache[capture]
 
       local atom_start_row, atom_start_col, atom_end_row, atom_end_col = node:range()
 
