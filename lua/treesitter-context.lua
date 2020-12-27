@@ -43,12 +43,15 @@ local transform_line = function(line)
 end
 
 local get_gutter_width = function()
-  local saved_view = api.nvim_call_function('winsaveview', {})
+  -- Note when moving the cursor, we must ensure that the 'curswant' state is
+  -- restored (see #11). Functions like 'cursor()' and 'nvim_buf_set_cursor()'
+  -- clear this state.
+  local saved_cursor = api.nvim_call_function('getcurpos', {})
 
   api.nvim_call_function('cursor', { 0, 1 })
   local gutter_width = api.nvim_call_function('wincol', {}) - 1
 
-  api.nvim_call_function('winrestview', { saved_view })
+  api.nvim_call_function('setpos', { '.', saved_cursor })
   return gutter_width
 end
 
@@ -127,8 +130,6 @@ function M.update_context()
   else
     M.close()
   end
-
-  return { winid, get_gutter_width(), context }
 end
 
 function M.close()
