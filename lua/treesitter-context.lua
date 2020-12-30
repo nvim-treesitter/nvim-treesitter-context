@@ -203,6 +203,12 @@ function M.open()
   local buf_queries = {}
   if buf_highlighter then
     buf_queries = buf_highlighter._queries
+  else
+    local current_ft = api.nvim_buf_get_option(0, 'filetype')
+    local buffer_ft  = api.nvim_buf_get_option(bufnr, 'filetype')
+    if current_ft ~= buffer_ft then
+      api.nvim_buf_set_option(bufnr, 'filetype', current_ft)
+    end
   end
   for _, buf_query in pairs(buf_queries) do
     if buf_query == nil then
