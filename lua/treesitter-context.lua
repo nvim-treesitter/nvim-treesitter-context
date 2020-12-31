@@ -1,5 +1,4 @@
 
-local vim = vim
 local api = vim.api
 local ts = vim.treesitter
 local Highlighter = ts.highlighter
@@ -37,11 +36,6 @@ local get_lines_for_node = function(node)
   return api.nvim_buf_get_lines(0, start_row, end_row + 1, false)
 end
 
--- Trim spaces and opening brackets from end
-local transform_line = function(line)
-  return line:gsub('%s*[%[%(%{]*%s*$', ''):gsub('\n', '')
-end
-
 local get_gutter_width = function()
   -- Note when moving the cursor, we must ensure that the 'curswant' state is
   -- restored (see #11). Functions like 'cursor()' and 'nvim_buf_set_cursor()'
@@ -77,14 +71,12 @@ function M.get_context(opts)
   if not parsers.has_parser() then return nil end
   local options = opts or {}
   local type_patterns = options.type_patterns or {'class', 'function', 'method'}
-  local transform_fn = options.transform_fn or transform_line
-  local separator = options.separator or ' -> '
 
-  local current_node = ts_utils.get_node_at_cursor()
-  if not current_node then return nil end
+  local cursor_node = ts_utils.get_node_at_cursor()
+  if not cursor_node then return nil end
 
   local matches = {}
-  local expr = current_node
+  local expr = cursor_node
 
   while expr do
     if is_valid(expr, type_patterns) then
@@ -158,8 +150,6 @@ function M.open()
   previous_node = current_node
 
   local saved_bufnr = api.nvim_get_current_buf()
-  local start_row = current_node:start()
-  local end_row   = current_node:end_()
 
   local gutter_width = get_gutter_width()
   local win_width = api.nvim_win_get_width(0) - gutter_width
@@ -236,7 +226,7 @@ function M.open()
 
         api.nvim_buf_set_extmark(bufnr, ns,
           hl_start_row, hl_start_col,
-        { end_line = hl_end_line, end_col = hl_end_col,
+        { end_line = hl_end_row, end_col = hl_end_col,
           hl_group = hl })
       end
     end

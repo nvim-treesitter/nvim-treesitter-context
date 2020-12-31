@@ -1,0 +1,1 @@
+read_globals = {"vim"}
