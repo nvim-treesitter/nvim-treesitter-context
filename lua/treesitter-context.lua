@@ -3,6 +3,7 @@ local api = vim.api
 local ts = vim.treesitter
 local Highlighter = ts.highlighter
 local ts_utils = require'nvim-treesitter.ts_utils'
+local ts_highlight = require('nvim-treesitter.highlight')
 local parsers = require'nvim-treesitter.parsers'
 
 -- Script variables
@@ -188,49 +189,8 @@ function M.open()
   api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
   api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  local start_row_absolute = current_node:start()
-
-  local buf_highlighter = Highlighter.active[saved_bufnr] or nil
-  local buf_queries = {}
-  if buf_highlighter then
-    buf_queries = buf_highlighter._queries
-  else
-    local current_ft = api.nvim_buf_get_option(0, 'filetype')
-    local buffer_ft  = api.nvim_buf_get_option(bufnr, 'filetype')
-    if current_ft ~= buffer_ft then
-      api.nvim_buf_set_option(bufnr, 'filetype', current_ft)
-    end
-  end
-  for _, buf_query in pairs(buf_queries) do
-    if buf_query == nil then
-      break
-    end
-    local iter = buf_query:query():iter_captures(target_node, saved_bufnr, start_row, end_row)
-
-    for capture, node in iter do
-
-      local hl = buf_query.hl_cache[capture]
-
-      local atom_start_row, atom_start_col, atom_end_row, atom_end_col = node:range()
-
-      if atom_end_row >= end_row and atom_end_col >= end_col then
-        break
-      end
-
-      if atom_start_row >= start_row_absolute then
-
-        local hl_start_row = atom_start_row - start_row_absolute
-        local hl_end_row   = atom_end_row   - start_row_absolute
-        local hl_start_col = atom_start_col
-        local hl_end_col   = atom_end_col
-
-        api.nvim_buf_set_extmark(bufnr, ns,
-          hl_start_row, hl_start_col,
-        { end_line = hl_end_row, end_col = hl_end_col,
-          hl_group = hl })
-      end
-    end
-  end
+  local ft = vim.bo.filetype
+  ts_highlight.attach(bufnr, ft)
 end
 
 function M.enable()
