@@ -369,7 +369,6 @@ function M.enable()
     {'WinScrolled', '*',               'silent lua require("treesitter-context").throttled_update_context()'},
     {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").throttled_update_context()'},
     {'CursorMoved', '*',               'silent lua require("treesitter-context").do_au_cursor_moved_vertical()'},
-    {'User', 'CursorMovedVertical',    'silent lua require("treesitter-context").throttled_update_context()'},
     {'BufEnter',    '*',               'silent lua require("treesitter-context").throttled_update_context()'},
     {'WinEnter',    '*',               'silent lua require("treesitter-context").throttled_update_context()'},
     {'WinLeave',    '*',               'silent lua require("treesitter-context").close()'},
