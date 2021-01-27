@@ -36,7 +36,11 @@ end
 local get_lines_for_node = function(node)
   local start_row = node:start()
   local end_row   = node:end_()
-  return api.nvim_buf_get_lines(0, start_row, end_row + 1, false)
+  return api.nvim_buf_get_lines(0, start_row, end_row + 1, false)[1]
+end
+
+local function get_lines_for_multiple_nodes(nodes)
+  return vim.tbl_map(get_lines_for_node, nodes)
 end
 
 local get_gutter_width = function()
@@ -95,12 +99,6 @@ function M.get_context(opts)
   return matches
 end
 
-function tbl_reverse(tbl)
-  for i=1, math.floor(#tbl / 2) do
-    tbl[i], tbl[#tbl - i + 1] = tbl[#tbl - i + 1], tbl[i]
-  end
-end
-
 function M.get_parent_matches()
   local contains = vim.tbl_contains
 
@@ -119,8 +117,6 @@ function M.get_parent_matches()
       break
     end
   end
-
-  tbl_reverse(parent_matches)
 
   return parent_matches
 end
@@ -207,7 +203,7 @@ function M.open()
   local gutter_width = get_gutter_width()
   local win_width = api.nvim_win_get_width(0) - gutter_width
 
-  local lines = get_text_for_multiple_nodes(current_node)
+  local lines = get_lines_for_multiple_nodes(current_node)
   if #lines <= 0 then
     return
   end
