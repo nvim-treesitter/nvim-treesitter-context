@@ -3,6 +3,7 @@ local api = vim.api
 local ts = vim.treesitter
 local Highlighter = ts.highlighter
 local ts_utils = require'nvim-treesitter.ts_utils'
+local ts_query = require('nvim-treesitter.query')
 local ts_highlight = require('nvim-treesitter.highlight')
 local parsers = require'nvim-treesitter.parsers'
 
@@ -93,6 +94,36 @@ function M.get_context(opts)
   return matches
 end
 
+function tbl_reverse(tbl)
+  for i=1, math.floor(#tbl / 2) do
+    tbl[i], tbl[#tbl - i + 1] = tbl[#tbl - i + 1], tbl[i]
+  end
+end
+
+function M.get_parent_matches()
+  local contains = vim.tbl_contains
+
+  local matches = ts_query.get_capture_matches(0, '@scope.node', 'locals')
+
+  local curr_node = ts_utils.get_node_at_cursor()
+  if not curr_node then return end
+
+  local parent_matches = {}
+  while true do
+    if contains(matches, curr_node) then
+      table.insert(parent_matches, curr_node)
+    end
+    curr_node = curr_node:parent()
+    if curr_node == nil then
+      break
+    end
+  end
+
+  tbl_reverse(parent_matches)
+
+  return parent_matches
+end
+
 function M.update_context()
   if api.nvim_get_option('buftype') ~= '' or
       vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
@@ -100,7 +131,7 @@ function M.update_context()
     return
   end
 
-  local context = M.get_context()
+  local context = M.get_parent_matches()
 
   current_node = nil
 
@@ -122,6 +153,24 @@ function M.update_context()
     M.open()
   else
     M.close()
+  end
+end
+
+do
+  local running = false
+  local timer
+
+  function M.throttled_update_context()
+    if running == false then
+      running = true
+
+      vim.defer_fn(function()
+        M.update_context()
+
+        running = false
+        if timer then timer:close() end
+      end, 500)
+    end
   end
 end
 
@@ -195,17 +244,17 @@ end
 
 function M.enable()
   nvim_augroup('treesitter_context', {
-    {'WinScrolled', '*',               'silent lua require("treesitter-context").update_context()'},
-    {'CursorMoved', '*',               'silent lua require("treesitter-context").update_context()'},
-    {'BufEnter',    '*',               'silent lua require("treesitter-context").update_context()'},
-    {'WinEnter',    '*',               'silent lua require("treesitter-context").update_context()'},
+    {'WinScrolled', '*',               'silent lua require("treesitter-context").throttled_update_context()'},
+    {'CursorMoved', '*',               'silent lua require("treesitter-context").throttled_update_context()'},
+    {'BufEnter',    '*',               'silent lua require("treesitter-context").throttled_update_context()'},
+    {'WinEnter',    '*',               'silent lua require("treesitter-context").throttled_update_context()'},
     {'WinLeave',    '*',               'silent lua require("treesitter-context").close()'},
     {'VimResized',  '*',               'silent lua require("treesitter-context").open()'},
     {'User',        'SessionSavePre',  'silent lua require("treesitter-context").close()'},
     {'User',        'SessionSavePost', 'silent lua require("treesitter-context").open()'},
   })
 
-  M.update_context()
+  M.throttled_update_context()
 end
 
 function M.disable()
