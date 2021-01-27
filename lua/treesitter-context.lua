@@ -194,14 +194,10 @@ function M.get_parent_matches()
   return parent_matches
 end
 
-local counter = 1
 function M.update_context()
   if not cursor_moved_vertical() then
     return
   end
-
-  print('updating context', counter)
-  counter = counter + 1
 
   if api.nvim_get_option('buftype') ~= '' or
       vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
