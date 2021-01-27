@@ -83,10 +83,10 @@ local nvim_augroup = function(group_name, definitions)
   api.nvim_command('augroup END')
 end
 
-local line_changed
+local cursor_moved_vertical
 do
   local line
-  line_changed = function()
+  cursor_moved_vertical = function()
     local newline =  vim.api.nvim_win_get_cursor(0)[1]
     if newline ~= line then
       line = newline
@@ -194,10 +194,14 @@ function M.get_parent_matches()
   return parent_matches
 end
 
+local counter = 1
 function M.update_context()
-  if not line_changed() then
+  if not cursor_moved_vertical() then
     return
   end
+
+  print('updating context', counter)
+  counter = counter + 1
 
   if api.nvim_get_option('buftype') ~= '' or
       vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
