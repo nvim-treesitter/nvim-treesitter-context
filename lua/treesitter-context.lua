@@ -1,7 +1,4 @@
-
 local api = vim.api
-local ts = vim.treesitter
-local Highlighter = ts.highlighter
 local ts_utils = require'nvim-treesitter.ts_utils'
 local ts_query = require('nvim-treesitter.query')
 local ts_highlight = require('nvim-treesitter.highlight')
@@ -12,7 +9,7 @@ local parsers = require'nvim-treesitter.parsers'
 local winid = nil
 local bufnr = api.nvim_create_buf(false, true)
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
-local current_node = nil
+local current_node = {}
 local previous_node = nil
 
 
@@ -30,6 +27,10 @@ end
 
 local get_text_for_node = function(node)
   return ts_utils.get_node_text(node)[1]
+end
+
+local function get_text_for_multiple_nodes(nodes)
+  return vim.tbl_map(get_text_for_node, nodes)
 end
 
 local get_lines_for_node = function(node)
@@ -133,7 +134,7 @@ function M.update_context()
 
   local context = M.get_parent_matches()
 
-  current_node = nil
+  current_node = {}
 
   if context then
     local first_visible_line = api.nvim_call_function('line', { 'w0' })
@@ -143,13 +144,14 @@ function M.update_context()
       local row = node:start()
 
       if row < (first_visible_line - 1) then
-        current_node = node
-        break
+        table.insert(current_node, node)
+        -- current_node = node
+        -- break
       end
     end
   end
 
-  if current_node then
+  if #current_node ~= 0 then
     M.open()
   else
     M.close()
@@ -175,6 +177,7 @@ do
 end
 
 function M.close()
+  print('closing')
   previous_node = nil
 
   if winid ~= nil and api.nvim_win_is_valid(winid) then
@@ -189,7 +192,7 @@ function M.close()
 end
 
 function M.open()
-  if current_node == nil then
+  if #current_node == 0 then
     return
   end
 
@@ -204,11 +207,16 @@ function M.open()
   local gutter_width = get_gutter_width()
   local win_width = api.nvim_win_get_width(0) - gutter_width
 
+  local lines = get_text_for_multiple_nodes(current_node)
+  if #lines <= 0 then
+    return
+  end
+
   if winid == nil or not api.nvim_win_is_valid(winid) then
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
       width = win_width,
-      height = 1,
+      height = #lines,
       row = 0,
       col = gutter_width,
       focusable = false,
@@ -219,21 +227,16 @@ function M.open()
       win = api.nvim_get_current_win(),
       relative = 'win',
       width = win_width,
-      height = 1,
+      height = #lines,
       row = 0,
       col = gutter_width,
     })
   end
 
-  local start_row, start_col = current_node:start()
-  local end_row = start_row + 1
-  local end_col = 0
-
-  local lines =
-    start_col == 0
-      and vim.split(get_text_for_node(current_node), '\n')
-      or  get_lines_for_node(current_node)
-  local target_node = current_node
+  -- local lines =
+  --   start_col == 0
+  --     and vim.split(get_text_for_node(current_node), '\n')
+  --     or  get_lines_for_node(current_node)
 
   api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
   api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
