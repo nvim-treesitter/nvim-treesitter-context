@@ -9,7 +9,7 @@ local parsers = require'nvim-treesitter.parsers'
 local winid = nil
 local bufnr = api.nvim_create_buf(false, true)
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
-local current_node = {}
+local context_nodes = {}
 local previous_node = nil
 
 
@@ -130,7 +130,7 @@ function M.update_context()
 
   local context = M.get_parent_matches()
 
-  current_node = {}
+  context_nodes = {}
 
   if context then
     local first_visible_line = api.nvim_call_function('line', { 'w0' })
@@ -140,14 +140,14 @@ function M.update_context()
       local row = node:start()
 
       if row < (first_visible_line - 1) then
-        table.insert(current_node, node)
-        -- current_node = node
+        table.insert(context_nodes, node)
+        -- context_nodes = node
         -- break
       end
     end
   end
 
-  if #current_node ~= 0 then
+  if #context_nodes ~= 0 then
     M.open()
   else
     M.close()
@@ -173,7 +173,6 @@ do
 end
 
 function M.close()
-  print('closing')
   previous_node = nil
 
   if winid ~= nil and api.nvim_win_is_valid(winid) then
@@ -188,22 +187,20 @@ function M.close()
 end
 
 function M.open()
-  if #current_node == 0 then
+  if #context_nodes == 0 then
     return
   end
 
-  if current_node == previous_node then
+  if context_nodes == previous_node then
     return
   end
 
-  previous_node = current_node
-
-  local saved_bufnr = api.nvim_get_current_buf()
+  previous_node = context_nodes
 
   local gutter_width = get_gutter_width()
   local win_width = api.nvim_win_get_width(0) - gutter_width
 
-  local lines = get_lines_for_multiple_nodes(current_node)
+  local lines = get_lines_for_multiple_nodes(context_nodes)
   if #lines <= 0 then
     return
   end
@@ -231,8 +228,8 @@ function M.open()
 
   -- local lines =
   --   start_col == 0
-  --     and vim.split(get_text_for_node(current_node), '\n')
-  --     or  get_lines_for_node(current_node)
+  --     and vim.split(get_text_for_node(context_nodes), '\n')
+  --     or  get_lines_for_node(context_nodes)
 
   api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
   api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
