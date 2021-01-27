@@ -1,5 +1,6 @@
 local api = vim.api
 local ts_utils = require'nvim-treesitter.ts_utils'
+local Highlighter = vim.treesitter.highlighter
 local ts_query = require('nvim-treesitter.query')
 local ts_highlight = require('nvim-treesitter.highlight')
 local parsers = require'nvim-treesitter.parsers'
@@ -12,6 +13,20 @@ local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local context_nodes = {}
 local previous_node = nil
 
+local Pos = {}
+Pos.__index = Pos
+
+function Pos.from_node(node)
+  local self = setmetatable({}, Pos)
+
+  local start_row, start_col = node:start()
+  self.start_row = start_row
+  self.start_col = start_col
+  self.end_row = start_row + 1
+  self.end_col = 0
+
+  return self
+end
 
 -- Helper functions
 
@@ -68,7 +83,65 @@ local nvim_augroup = function(group_name, definitions)
   api.nvim_command('augroup END')
 end
 
+local line_changed
+do
+  local line
+  line_changed = function()
+    local newline =  vim.api.nvim_win_get_cursor(0)[1]
+    if newline ~= line then
+      line = newline
+      return true
+    end
+    return false
+  end
+end
 
+local function highlight_node_from_buf(buf, buf_query, target_node, start_row, start_col, end_row, end_col)
+  if buf_query == nil then
+    return
+  end
+
+  local iter = buf_query:query():iter_captures(target_node, buf, start_row, end_row)
+
+  for capture, node in iter do
+
+    local hl = buf_query.hl_cache[capture]
+
+    local atom_start_row, atom_start_col, atom_end_row, atom_end_col = node:range()
+
+    if atom_end_row >= end_row and atom_end_col >= end_col then
+      break
+    end
+
+    if atom_start_row >= start_row then
+
+      local hl_start_row = atom_start_row - start_row
+      local hl_end_row   = atom_end_row   - start_row
+      local hl_start_col = atom_start_col
+      local hl_end_col   = atom_end_col
+
+      api.nvim_buf_set_extmark(bufnr, ns, hl_start_row, hl_start_col, {
+        end_line = hl_end_row,
+        end_col = hl_end_col,
+        hl_group = hl
+      })
+    end
+  end
+end
+
+function remove_dup(tbl)
+  local hash = {}
+  local res = {}
+
+  for _,v in ipairs(tbl) do
+    if (not hash[v]) then
+      res[#res+1] = v
+      hash[v] = true
+    end
+  end
+
+  return res
+end
 
 -- Exports
 
@@ -122,6 +195,10 @@ function M.get_parent_matches()
 end
 
 function M.update_context()
+  if not line_changed() then
+    return
+  end
+
   if api.nvim_get_option('buftype') ~= '' or
       vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
     M.close()
@@ -154,6 +231,19 @@ function M.update_context()
   end
 end
 
+local async_wrap = function(f)
+  local wrapped = function(...)
+    local handle
+    handle = vim.loop.new_async(vim.schedule_wrap(function(...)
+      f(...)
+      handle:close()
+    end))
+    handle:send(...)
+  end
+
+  return wrapped
+end
+
 do
   local running = false
   local timer
@@ -162,12 +252,16 @@ do
     if running == false then
       running = true
 
-      vim.defer_fn(function()
-        M.update_context()
+      vim.defer_fn(async_wrap(function()
+        local status, err = pcall(M.update_context)
+
+        if err then
+          print('Failed to get context: ' .. err)
+        end
 
         running = false
         if timer then timer:close() end
-      end, 500)
+      end), 500)
     end
   end
 end
@@ -197,10 +291,22 @@ function M.open()
 
   previous_node = context_nodes
 
+  local saved_bufnr = api.nvim_get_current_buf()
+
   local gutter_width = get_gutter_width()
   local win_width = api.nvim_win_get_width(0) - gutter_width
 
+  local start_row, start_col = context_nodes[1]:start()
+  local end_row = start_row + 1
+  local end_col = 0
+
   local lines = get_lines_for_multiple_nodes(context_nodes)
+  lines = remove_dup(lines)
+  -- local lines =
+  --   start_col == 0
+  --   and get_text_for_multiple_nodes(context_nodes)
+  --   or get_lines_for_multiple_nodes(context_nodes)
+
   if #lines <= 0 then
     return
   end
@@ -226,16 +332,34 @@ function M.open()
     })
   end
 
-  -- local lines =
-  --   start_col == 0
-  --     and vim.split(get_text_for_node(context_nodes), '\n')
-  --     or  get_lines_for_node(context_nodes)
-
   api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
   api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  local ft = vim.bo.filetype
-  ts_highlight.attach(bufnr, ft)
+  local highlight_better = true
+
+  if highlight_better then
+    local buf_highlighter = Highlighter.active[saved_bufnr] or nil
+    local buf_queries = {}
+
+    if buf_highlighter then
+      buf_queries = buf_highlighter._queries
+    else
+      local current_ft = api.nvim_buf_get_option(0, 'filetype')
+      local buffer_ft  = api.nvim_buf_get_option(bufnr, 'filetype')
+      if current_ft ~= buffer_ft then
+        api.nvim_buf_set_option(bufnr, 'filetype', current_ft)
+      end
+    end
+
+    local buf_query = buf_queries[vim.bo.filetype]
+
+    for _, target_node in ipairs(context_nodes) do
+      highlight_node_from_buf(saved_bufnr, buf_query, target_node, start_row, start_col, end_row, end_col)
+    end
+  else
+    local ft = vim.bo.filetype
+    ts_highlight.attach(bufnr, ft)
+  end
 end
 
 function M.enable()
