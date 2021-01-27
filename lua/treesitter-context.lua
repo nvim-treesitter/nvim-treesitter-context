@@ -147,6 +147,12 @@ end
 
 local M = {}
 
+function M.do_au_cursor_moved_vertical()
+  if cursor_moved_vertical() then
+    vim.cmd [[doautocmd User CursorMovedVertical]]
+  end
+end
+
 function M.get_context(opts)
   if not parsers.has_parser() then return nil end
   local options = opts or {}
@@ -195,10 +201,6 @@ function M.get_parent_matches()
 end
 
 function M.update_context()
-  if not cursor_moved_vertical() then
-    return
-  end
-
   if api.nvim_get_option('buftype') ~= '' or
       vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
     M.close()
@@ -365,7 +367,9 @@ end
 function M.enable()
   nvim_augroup('treesitter_context', {
     {'WinScrolled', '*',               'silent lua require("treesitter-context").throttled_update_context()'},
-    {'CursorMoved', '*',               'silent lua require("treesitter-context").throttled_update_context()'},
+    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").throttled_update_context()'},
+    {'CursorMoved', '*',               'silent lua require("treesitter-context").do_au_cursor_moved_vertical()'},
+    {'User', 'CursorMovedVertical',    'silent lua require("treesitter-context").throttled_update_context()'},
     {'BufEnter',    '*',               'silent lua require("treesitter-context").throttled_update_context()'},
     {'WinEnter',    '*',               'silent lua require("treesitter-context").throttled_update_context()'},
     {'WinLeave',    '*',               'silent lua require("treesitter-context").close()'},
@@ -389,6 +393,5 @@ M.enable()
 
 api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable()')
 api.nvim_command('command! TSContextDisable lua require("treesitter-context").disable()')
-
 
 return M
