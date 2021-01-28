@@ -1,5 +1,6 @@
 local api = vim.api
 local ts_utils = require'nvim-treesitter.ts_utils'
+local uv = vim.loop
 local Highlighter = vim.treesitter.highlighter
 local ts_query = require('nvim-treesitter.query')
 local ts_highlight = require('nvim-treesitter.highlight')
@@ -12,21 +13,6 @@ local bufnr = api.nvim_create_buf(false, true)
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local context_nodes = {}
 local previous_node = nil
-
-local Pos = {}
-Pos.__index = Pos
-
-function Pos.from_node(node)
-  local self = setmetatable({}, Pos)
-
-  local start_row, start_col = node:start()
-  self.start_row = start_row
-  self.start_col = start_col
-  self.end_row = start_row + 1
-  self.end_col = 0
-
-  return self
-end
 
 -- Helper functions
 
@@ -129,7 +115,7 @@ local function highlight_node_from_buf(buf, buf_query, target_node, start_row, s
   end
 end
 
-function remove_dup(tbl)
+local function remove_dup(tbl)
   local hash = {}
   local res = {}
 
@@ -179,6 +165,8 @@ function M.get_context(opts)
 end
 
 function M.get_parent_matches()
+  if not parsers.has_parser() then return nil end
+
   local contains = vim.tbl_contains
 
   local matches = ts_query.get_capture_matches(0, '@scope.node', 'locals')
@@ -263,7 +251,7 @@ do
 
         running = false
         if timer then timer:close() end
-      end), 500)
+      end), 400)
     end
   end
 end
