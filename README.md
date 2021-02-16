@@ -24,3 +24,7 @@ brittle.
 
 `TSContextEnable` and `TSContextDisable`.
 
+## Appearance
+
+Use the highlight group `TreesitterContext` to change the colors of the
+context. Per default it links to `NormalFloat`.

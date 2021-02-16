@@ -175,6 +175,8 @@ function M.open()
     })
   end
 
+  api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
+
   local start_row, start_col = current_node:start()
   local end_row = start_row + 1
   local end_col = 0
@@ -260,6 +262,7 @@ M.enable()
 
 api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable()')
 api.nvim_command('command! TSContextDisable lua require("treesitter-context").disable()')
+api.nvim_command('highlight default link TreesitterContext NormalFloat')
 
 
 return M
