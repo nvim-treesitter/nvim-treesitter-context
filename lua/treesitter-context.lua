@@ -4,30 +4,82 @@ local ts = vim.treesitter
 local Highlighter = ts.highlighter
 local ts_utils = require'nvim-treesitter.ts_utils'
 local parsers = require'nvim-treesitter.parsers'
+local utils = require'treesitter-context.utils'
+local slice = utils.slice
+
+-- Constants
+
+-- Tells us at which node type to stop when highlighting a multi-line
+-- node. If not specified, the highlighting stops after the first line.
+local last_types = {
+  ['function'] = {
+    c = 'function_declarator',
+    lua = 'parameters',
+    javascript = 'formal_parameters',
+  },
+}
 
 -- Script variables
 
 local winid = nil
 local bufnr = api.nvim_create_buf(false, true)
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
+
+local current_type = nil
 local current_node = nil
 local previous_node = nil
 
 
--- Helper functions
 
+-- Helper functions
 local is_valid = function(node, type_patterns)
   local node_type = node:type()
   for _, rgx in ipairs(type_patterns) do
     if node_type:find(rgx) then
-      return true
+      return true, rgx
     end
   end
   return false
 end
 
 local get_text_for_node = function(node)
-  return ts_utils.get_node_text(node)[1]
+  local start_row, start_col = node:start()
+  local end_row, end_col     = node:end_()
+
+  local lines = ts_utils.get_node_text(node)
+
+  if start_col ~= 0 then
+    lines[1] = api.nvim_buf_get_lines(0, start_row, start_row + 1, false)[1]
+  end
+  start_col = 0
+
+  local filetype = api.nvim_buf_get_option(0, 'filetype')
+  local last_type = (last_types[current_type] or {})[filetype]
+
+  if last_type ~= nil then
+    local last_position = nil
+
+    for child, field_name in node:iter_children() do
+      local type = child:type()
+      if type == last_type then
+        last_position = {child:end_()}
+        break
+      end
+    end
+    end_row = last_position[1]
+    end_col = last_position[2]
+    local last_index = end_row - start_row
+    lines = slice(lines, 1, last_index + 1)
+    lines[#lines] = slice(lines[#lines], 1, end_col)
+  else
+    lines = slice(lines, 1, 1)
+    end_row = start_row
+    end_col = #lines[1]
+  end
+
+  local range = {start_row, start_col, end_row, end_col}
+
+  return lines, range
 end
 
 local get_lines_for_node = function(node)
@@ -79,8 +131,9 @@ function M.get_context(opts)
   local expr = cursor_node
 
   while expr do
-    if is_valid(expr, type_patterns) then
-      table.insert(matches, 1, expr)
+    local is_match, type = is_valid(expr, type_patterns)
+    if is_match then
+      table.insert(matches, 1, {expr, type})
     end
     expr = expr:parent()
   end
@@ -101,16 +154,19 @@ function M.update_context()
 
   local context = M.get_context()
 
+  current_type = nil
   current_node = nil
 
   if context then
     local first_visible_line = api.nvim_call_function('line', { 'w0' })
 
     for i = #context, 1, -1 do
-      local node = context[i]
+      local node = context[i][1]
+      local type = context[i][2]
       local row = node:start()
 
       if row < (first_visible_line - 1) then
+        current_type = type
         current_node = node
         break
       end
@@ -139,13 +195,8 @@ function M.close()
 end
 
 function M.open()
-  if current_node == nil then
-    return
-  end
-
-  if current_node == previous_node then
-    return
-  end
+  if current_node == nil then return end
+  if current_node == previous_node then return end
 
   previous_node = current_node
 
@@ -177,18 +228,22 @@ function M.open()
 
   api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
 
-  local start_row, start_col = current_node:start()
-  local end_row = start_row + 1
-  local end_col = 0
+  -- Set text
 
-  local lines =
-    start_col == 0
-      and vim.split(get_text_for_node(current_node), '\n')
-      or  get_lines_for_node(current_node)
-  local target_node = current_node
+  local lines, range = get_text_for_node(current_node)
+
+  local start_row = range[1]
+  local start_col = range[2]
+  local end_row   = range[3]
+  local end_col   = range[4]
+
+  local text = table.concat(lines, ' ')
+  local target_node = current_node:parent()
+
+  -- Highlight
 
   api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-  api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  api.nvim_buf_set_lines(bufnr, 0, -1, false, {text})
 
   local start_row_absolute = current_node:start()
 
@@ -203,33 +258,57 @@ function M.open()
       api.nvim_buf_set_option(bufnr, 'filetype', current_ft)
     end
   end
-  for _, buf_query in pairs(buf_queries) do
-    if buf_query == nil then
-      break
-    end
-    local iter = buf_query:query():iter_captures(target_node, saved_bufnr, start_row, end_row)
 
-    for capture, node in iter do
+  for _, buf_query in pairs(buf_queries) do
+    if buf_query == nil then break end
+
+    local captures =
+      buf_query:query()
+        :iter_captures(target_node, saved_bufnr, start_row, current_node:end_())
+
+    local last_line = nil
+    local last_offset = nil
+ 
+    for capture, node in captures do
 
       local hl = buf_query.hl_cache[capture]
+      local atom_start_row, atom_start_col,
+            atom_end_row,   atom_end_col = node:range()
 
-      local atom_start_row, atom_start_col, atom_end_row, atom_end_col = node:range()
-
-      if atom_end_row >= end_row and atom_end_col >= end_col then
+      if atom_end_row > end_row or
+        (atom_end_row == end_row and atom_end_col > end_col) then
         break
       end
 
       if atom_start_row >= start_row_absolute then
 
-        local hl_start_row = atom_start_row - start_row_absolute
-        local hl_end_row   = atom_end_row   - start_row_absolute
-        local hl_start_col = atom_start_col
-        local hl_end_col   = atom_end_col
+        local intended_start_row = atom_start_row - start_row_absolute
+        local intended_end_row   = atom_end_row   - start_row_absolute
+        local intended_start_col = atom_start_col
+        local intended_end_col   = atom_end_col
+
+        local offset
+        if intended_start_row == last_line then
+          offset = last_offset
+        else
+          -- Add 1 for each space added between lines when
+          -- we replace "\n" with " "
+          offset = intended_start_row
+          -- Add the length of each precending lines
+          for i = 1, intended_start_row do
+            offset = offset + #lines[i]
+          end
+        end
+
+        local hl_start_row = 0
+        local hl_end_row   = 0
+        local hl_start_col = atom_start_col + offset
+        local hl_end_col   = atom_end_col + offset
 
         api.nvim_buf_set_extmark(bufnr, ns,
           hl_start_row, hl_start_col,
-        { end_line = hl_end_row, end_col = hl_end_col,
-          hl_group = hl })
+          { end_line = hl_end_row, end_col = hl_end_col,
+            hl_group = hl })
       end
     end
   end
