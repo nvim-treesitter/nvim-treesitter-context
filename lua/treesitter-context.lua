@@ -16,6 +16,7 @@ local last_types = {
     c = 'function_declarator',
     lua = 'parameters',
     javascript = 'formal_parameters',
+    typescript = 'formal_parameters',
   },
 }
 
