@@ -371,6 +371,7 @@ function M.enable()
     {'BufEnter',    '*',               'silent lua require("treesitter-context").update_context()'},
     {'WinEnter',    '*',               'silent lua require("treesitter-context").update_context()'},
     {'WinLeave',    '*',               'silent lua require("treesitter-context").close()'},
+    {'QuitPre',     '*',               'silent lua require("treesitter-context").close()'},
     {'VimResized',  '*',               'silent lua require("treesitter-context").open()'},
     {'User',        'SessionSavePre',  'silent lua require("treesitter-context").close()'},
     {'User',        'SessionSavePost', 'silent lua require("treesitter-context").open()'},
