@@ -21,6 +21,8 @@ local last_types = {
   },
 }
 
+local INDENT_PATTERN = '^%s+'
+
 -- Script variables
 
 local winid = nil
@@ -34,6 +36,12 @@ local previous_node = nil
 
 
 -- Helper functions
+local get_target_node = function(node)
+  local tree = parsers.get_parser():parse()[1]
+  local root = tree:root()
+  return root
+end
+
 local is_valid = function(node, type_patterns)
   local node_type = node:type()
   for _, rgx in ipairs(type_patterns) do
@@ -98,6 +106,31 @@ local get_lines_for_node = function(node)
   return api.nvim_buf_get_lines(0, start_row, end_row + 1, false)
 end
 
+-- Merge lines, removing the indentation after 1st line
+local merge_lines = function(lines)
+  local text = ''
+  for i, line in ipairs(lines) do
+    if i == 1 then
+      text = text .. line
+    else
+      text = text .. line:gsub(INDENT_PATTERN, '')
+    end
+    text = text .. ' '
+  end
+  return text
+end
+
+-- Get indentation for lines except first
+local get_indents = function(lines)
+  local indents = vim.tbl_map(function(line)
+    local indent = line:match(INDENT_PATTERN)
+    return indent and #indent or 0
+  end, lines)
+  -- Dont skip first line indentation
+  indents[1] = 0
+  return indents
+end
+
 local get_gutter_width = function()
   -- Note when moving the cursor, we must ensure that the 'curswant' state is
   -- restored (see #11). Functions like 'cursor()' and 'nvim_buf_set_cursor()'
@@ -121,12 +154,6 @@ local nvim_augroup = function(group_name, definitions)
     end
   end
   api.nvim_command('augroup END')
-end
-
-local get_target_node = function(node)
-  local tree = parsers.get_parser():parse()[1]
-  local root = tree:root()
-  return root
 end
 
 
@@ -246,13 +273,14 @@ function M.open()
   -- Set text
 
   local lines, range = get_text_for_node(current_node)
+  local indents = get_indents(lines)
 
   local start_row = range[1]
   local start_col = range[2]
   local end_row   = range[3]
   local end_col   = range[4]
 
-  local text = table.concat(lines, ' ')
+  local text = merge_lines(lines)
   local target_node = get_target_node(current_node)
 
   -- api.nvim_command('echom ' .. vim.fn.json_encode({
@@ -316,8 +344,10 @@ function M.open()
           offset = intended_start_row
           -- Add the length of each precending lines
           for i = 1, intended_start_row do
-            offset = offset + #lines[i]
+            offset = offset + #lines[i] - indents[i]
           end
+          -- Remove the indentation negative offset for current line
+          offset = offset - (indents[intended_start_row + 1])
         end
 
         local hl_start_row = 0
