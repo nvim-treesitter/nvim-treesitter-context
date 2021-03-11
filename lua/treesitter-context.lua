@@ -14,6 +14,7 @@ local slice = utils.slice
 local last_types = {
   ['function'] = {
     c = 'function_declarator',
+    cpp = 'function_declarator',
     lua = 'parameters',
     javascript = 'formal_parameters',
     typescript = 'formal_parameters',
@@ -56,29 +57,37 @@ local get_text_for_node = function(node)
 
   local filetype = api.nvim_buf_get_option(0, 'filetype')
   local last_type = (last_types[current_type] or {})[filetype]
+  local last_position = nil
 
   if last_type ~= nil then
-    local last_position = nil
-
     for child, field_name in node:iter_children() do
       local type = child:type()
+
       if type == last_type then
         last_position = {child:end_()}
+
+        end_row = last_position[1]
+        end_col = last_position[2]
+        local last_index = end_row - start_row
+        lines = slice(lines, 1, last_index + 1)
+        lines[#lines] = slice(lines[#lines], 1, end_col)
         break
       end
     end
-    end_row = last_position[1]
-    end_col = last_position[2]
-    local last_index = end_row - start_row
-    lines = slice(lines, 1, last_index + 1)
-    lines[#lines] = slice(lines[#lines], 1, end_col)
-  else
+  end
+
+  if last_position == nil then
     lines = slice(lines, 1, 1)
     end_row = start_row
     end_col = #lines[1]
   end
 
   local range = {start_row, start_col, end_row, end_col}
+
+  -- api.nvim_command('echom ' .. vim.fn.json_encode({
+  --   last_position = last_position,
+  --   range = range,
+  -- }))
 
   return lines, range
 end
@@ -114,6 +123,11 @@ local nvim_augroup = function(group_name, definitions)
   api.nvim_command('augroup END')
 end
 
+local get_target_node = function(node)
+  local tree = parsers.get_parser():parse()[1]
+  local root = tree:root()
+  return root
+end
 
 
 -- Exports
@@ -239,7 +253,12 @@ function M.open()
   local end_col   = range[4]
 
   local text = table.concat(lines, ' ')
-  local target_node = current_node:parent()
+  local target_node = get_target_node(current_node)
+
+  -- api.nvim_command('echom ' .. vim.fn.json_encode({
+  --   type = target_node:type(),
+  --   text = ts_utils.get_node_text(target_node),
+  -- }))
 
   -- Highlight
 
