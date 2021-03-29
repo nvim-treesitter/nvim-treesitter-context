@@ -1,11 +1,14 @@
-
 local api = vim.api
-local ts = vim.treesitter
-local Highlighter = ts.highlighter
 local ts_utils = require'nvim-treesitter.ts_utils'
+local uv = vim.loop
+local Highlighter = vim.treesitter.highlighter
+local ts_query = require('nvim-treesitter.query')
+local ts_highlight = require('nvim-treesitter.highlight')
 local parsers = require'nvim-treesitter.parsers'
 local utils = require'treesitter-context.utils'
 local slice = utils.slice
+local contains = vim.tbl_contains
+
 
 -- Constants
 
@@ -21,6 +24,7 @@ local last_types = {
   },
 }
 
+local TYPE_PATTERNS = {'class', 'function', 'method', 'for' , 'while', 'if'}
 local INDENT_PATTERN = '^%s+'
 
 -- Script variables
@@ -28,14 +32,16 @@ local INDENT_PATTERN = '^%s+'
 local winid = nil
 local bufnr = api.nvim_create_buf(false, true)
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
-
-local current_type = nil
-local current_node = nil
-local previous_node = nil
-
+local context_nodes = {}
+local context_types = {}
+local previous_nodes = nil
 
 
 -- Helper functions
+local log_message = function(value)
+  api.nvim_command('echom ' .. vim.fn.json_encode(value))
+end
+
 local get_target_node = function(node)
   local tree = parsers.get_parser():parse()[1]
   local root = tree:root()
@@ -52,7 +58,17 @@ local is_valid = function(node, type_patterns)
   return false
 end
 
-local get_text_for_node = function(node)
+local get_type_pattern = function(node, type_patterns)
+  local node_type = node:type()
+  for _, rgx in ipairs(type_patterns) do
+    if node_type:find(rgx) then
+      return rgx
+    end
+  end
+  return nil
+end
+
+local get_text_for_node = function(node, type)
   local start_row, start_col = node:start()
   local end_row, end_col     = node:end_()
 
@@ -64,7 +80,7 @@ local get_text_for_node = function(node)
   start_col = 0
 
   local filetype = api.nvim_buf_get_option(0, 'filetype')
-  local last_type = (last_types[current_type] or {})[filetype]
+  local last_type = (last_types[type] or {})[filetype]
   local last_position = nil
 
   if last_type ~= nil then
@@ -92,18 +108,17 @@ local get_text_for_node = function(node)
 
   local range = {start_row, start_col, end_row, end_col}
 
-  -- api.nvim_command('echom ' .. vim.fn.json_encode({
-  --   last_position = last_position,
-  --   range = range,
-  -- }))
-
   return lines, range
 end
 
 local get_lines_for_node = function(node)
   local start_row = node:start()
   local end_row   = node:end_()
-  return api.nvim_buf_get_lines(0, start_row, end_row + 1, false)
+  return api.nvim_buf_get_lines(0, start_row, end_row + 1, false)[1]
+end
+
+local function get_lines_for_multiple_nodes(nodes)
+  return vim.tbl_map(get_lines_for_node, nodes)
 end
 
 -- Merge lines, removing the indentation after 1st line
@@ -156,15 +171,57 @@ local nvim_augroup = function(group_name, definitions)
   api.nvim_command('augroup END')
 end
 
+local cursor_moved_vertical
+do
+  local line
+  cursor_moved_vertical = function()
+    local newline =  vim.api.nvim_win_get_cursor(0)[1]
+    if newline ~= line then
+      line = newline
+      return true
+    end
+    return false
+  end
+end
+
+function display_window(width, height, row, col)
+  if winid == nil or not api.nvim_win_is_valid(winid) then
+    winid = api.nvim_open_win(bufnr, false, {
+      relative = 'win',
+      width = width,
+      height = height,
+      row = row,
+      col = col,
+      focusable = false,
+      style = 'minimal',
+    })
+  else
+    api.nvim_win_set_config(winid, {
+      win = api.nvim_get_current_win(),
+      relative = 'win',
+      width = width,
+      height = height,
+      row = row,
+      col = col,
+    })
+  end
+  api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
+end
 
 -- Exports
 
 local M = {}
 
+function M.do_au_cursor_moved_vertical()
+  if cursor_moved_vertical() then
+    vim.cmd [[doautocmd User CursorMovedVertical]]
+  end
+end
+
 function M.get_context(opts)
   if not parsers.has_parser() then return nil end
   local options = opts or {}
-  local type_patterns = options.type_patterns or {'class', 'function', 'method'}
+  local type_patterns = options.type_patterns or TYPE_PATTERNS
 
   local cursor_node = ts_utils.get_node_at_cursor()
   if not cursor_node then return nil end
@@ -187,6 +244,26 @@ function M.get_context(opts)
   return matches
 end
 
+function M.get_parent_matches(type_patterns)
+  if not parsers.has_parser() then return nil end
+
+  -- FIXME: use TS queries when possible
+  -- local matches = ts_query.get_capture_matches(0, '@scope.node', 'locals')
+
+  local current = ts_utils.get_node_at_cursor()
+  if not current then return end
+
+  local parent_matches = {}
+  while current ~= nil do
+    if is_valid(current, type_patterns) then
+      table.insert(parent_matches, current)
+    end
+    current = current:parent()
+  end
+
+  return parent_matches
+end
+
 function M.update_context()
   if api.nvim_get_option('buftype') ~= '' or
       vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
@@ -194,36 +271,72 @@ function M.update_context()
     return
   end
 
-  local context = M.get_context()
+  local context = M.get_parent_matches(TYPE_PATTERNS)
 
-  current_type = nil
-  current_node = nil
+  context_nodes = {}
+  context_types = {}
 
   if context then
     local first_visible_line = api.nvim_call_function('line', { 'w0' })
+    local last_row = -1
 
     for i = #context, 1, -1 do
-      local node = context[i][1]
-      local type = context[i][2]
+      local node = context[i]
+      local type = get_type_pattern(node, TYPE_PATTERNS) or node:type()
       local row = node:start()
 
-      if row < (first_visible_line - 1) then
-        current_type = type
-        current_node = node
-        break
+      if row < (first_visible_line - 1) and row ~= last_row then
+        table.insert(context_nodes, node)
+        table.insert(context_types, type)
+        last_row = row
       end
     end
   end
 
-  if current_node then
+  if #context_nodes ~= 0 then
     M.open()
   else
     M.close()
   end
 end
 
+local async_wrap = function(f)
+  local wrapped = function(...)
+    local handle
+    handle = vim.loop.new_async(vim.schedule_wrap(function(...)
+      f(...)
+      handle:close()
+    end))
+    handle:send(...)
+  end
+
+  return wrapped
+end
+
+do
+  local running = false
+  local timer
+
+  function M.throttled_update_context()
+    if running == false then
+      running = true
+
+      vim.defer_fn(async_wrap(function()
+        local status, err = pcall(M.update_context)
+
+        if err then
+          print('Failed to get context: ' .. err)
+        end
+
+        running = false
+        if timer then timer:close() end
+      end), 400)
+    end
+  end
+end
+
 function M.close()
-  previous_node = nil
+  previous_nodes = nil
 
   if winid ~= nil and api.nvim_win_is_valid(winid) then
     -- Can't close other windows when the command-line window is open
@@ -237,51 +350,37 @@ function M.close()
 end
 
 function M.open()
-  if current_node == nil then return end
-  if current_node == previous_node then return end
+  if #context_nodes == 0 then return end
+  if context_nodes == previous_nodes then return end
 
-  previous_node = current_node
+  previous_nodes = context_nodes
 
   local saved_bufnr = api.nvim_get_current_buf()
 
   local gutter_width = get_gutter_width()
   local win_width = api.nvim_win_get_width(0) - gutter_width
+  local win_height = #context_nodes
 
-  if winid == nil or not api.nvim_win_is_valid(winid) then
-    winid = api.nvim_open_win(bufnr, false, {
-      relative = 'win',
-      width = win_width,
-      height = 1,
-      row = 0,
-      col = gutter_width,
-      focusable = false,
-      style = 'minimal',
-    })
-  else
-    api.nvim_win_set_config(winid, {
-      win = api.nvim_get_current_win(),
-      relative = 'win',
-      width = win_width,
-      height = 1,
-      row = 0,
-      col = gutter_width,
-    })
-  end
-
-  api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
+  display_window(win_width, win_height, 0, gutter_width)
 
   -- Set text
 
-  local lines, range = get_text_for_node(current_node)
-  local indents = get_indents(lines)
+  local context_ranges = {}
+  local context_lines = {}
+  local context_text = {}
+  local context_indents = {}
 
-  local start_row = range[1]
-  local start_col = range[2]
-  local end_row   = range[3]
-  local end_col   = range[4]
+  for i in ipairs(context_nodes) do
+    local lines, range = get_text_for_node(context_nodes[i])
+    local text = merge_lines(lines)
+    local indents = get_indents(lines)
+    table.insert(context_lines, lines)
+    table.insert(context_ranges, range)
+    table.insert(context_text, text)
+    table.insert(context_indents, indents)
+  end
 
-  local text = merge_lines(lines)
-  local target_node = get_target_node(current_node)
+  api.nvim_buf_set_lines(bufnr, 0, -1, false, context_text)
 
   -- api.nvim_command('echom ' .. vim.fn.json_encode({
   --   type = target_node:type(),
@@ -291,24 +390,39 @@ function M.open()
   -- Highlight
 
   api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-  api.nvim_buf_set_lines(bufnr, 0, -1, false, {text})
-
-  local start_row_absolute = current_node:start()
 
   local buf_highlighter = Highlighter.active[saved_bufnr] or nil
-  local buf_queries = {}
+  local buf_queries = nil
+  local buf_query = nil
+
   if buf_highlighter then
     buf_queries = buf_highlighter._queries
+    buf_query = buf_queries[vim.bo.filetype]
+    if buf_query == nil then
+      return
+    end
   else
     local current_ft = api.nvim_buf_get_option(0, 'filetype')
     local buffer_ft  = api.nvim_buf_get_option(bufnr, 'filetype')
     if current_ft ~= buffer_ft then
       api.nvim_buf_set_option(bufnr, 'filetype', current_ft)
     end
+    return
   end
 
-  for _, buf_query in pairs(buf_queries) do
-    if buf_query == nil then break end
+  for i in ipairs(context_nodes) do
+    local current_node = context_nodes[i]
+    local range = context_ranges[i]
+    local indents = context_indents[i]
+
+    local start_row = range[1]
+    local start_col = range[2]
+    local end_row   = range[3]
+    local end_col   = range[4]
+
+    local target_node = get_target_node(current_node)
+
+    local start_row_absolute = current_node:start()
 
     local captures =
       buf_query:query()
@@ -316,9 +430,8 @@ function M.open()
 
     local last_line = nil
     local last_offset = nil
- 
-    for capture, node in captures do
 
+    for capture, node in captures do
       local hl = buf_query.hl_cache[capture]
       local atom_start_row, atom_start_col,
             atom_end_row,   atom_end_col = node:range()
@@ -350,8 +463,8 @@ function M.open()
           offset = offset - (indents[intended_start_row + 1])
         end
 
-        local hl_start_row = 0
-        local hl_end_row   = 0
+        local hl_start_row = i - 1
+        local hl_end_row   = i - 1
         local hl_start_col = atom_start_col + offset
         local hl_end_col   = atom_end_col + offset
 
@@ -366,18 +479,18 @@ end
 
 function M.enable()
   nvim_augroup('treesitter_context', {
-    {'WinScrolled', '*',               'silent lua require("treesitter-context").update_context()'},
-    {'CursorMoved', '*',               'silent lua require("treesitter-context").update_context()'},
-    {'BufEnter',    '*',               'silent lua require("treesitter-context").update_context()'},
-    {'WinEnter',    '*',               'silent lua require("treesitter-context").update_context()'},
-    {'WinLeave',    '*',               'silent lua require("treesitter-context").close()'},
-    {'QuitPre',     '*',               'silent lua require("treesitter-context").close()'},
-    {'VimResized',  '*',               'silent lua require("treesitter-context").open()'},
-    {'User',        'SessionSavePre',  'silent lua require("treesitter-context").close()'},
-    {'User',        'SessionSavePost', 'silent lua require("treesitter-context").open()'},
+    {'WinScrolled', '*',                   'silent lua require("treesitter-context").update_context()'},
+    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").update_context()'},
+    {'CursorMoved', '*',                   'silent lua require("treesitter-context").do_au_cursor_moved_vertical()'},
+    {'BufEnter',    '*',                   'silent lua require("treesitter-context").update_context()'},
+    {'WinEnter',    '*',                   'silent lua require("treesitter-context").update_context()'},
+    {'WinLeave',    '*',                   'silent lua require("treesitter-context").close()'},
+    {'VimResized',  '*',                   'silent lua require("treesitter-context").open()'},
+    {'User',        'SessionSavePre',      'silent lua require("treesitter-context").close()'},
+    {'User',        'SessionSavePost',     'silent lua require("treesitter-context").open()'},
   })
 
-  M.update_context()
+  M.throttled_update_context()
 end
 
 function M.disable()
@@ -393,6 +506,5 @@ M.enable()
 api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable()')
 api.nvim_command('command! TSContextDisable lua require("treesitter-context").disable()')
 api.nvim_command('highlight default link TreesitterContext NormalFloat')
-
 
 return M
