@@ -24,7 +24,17 @@ local last_types = {
   },
 }
 
-local TYPE_PATTERNS = {'class', 'function', 'method', 'for' , 'while', 'if'}
+local TYPE_PATTERNS = {
+  -- These catch most generic groups, eg "function_declaration" or "function_block"
+  'class',
+  'function',
+  'method',
+  'for',
+  'while',
+  'if',
+  -- There are more specific
+  'impl_item', -- Rust
+}
 local INDENT_PATTERN = '^%s+'
 
 -- Script variables
