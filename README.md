@@ -1,6 +1,6 @@
 # nvim-treesitter-context
 
-Very basic alternative to [context.vim](https://github.com/wellle/context.vim)
+Lightweight alternative to [context.vim](https://github.com/wellle/context.vim)
 implemented with [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter).
 
 ## Install
@@ -16,9 +16,9 @@ Plug 'romgrk/nvim-treesitter-context'
 
 ### Notes
 
-Currently only updates the context on `CursorMoved` because there is no good scroll
-event, and trying to remap basic movement mappings like context.vim does ends up being
-brittle.
+This plugins uses the new neovim `WinScrolled` event when available to update its
+context window. Make sure to have a recent neovim build to get this behavior. The fallback
+behavior is to update its content on `CursorMoved`.
 
 ## Commands
 
