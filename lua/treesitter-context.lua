@@ -1,13 +1,10 @@
 local api = vim.api
 local ts_utils = require'nvim-treesitter.ts_utils'
-local uv = vim.loop
 local Highlighter = vim.treesitter.highlighter
-local ts_query = require('nvim-treesitter.query')
-local ts_highlight = require('nvim-treesitter.highlight')
+-- local ts_query = require('nvim-treesitter.query')
 local parsers = require'nvim-treesitter.parsers'
 local utils = require'treesitter-context.utils'
 local slice = utils.slice
-local contains = vim.tbl_contains
 
 
 -- Constants
@@ -54,10 +51,9 @@ local log_message = function(value)
   api.nvim_command('echom ' .. vim.fn.json_encode(value))
 end
 
-local get_target_node = function(node)
+local get_target_node = function()
   local tree = parsers.get_parser():parse()[1]
-  local root = tree:root()
-  return root
+  return tree:root()
 end
 
 local is_valid = function(node, type_patterns)
@@ -96,10 +92,10 @@ local get_text_for_node = function(node, type)
   local last_position = nil
 
   if last_type ~= nil then
-    for child, field_name in node:iter_children() do
-      local type = child:type()
+    for child, _ in node:iter_children() do
+      local ctype = child:type()
 
-      if type == last_type then
+      if ctype == last_type then
         last_position = {child:end_()}
 
         end_row = last_position[1]
@@ -121,16 +117,6 @@ local get_text_for_node = function(node, type)
   local range = {start_row, start_col, end_row, end_col}
 
   return lines, range
-end
-
-local get_lines_for_node = function(node)
-  local start_row = node:start()
-  local end_row   = node:end_()
-  return api.nvim_buf_get_lines(0, start_row, end_row + 1, false)[1]
-end
-
-local function get_lines_for_multiple_nodes(nodes)
-  return vim.tbl_map(get_lines_for_node, nodes)
 end
 
 -- Merge lines, removing the indentation after 1st line
@@ -196,7 +182,7 @@ do
   end
 end
 
-function display_window(width, height, row, col)
+local function display_window(width, height, row, col)
   if winid == nil or not api.nvim_win_is_valid(winid) then
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
@@ -337,7 +323,7 @@ do
       vim.defer_fn(async_wrap(function()
         local status, err = pcall(M.update_context)
 
-        if err then
+        if not status then
           print('Failed to get context: ' .. err)
         end
 
@@ -427,13 +413,14 @@ function M.open()
     local current_node = context_nodes[i]
     local range = context_ranges[i]
     local indents = context_indents[i]
+    local lines = context_lines[i]
 
     local start_row = range[1]
     local start_col = range[2]
     local end_row   = range[3]
     local end_col   = range[4]
 
-    local target_node = get_target_node(current_node)
+    local target_node = get_target_node()
 
     local start_row_absolute = current_node:start()
 
@@ -469,8 +456,8 @@ function M.open()
           -- we replace "\n" with " "
           offset = intended_start_row
           -- Add the length of each precending lines
-          for i = 1, intended_start_row do
-            offset = offset + #lines[i] - indents[i]
+          for j = 1, intended_start_row do
+            offset = offset + #lines[j] - indents[j]
           end
           -- Remove the indentation negative offset for current line
           offset = offset - (indents[intended_start_row + 1])
