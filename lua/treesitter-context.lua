@@ -144,6 +144,8 @@ local get_indents = function(lines)
   return indents
 end
 
+local gutter_width = 0
+
 local get_gutter_width = function()
   -- Note when moving the cursor, we must ensure that the 'curswant' state is
   -- restored (see #11). Functions like 'cursor()' and 'nvim_buf_set_cursor()'
@@ -151,10 +153,10 @@ local get_gutter_width = function()
   local saved_cursor = api.nvim_call_function('getcurpos', {})
 
   api.nvim_call_function('cursor', { 0, 1 })
-  local gutter_width = api.nvim_call_function('wincol', {}) - 1
+  local new_gutter_width = api.nvim_call_function('wincol', {}) - 1
 
   api.nvim_call_function('setpos', { '.', saved_cursor })
-  return gutter_width
+  return new_gutter_width
 end
 
 local nvim_augroup = function(group_name, definitions)
@@ -263,7 +265,7 @@ function M.get_parent_matches(type_patterns)
   return parent_matches
 end
 
-function M.update_context()
+function M.update_context(update_gutter_width)
   if api.nvim_get_option('buftype') ~= '' or
       vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
     M.close()
@@ -293,7 +295,7 @@ function M.update_context()
   end
 
   if #context_nodes ~= 0 then
-    M.open()
+    M.open(update_gutter_width)
   else
     M.close()
   end
@@ -348,7 +350,7 @@ function M.close()
   winid = nil
 end
 
-function M.open()
+function M.open(update_gutter_width)
   if #context_nodes == 0 then return end
   if context_nodes == previous_nodes then return end
 
@@ -356,7 +358,10 @@ function M.open()
 
   local saved_bufnr = api.nvim_get_current_buf()
 
-  local gutter_width = get_gutter_width()
+  if update_gutter_width then
+    gutter_width = get_gutter_width()
+  end
+
   local win_width = api.nvim_win_get_width(0) - gutter_width
   local win_height = #context_nodes
 
@@ -480,7 +485,7 @@ end
 function M.enable()
   nvim_augroup('treesitter_context', {
     {'WinScrolled', '*',                   'silent lua require("treesitter-context").update_context()'},
-    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").update_context()'},
+    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").update_context(true)'},
     {'CursorMoved', '*',                   'silent lua require("treesitter-context").do_au_cursor_moved_vertical()'},
     {'BufEnter',    '*',                   'silent lua require("treesitter-context").update_context()'},
     {'WinEnter',    '*',                   'silent lua require("treesitter-context").update_context()'},
