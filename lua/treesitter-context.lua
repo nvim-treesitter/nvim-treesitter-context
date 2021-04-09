@@ -32,6 +32,8 @@ local TYPE_PATTERNS = {
   'for',
   'while',
   'if',
+  'switch',
+  'case',
   -- There are more specific
   'impl_item', -- Rust
 }
@@ -224,6 +226,7 @@ local M = {}
 
 function M.do_au_cursor_moved_vertical()
   if cursor_moved_vertical() then
+    log_message({'cursor_moved_vertical'})
     vim.cmd [[doautocmd User CursorMovedVertical]]
   end
 end
