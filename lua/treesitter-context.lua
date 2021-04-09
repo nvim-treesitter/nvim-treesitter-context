@@ -1,13 +1,10 @@
 local api = vim.api
 local ts_utils = require'nvim-treesitter.ts_utils'
-local uv = vim.loop
 local Highlighter = vim.treesitter.highlighter
-local ts_query = require('nvim-treesitter.query')
-local ts_highlight = require('nvim-treesitter.highlight')
+-- local ts_query = require('nvim-treesitter.query')
 local parsers = require'nvim-treesitter.parsers'
 local utils = require'treesitter-context.utils'
 local slice = utils.slice
-local contains = vim.tbl_contains
 
 
 -- Constants
@@ -54,10 +51,9 @@ local log_message = function(value)
   api.nvim_command('echom ' .. vim.fn.json_encode(value))
 end
 
-local get_target_node = function(node)
+local get_target_node = function()
   local tree = parsers.get_parser():parse()[1]
-  local root = tree:root()
-  return root
+  return tree:root()
 end
 
 local is_valid = function(node, type_patterns)
@@ -96,10 +92,10 @@ local get_text_for_node = function(node, type)
   local last_position = nil
 
   if last_type ~= nil then
-    for child, field_name in node:iter_children() do
-      local type = child:type()
+    for child, _ in node:iter_children() do
+      local ctype = child:type()
 
-      if type == last_type then
+      if ctype == last_type then
         last_position = {child:end_()}
 
         end_row = last_position[1]
@@ -121,16 +117,6 @@ local get_text_for_node = function(node, type)
   local range = {start_row, start_col, end_row, end_col}
 
   return lines, range
-end
-
-local get_lines_for_node = function(node)
-  local start_row = node:start()
-  local end_row   = node:end_()
-  return api.nvim_buf_get_lines(0, start_row, end_row + 1, false)[1]
-end
-
-local function get_lines_for_multiple_nodes(nodes)
-  return vim.tbl_map(get_lines_for_node, nodes)
 end
 
 -- Merge lines, removing the indentation after 1st line
@@ -158,6 +144,8 @@ local get_indents = function(lines)
   return indents
 end
 
+local gutter_width = 0
+
 local get_gutter_width = function()
   -- Note when moving the cursor, we must ensure that the 'curswant' state is
   -- restored (see #11). Functions like 'cursor()' and 'nvim_buf_set_cursor()'
@@ -165,10 +153,10 @@ local get_gutter_width = function()
   local saved_cursor = api.nvim_call_function('getcurpos', {})
 
   api.nvim_call_function('cursor', { 0, 1 })
-  local gutter_width = api.nvim_call_function('wincol', {}) - 1
+  local new_gutter_width = api.nvim_call_function('wincol', {}) - 1
 
   api.nvim_call_function('setpos', { '.', saved_cursor })
-  return gutter_width
+  return new_gutter_width
 end
 
 local nvim_augroup = function(group_name, definitions)
@@ -196,7 +184,7 @@ do
   end
 end
 
-function display_window(width, height, row, col)
+local function display_window(width, height, row, col)
   if winid == nil or not api.nvim_win_is_valid(winid) then
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
@@ -277,7 +265,7 @@ function M.get_parent_matches(type_patterns)
   return parent_matches
 end
 
-function M.update_context()
+function M.update_context(update_gutter_width)
   if api.nvim_get_option('buftype') ~= '' or
       vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
     M.close()
@@ -307,7 +295,7 @@ function M.update_context()
   end
 
   if #context_nodes ~= 0 then
-    M.open()
+    M.open(update_gutter_width)
   else
     M.close()
   end
@@ -337,7 +325,7 @@ do
       vim.defer_fn(async_wrap(function()
         local status, err = pcall(M.update_context)
 
-        if err then
+        if not status then
           print('Failed to get context: ' .. err)
         end
 
@@ -362,7 +350,7 @@ function M.close()
   winid = nil
 end
 
-function M.open()
+function M.open(update_gutter_width)
   if #context_nodes == 0 then return end
   if context_nodes == previous_nodes then return end
 
@@ -370,7 +358,10 @@ function M.open()
 
   local saved_bufnr = api.nvim_get_current_buf()
 
-  local gutter_width = get_gutter_width()
+  if update_gutter_width then
+    gutter_width = get_gutter_width()
+  end
+
   local win_width = api.nvim_win_get_width(0) - gutter_width
   local win_height = #context_nodes
 
@@ -427,13 +418,14 @@ function M.open()
     local current_node = context_nodes[i]
     local range = context_ranges[i]
     local indents = context_indents[i]
+    local lines = context_lines[i]
 
     local start_row = range[1]
     local start_col = range[2]
     local end_row   = range[3]
     local end_col   = range[4]
 
-    local target_node = get_target_node(current_node)
+    local target_node = get_target_node()
 
     local start_row_absolute = current_node:start()
 
@@ -469,8 +461,8 @@ function M.open()
           -- we replace "\n" with " "
           offset = intended_start_row
           -- Add the length of each precending lines
-          for i = 1, intended_start_row do
-            offset = offset + #lines[i] - indents[i]
+          for j = 1, intended_start_row do
+            offset = offset + #lines[j] - indents[j]
           end
           -- Remove the indentation negative offset for current line
           offset = offset - (indents[intended_start_row + 1])
@@ -493,7 +485,7 @@ end
 function M.enable()
   nvim_augroup('treesitter_context', {
     {'WinScrolled', '*',                   'silent lua require("treesitter-context").update_context()'},
-    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").update_context()'},
+    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").update_context(true)'},
     {'CursorMoved', '*',                   'silent lua require("treesitter-context").do_au_cursor_moved_vertical()'},
     {'BufEnter',    '*',                   'silent lua require("treesitter-context").update_context()'},
     {'WinEnter',    '*',                   'silent lua require("treesitter-context").update_context()'},
