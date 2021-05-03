@@ -206,7 +206,7 @@ local M = {}
 function M.do_au_cursor_moved_vertical()
   if cursor_moved_vertical() then
     log_message({'cursor_moved_vertical'})
-    vim.cmd [[doautocmd User CursorMovedVertical]]
+    vim.cmd [[doautocmd <nomodeline> User CursorMovedVertical]]
   end
 end
 
