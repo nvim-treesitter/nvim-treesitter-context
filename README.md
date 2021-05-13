@@ -22,7 +22,7 @@ behavior is to update its content on `CursorMoved`.
 
 ## Commands
 
-`TSContextEnable` and `TSContextDisable`.
+`TSContextEnable`, `TSContextDisable` and `TSContextToggle`.
 
 ## Appearance
 
