@@ -40,6 +40,7 @@ local INDENT_PATTERN = '^%s+'
 
 -- Script variables
 
+local enabled = nil
 local winid = nil
 local bufnr = api.nvim_create_buf(false, true)
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
@@ -484,12 +485,22 @@ function M.enable()
   })
 
   M.throttled_update_context()
+  enabled = true
 end
 
 function M.disable()
   nvim_augroup('treesitter_context', {})
 
   M.close()
+  enabled = false
+end
+
+function M.toggleEnabled()
+    if enabled then
+        M.disable()
+    else
+        M.enable()
+    end
 end
 
 -- Setup
@@ -498,6 +509,7 @@ M.enable()
 
 api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable()')
 api.nvim_command('command! TSContextDisable lua require("treesitter-context").disable()')
+api.nvim_command('command! TSContextToggle  lua require("treesitter-context").toggleEnabled()')
 api.nvim_command('highlight default link TreesitterContext NormalFloat')
 
 return M
