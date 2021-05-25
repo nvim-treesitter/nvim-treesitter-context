@@ -5,6 +5,7 @@ local Highlighter = vim.treesitter.highlighter
 local parsers = require'nvim-treesitter.parsers'
 local utils = require'treesitter-context.utils'
 local slice = utils.slice
+local config = require'treesitter-context.config'.config
 
 local ffi = require("ffi")
 ffi.cdef'int curwin_col_off(void);'
@@ -505,7 +506,9 @@ end
 
 -- Setup
 
-M.enable()
+if config.enable then
+    M.enable()
+end
 
 api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable()')
 api.nvim_command('command! TSContextDisable lua require("treesitter-context").disable()')

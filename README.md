@@ -20,6 +20,16 @@ This plugins uses the new neovim `WinScrolled` event when available to update it
 context window. Make sure to have a recent neovim build to get this behavior. The fallback
 behavior is to update its content on `CursorMoved`.
 
+## Configuration
+
+(Default values are shown below)
+
+```lua
+require'treesitter-context.config'.setup{
+    enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
+}
+```
+
 ## Commands
 
 `TSContextEnable`, `TSContextDisable` and `TSContextToggle`.
