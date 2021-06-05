@@ -188,6 +188,7 @@ local function display_window(width, height, row, col)
       focusable = false,
       style = 'minimal',
     })
+    api.nvim_win_set_var(winid, 'treesitter_context', true)
   else
     api.nvim_win_set_config(winid, {
       win = api.nvim_get_current_win(),
