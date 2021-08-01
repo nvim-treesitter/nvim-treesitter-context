@@ -295,38 +295,21 @@ function M.update_context()
   end
 end
 
-local async_wrap = function(f)
-  local wrapped = function(...)
-    local handle
-    handle = vim.loop.new_async(vim.schedule_wrap(function(...)
-      f(...)
-      handle:close()
-    end))
-    handle:send(...)
-  end
-
-  return wrapped
-end
-
 do
   local running = false
-  local timer
 
   function M.throttled_update_context()
-    if running == false then
-      running = true
+    if running then return end
+    running = true
+    vim.defer_fn(function()
+      local status, err = pcall(M.update_context)
 
-      vim.defer_fn(async_wrap(function()
-        local status, err = pcall(M.update_context)
+      if not status then
+        print('Failed to get context: ' .. err)
+      end
 
-        if not status then
-          print('Failed to get context: ' .. err)
-        end
-
-        running = false
-        if timer then timer:close() end
-      end), 400)
-    end
+      running = false
+    end, 100)
   end
 end
 
@@ -475,11 +458,11 @@ end
 
 function M.enable()
   nvim_augroup('treesitter_context', {
-    {'WinScrolled', '*',                   'silent lua require("treesitter-context").update_context()'},
-    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").update_context()'},
+    {'WinScrolled', '*',                   'silent lua require("treesitter-context").throttled_update_context()'},
+    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").throttled_update_context()'},
     {'CursorMoved', '*',                   'silent lua require("treesitter-context").do_au_cursor_moved_vertical()'},
-    {'BufEnter',    '*',                   'silent lua require("treesitter-context").update_context()'},
-    {'WinEnter',    '*',                   'silent lua require("treesitter-context").update_context()'},
+    {'BufEnter',    '*',                   'silent lua require("treesitter-context").throttled_update_context()'},
+    {'WinEnter',    '*',                   'silent lua require("treesitter-context").throttled_update_context()'},
     {'WinLeave',    '*',                   'silent lua require("treesitter-context").close()'},
     {'VimResized',  '*',                   'silent lua require("treesitter-context").open()'},
     {'User',        'SessionSavePre',      'silent lua require("treesitter-context").close()'},
