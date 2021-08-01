@@ -5,7 +5,13 @@ local Highlighter = vim.treesitter.highlighter
 local parsers = require'nvim-treesitter.parsers'
 local utils = require'treesitter-context.utils'
 local slice = utils.slice
-local config = require'treesitter-context.config'.config
+
+local defaultConfig = {
+  enable = true,
+  throttle = false,
+}
+
+local config = {}
 
 local ffi = require("ffi")
 ffi.cdef'int curwin_col_off(void);'
@@ -208,7 +214,6 @@ local M = {}
 
 function M.do_au_cursor_moved_vertical()
   if cursor_moved_vertical() then
-    log_message({'cursor_moved_vertical'})
     vim.cmd [[doautocmd <nomodeline> User CursorMovedVertical]]
   end
 end
@@ -457,12 +462,13 @@ function M.open()
 end
 
 function M.enable()
+  local throttle = config.throttle and 'throttled_' or ''
   nvim_augroup('treesitter_context', {
-    {'WinScrolled', '*',                   'silent lua require("treesitter-context").throttled_update_context()'},
-    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").throttled_update_context()'},
+    {'WinScrolled', '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
+    {'BufEnter',    '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
+    {'WinEnter',    '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
+    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
     {'CursorMoved', '*',                   'silent lua require("treesitter-context").do_au_cursor_moved_vertical()'},
-    {'BufEnter',    '*',                   'silent lua require("treesitter-context").throttled_update_context()'},
-    {'WinEnter',    '*',                   'silent lua require("treesitter-context").throttled_update_context()'},
     {'WinLeave',    '*',                   'silent lua require("treesitter-context").close()'},
     {'VimResized',  '*',                   'silent lua require("treesitter-context").open()'},
     {'User',        'SessionSavePre',      'silent lua require("treesitter-context").close()'},
@@ -490,9 +496,17 @@ end
 
 -- Setup
 
-if config.enable then
+function M.setup(options)
+  config = vim.tbl_deep_extend("force", {}, defaultConfig, options or {})
+
+  if config.enable then
     M.enable()
+  else
+    M.disable()
+  end
 end
+
+M.setup()
 
 api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable()')
 api.nvim_command('command! TSContextDisable lua require("treesitter-context").disable()')

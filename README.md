@@ -25,8 +25,9 @@ behavior is to update its content on `CursorMoved`.
 (Default values are shown below)
 
 ```lua
-require'treesitter-context.config'.setup{
+require'treesitter-context'.setup{
     enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
+    throttle = true, -- Throttles plugin updates (may improve performance)
 }
 ```
 
