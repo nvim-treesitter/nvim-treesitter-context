@@ -193,6 +193,7 @@ local function display_window(width, height, row, col)
       col = col,
       focusable = false,
       style = 'minimal',
+      noautocmd = true,
     })
     api.nvim_win_set_var(winid, 'treesitter_context', true)
   else
