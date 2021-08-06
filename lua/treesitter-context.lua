@@ -4,7 +4,10 @@ local Highlighter = vim.treesitter.highlighter
 -- local ts_query = require('nvim-treesitter.query')
 local parsers = require'nvim-treesitter.parsers'
 local utils = require'treesitter-context.utils'
+local len = utils.len
 local slice = utils.slice
+local slice_right = utils.slice_right
+local word_pattern = utils.word_pattern
 
 local defaultConfig = {
   enable = true,
@@ -30,7 +33,7 @@ local last_types = {
   },
 }
 
-local TYPE_PATTERNS = {
+local TYPE_PATTERNS = vim.tbl_map(word_pattern, {
   -- These catch most generic groups, eg "function_declaration" or "function_block"
   'class',
   'function',
@@ -42,7 +45,7 @@ local TYPE_PATTERNS = {
   'case',
   -- There are more specific
   'impl_item', -- Rust
-}
+})
 local INDENT_PATTERN = '^%s+'
 
 -- Script variables
@@ -54,11 +57,16 @@ local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local context_nodes = {}
 local context_types = {}
 local previous_nodes = nil
+local current_height = 0
 
 
 -- Helper functions
 local log_message = function(value)
   api.nvim_command('echom ' .. vim.fn.json_encode(value))
+end
+
+local function get_first_visible_line()
+  return api.nvim_call_function('line', { 'w0' }) + current_height
 end
 
 local get_target_node = function()
@@ -128,6 +136,26 @@ local get_text_for_node = function(node, type)
 
   return lines, range
 end
+
+local function get_node_at_position(line, column)
+  local position_range = { line - 1, column }
+  local root = ts_utils.get_root_for_position(unpack(position_range))
+
+  if not root then
+    return
+  end
+
+  return root:named_descendant_for_range(position_range[1], position_range[2], position_range[1], position_range[2])
+end
+
+local function get_first_context_node()
+  local line = get_first_visible_line()
+  local text = api.nvim_buf_get_lines(0, line, line + 1, false)[1]
+  local column = 1
+
+  return get_node_at_position(line, column)
+end
+
 
 -- Merge lines, removing the indentation after 1st line
 local merge_lines = function(lines)
@@ -223,11 +251,11 @@ function M.get_context(opts)
   local options = opts or {}
   local type_patterns = options.type_patterns or TYPE_PATTERNS
 
-  local cursor_node = ts_utils.get_node_at_cursor()
-  if not cursor_node then return nil end
+  local current_node = get_first_context_node()
+  if not current_node then return nil end
 
   local matches = {}
-  local expr = cursor_node
+  local expr = current_node
 
   while expr do
     local is_match, type = is_valid(expr, type_patterns)
@@ -250,12 +278,13 @@ function M.get_parent_matches(type_patterns)
   -- FIXME: use TS queries when possible
   -- local matches = ts_query.get_capture_matches(0, '@scope.node', 'locals')
 
-  local current = ts_utils.get_node_at_cursor()
+  local current = get_first_context_node()
   if not current then return end
 
   local parent_matches = {}
   while current ~= nil do
-    if is_valid(current, type_patterns) then
+    local position = {current:start()}
+    if is_valid(current, type_patterns) and position[1] > 0 then
       table.insert(parent_matches, current)
     end
     current = current:parent()
@@ -277,7 +306,7 @@ function M.update_context()
   context_types = {}
 
   if context then
-    local first_visible_line = api.nvim_call_function('line', { 'w0' })
+    local first_visible_line = get_first_visible_line()
     local last_row = -1
 
     for i = #context, 1, -1 do
@@ -320,6 +349,7 @@ end
 
 function M.close()
   previous_nodes = nil
+  current_height = 0
 
   if winid ~= nil and api.nvim_win_is_valid(winid) then
     -- Can't close other windows when the command-line window is open
@@ -334,15 +364,30 @@ end
 
 function M.open()
   if #context_nodes == 0 then return end
-  if context_nodes == previous_nodes then return end
 
-  previous_nodes = context_nodes
+  local displayed_nodes = context_nodes
+
+  local first_node_end = { get_first_context_node():end_() }
+  local available_lines =
+    math.min(
+      first_node_end[1] - api.nvim_call_function('line', { 'w0' }),
+      vim.fn.winline() - 1
+    )
+
+  if #displayed_nodes > available_lines then
+    local length = available_lines == 0 and 1 or available_lines
+    displayed_nodes = slice_right(displayed_nodes, length)
+  end
+
+  if displayed_nodes == previous_nodes then return end
+  previous_nodes = displayed_nodes
+  current_height = #displayed_nodes
 
   local saved_bufnr = api.nvim_get_current_buf()
 
   local gutter_width = get_gutter_width()
   local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
-  local win_height = math.max(1, #context_nodes)
+  local win_height = math.max(1, #displayed_nodes)
 
   display_window(win_width, win_height, 0, gutter_width)
 
@@ -353,8 +398,8 @@ function M.open()
   local context_text = {}
   local context_indents = {}
 
-  for i in ipairs(context_nodes) do
-    local lines, range = get_text_for_node(context_nodes[i])
+  for i in ipairs(displayed_nodes) do
+    local lines, range = get_text_for_node(displayed_nodes[i])
     local text = merge_lines(lines)
     local indents = get_indents(lines)
     table.insert(context_lines, lines)
@@ -393,8 +438,8 @@ function M.open()
     return
   end
 
-  for i in ipairs(context_nodes) do
-    local current_node = context_nodes[i]
+  for i in ipairs(displayed_nodes) do
+    local current_node = displayed_nodes[i]
     local range = context_ranges[i]
     local indents = context_indents[i]
     local lines = context_lines[i]
