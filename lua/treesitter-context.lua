@@ -33,8 +33,8 @@ local last_types = {
   },
 }
 
-local TYPE_PATTERNS = vim.tbl_map(word_pattern, {
   -- These catch most generic groups, eg "function_declaration" or "function_block"
+local TYPE_PATTERNS = vim.tbl_map(word_pattern, {
   'class',
   'function',
   'method',
@@ -43,9 +43,18 @@ local TYPE_PATTERNS = vim.tbl_map(word_pattern, {
   'if',
   'switch',
   'case',
-  -- There are more specific
-  'impl_item', -- Rust
 })
+-- There are language-specific
+local TYPE_PATTERNS_BY_FILETYPE = {
+  rust = vim.tbl_map(word_pattern, {
+    'impl_item',
+  }),
+  vhdl = vim.tbl_map(word_pattern, {
+    'process_statement',
+    'architecture_body',
+    'entity_declaration',
+  }),
+}
 local INDENT_PATTERN = '^%s+'
 
 -- Script variables
@@ -74,11 +83,19 @@ local get_target_node = function()
   return tree:root()
 end
 
-local is_valid = function(node, type_patterns)
+local is_valid = function(node, type_patterns, filetype)
   local node_type = node:type()
   for _, rgx in ipairs(type_patterns) do
     if node_type:find(rgx) then
       return true, rgx
+    end
+  end
+  local filetype_patterns = TYPE_PATTERNS_BY_FILETYPE[filetype]
+  if filetype_patterns ~= nil then
+    for _, rgx in ipairs(filetype_patterns) do
+      if node_type:find(rgx) then
+        return true, rgx
+      end
     end
   end
   return false
@@ -258,8 +275,9 @@ function M.get_context(opts)
   local matches = {}
   local expr = current_node
 
+  local filetype = api.nvim_buf_get_option(0, 'filetype')
   while expr do
-    local is_match, type = is_valid(expr, type_patterns)
+    local is_match, type = is_valid(expr, type_patterns, filetype)
     if is_match then
       table.insert(matches, 1, {expr, type})
     end
@@ -283,9 +301,10 @@ function M.get_parent_matches(type_patterns)
   if not current then return end
 
   local parent_matches = {}
+  local filetype = api.nvim_buf_get_option(0, 'filetype')
   while current ~= nil do
     local position = {current:start()}
-    if is_valid(current, type_patterns) and position[1] > 0 then
+    if is_valid(current, type_patterns, filetype) and position[1] > 0 then
       table.insert(parent_matches, current)
     end
     current = current:parent()
