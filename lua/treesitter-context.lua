@@ -5,6 +5,7 @@ local Highlighter = vim.treesitter.highlighter
 local parsers = require'nvim-treesitter.parsers'
 local utils = require'treesitter-context.utils'
 local slice = utils.slice
+local word_pattern = utils.word_pattern
 
 local defaultConfig = {
   enable = true,
