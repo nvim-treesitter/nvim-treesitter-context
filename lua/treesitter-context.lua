@@ -287,6 +287,10 @@ function M.get_parent_matches(type_patterns)
 end
 
 function M.update_context()
+  if not enabled then
+    return
+  end
+
   if api.nvim_get_option('buftype') ~= '' or
       vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
     M.close()
