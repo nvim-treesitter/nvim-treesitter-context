@@ -10,6 +10,7 @@ local word_pattern = utils.word_pattern
 local defaultConfig = {
   enable = true,
   throttle = false,
+  max_lines = 0, -- no limit
 }
 
 local config = {}
@@ -360,11 +361,18 @@ function M.open()
 
   previous_nodes = context_nodes
 
+  local context_nodes_trimmed = context_nodes
+  local max_lines = config.max_lines
+  if max_lines > 0 then
+    -- get the last `max_lines` items
+    context_nodes_trimmed = vim.list_slice(context_nodes, math.max(1, #context_nodes - max_lines + 1), #context_nodes)
+  end
+
   local saved_bufnr = api.nvim_get_current_buf()
 
   local gutter_width = get_gutter_width()
   local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
-  local win_height = math.max(1, #context_nodes)
+  local win_height = math.max(1, #context_nodes_trimmed)
 
   display_window(win_width, win_height, 0, gutter_width)
 
@@ -375,8 +383,8 @@ function M.open()
   local context_text = {}
   local context_indents = {}
 
-  for i in ipairs(context_nodes) do
-    local lines, range = get_text_for_node(context_nodes[i])
+  for i in ipairs(context_nodes_trimmed) do
+    local lines, range = get_text_for_node(context_nodes_trimmed[i])
     local text = merge_lines(lines)
     local indents = get_indents(lines)
     table.insert(context_lines, lines)
@@ -415,8 +423,8 @@ function M.open()
     return
   end
 
-  for i in ipairs(context_nodes) do
-    local current_node = context_nodes[i]
+  for i in ipairs(context_nodes_trimmed) do
+    local current_node = context_nodes_trimmed[i]
     local range = context_ranges[i]
     local indents = context_indents[i]
     local lines = context_lines[i]
