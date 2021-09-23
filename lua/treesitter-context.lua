@@ -276,10 +276,27 @@ function M.get_parent_matches(type_patterns)
 
   local parent_matches = {}
   local filetype = api.nvim_buf_get_option(0, 'filetype')
+  local lines = 0
+  local last_row = -1
+  local first_visible_line = api.nvim_call_function('line', { 'w0' })
+
   while current ~= nil do
     local position = {current:start()}
-    if is_valid(current, type_patterns, filetype) and position[1] > 0 then
+    local row = position[1]
+
+    if is_valid(current, type_patterns, filetype)
+        and row > 0
+        and row < (first_visible_line - 1)
+        and row ~= last_row then
       table.insert(parent_matches, current)
+
+      if row ~= last_row then
+        lines = lines + 1
+        last_row = position[1]
+      end
+      if config.max_lines > 0 and lines >= config.max_lines then
+        break
+      end
     end
     current = current:parent()
   end
@@ -300,19 +317,13 @@ function M.update_context()
   context_types = {}
 
   if context then
-    local first_visible_line = api.nvim_call_function('line', { 'w0' })
-    local last_row = -1
 
     for i = #context, 1, -1 do
       local node = context[i]
       local type = get_type_pattern(node, TYPE_PATTERNS) or node:type()
-      local row = node:start()
 
-      if row < (first_visible_line - 1) and row ~= last_row then
-        table.insert(context_nodes, node)
-        table.insert(context_types, type)
-        last_row = row
-      end
+      table.insert(context_nodes, node)
+      table.insert(context_types, type)
     end
   end
 
@@ -361,18 +372,11 @@ function M.open()
 
   previous_nodes = context_nodes
 
-  local context_nodes_trimmed = context_nodes
-  local max_lines = config.max_lines
-  if max_lines > 0 then
-    -- get the last `max_lines` items
-    context_nodes_trimmed = vim.list_slice(context_nodes, math.max(1, #context_nodes - max_lines + 1), #context_nodes)
-  end
-
   local saved_bufnr = api.nvim_get_current_buf()
 
   local gutter_width = get_gutter_width()
   local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
-  local win_height = math.max(1, #context_nodes_trimmed)
+  local win_height = math.max(1, #context_nodes)
 
   display_window(win_width, win_height, 0, gutter_width)
 
@@ -383,8 +387,8 @@ function M.open()
   local context_text = {}
   local context_indents = {}
 
-  for i in ipairs(context_nodes_trimmed) do
-    local lines, range = get_text_for_node(context_nodes_trimmed[i])
+  for i in ipairs(context_nodes) do
+    local lines, range = get_text_for_node(context_nodes[i])
     local text = merge_lines(lines)
     local indents = get_indents(lines)
     table.insert(context_lines, lines)
@@ -423,8 +427,8 @@ function M.open()
     return
   end
 
-  for i in ipairs(context_nodes_trimmed) do
-    local current_node = context_nodes_trimmed[i]
+  for i in ipairs(context_nodes) do
+    local current_node = context_nodes[i]
     local range = context_ranges[i]
     local indents = context_indents[i]
     local lines = context_lines[i]
