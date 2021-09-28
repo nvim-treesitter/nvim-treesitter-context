@@ -10,6 +10,7 @@ local word_pattern = utils.word_pattern
 local defaultConfig = {
   enable = true,
   throttle = false,
+  max_lines = 0, -- no limit
 }
 
 local config = {}
@@ -275,10 +276,27 @@ function M.get_parent_matches(type_patterns)
 
   local parent_matches = {}
   local filetype = api.nvim_buf_get_option(0, 'filetype')
+  local lines = 0
+  local last_row = -1
+  local first_visible_line = api.nvim_call_function('line', { 'w0' })
+
   while current ~= nil do
     local position = {current:start()}
-    if is_valid(current, type_patterns, filetype) and position[1] > 0 then
+    local row = position[1]
+
+    if is_valid(current, type_patterns, filetype)
+        and row > 0
+        and row < (first_visible_line - 1)
+        and row ~= last_row then
       table.insert(parent_matches, current)
+
+      if row ~= last_row then
+        lines = lines + 1
+        last_row = position[1]
+      end
+      if config.max_lines > 0 and lines >= config.max_lines then
+        break
+      end
     end
     current = current:parent()
   end
@@ -299,19 +317,13 @@ function M.update_context()
   context_types = {}
 
   if context then
-    local first_visible_line = api.nvim_call_function('line', { 'w0' })
-    local last_row = -1
 
     for i = #context, 1, -1 do
       local node = context[i]
       local type = get_type_pattern(node, TYPE_PATTERNS) or node:type()
-      local row = node:start()
 
-      if row < (first_visible_line - 1) and row ~= last_row then
-        table.insert(context_nodes, node)
-        table.insert(context_types, type)
-        last_row = row
-      end
+      table.insert(context_nodes, node)
+      table.insert(context_types, type)
     end
   end
 
