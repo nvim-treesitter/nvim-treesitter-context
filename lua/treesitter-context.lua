@@ -32,27 +32,27 @@ local last_types = {
   },
 }
 
-  -- These catch most generic groups, eg "function_declaration" or "function_block"
-local TYPE_PATTERNS = vim.tbl_map(word_pattern, {
-  'class',
-  'function',
-  'method',
-  'for',
-  'while',
-  'if',
-  'switch',
-  'case',
-})
 -- There are language-specific
-local TYPE_PATTERNS_BY_FILETYPE = {
-  rust = vim.tbl_map(word_pattern, {
+local DEFAULT_TYPE_PATTERNS = {
+  -- These catch most generic groups, eg "function_declaration" or "function_block"
+  default = {
+    'class',
+    'function',
+    'method',
+    'for',
+    'while',
+    'if',
+    'switch',
+    'case',
+  },
+  rust = {
     'impl_item',
-  }),
-  vhdl = vim.tbl_map(word_pattern, {
+  },
+  vhdl = {
     'process_statement',
     'architecture_body',
     'entity_declaration',
-  }),
+  },
 }
 local INDENT_PATTERN = '^%s+'
 
@@ -77,14 +77,14 @@ local get_target_node = function()
   return tree:root()
 end
 
-local is_valid = function(node, type_patterns, filetype)
+local is_valid = function(node, filetype)
   local node_type = node:type()
-  for _, rgx in ipairs(type_patterns) do
+  for _, rgx in ipairs(config.patterns.default) do
     if node_type:find(rgx) then
       return true, rgx
     end
   end
-  local filetype_patterns = TYPE_PATTERNS_BY_FILETYPE[filetype]
+  local filetype_patterns = config.patterns[filetype]
   if filetype_patterns ~= nil then
     for _, rgx in ipairs(filetype_patterns) do
       if node_type:find(rgx) then
@@ -230,7 +230,9 @@ end
 
 -- Exports
 
-local M = {}
+local M = {
+  config = config,
+}
 
 function M.do_au_cursor_moved_vertical()
   if cursor_moved_vertical() then
@@ -241,7 +243,6 @@ end
 function M.get_context(opts)
   if not parsers.has_parser() then return nil end
   local options = opts or {}
-  local type_patterns = options.type_patterns or TYPE_PATTERNS
 
   local cursor_node = ts_utils.get_node_at_cursor()
   if not cursor_node then return nil end
@@ -251,7 +252,7 @@ function M.get_context(opts)
 
   local filetype = api.nvim_buf_get_option(0, 'filetype')
   while expr do
-    local is_match, type = is_valid(expr, type_patterns, filetype)
+    local is_match, type = is_valid(expr, filetype)
     if is_match then
       table.insert(matches, 1, {expr, type})
     end
@@ -265,7 +266,7 @@ function M.get_context(opts)
   return matches
 end
 
-function M.get_parent_matches(type_patterns)
+function M.get_parent_matches()
   if not parsers.has_parser() then return nil end
 
   -- FIXME: use TS queries when possible
@@ -284,7 +285,7 @@ function M.get_parent_matches(type_patterns)
     local position = {current:start()}
     local row = position[1]
 
-    if is_valid(current, type_patterns, filetype)
+    if is_valid(current, filetype)
         and row > 0
         and row < (first_visible_line - 1)
         and row ~= last_row then
@@ -311,7 +312,7 @@ function M.update_context()
     return
   end
 
-  local context = M.get_parent_matches(TYPE_PATTERNS)
+  local context = M.get_parent_matches()
 
   context_nodes = {}
   context_types = {}
@@ -320,7 +321,7 @@ function M.update_context()
 
     for i = #context, 1, -1 do
       local node = context[i]
-      local type = get_type_pattern(node, TYPE_PATTERNS) or node:type()
+      local type = get_type_pattern(node, config.patterns.default) or node:type()
 
       table.insert(context_nodes, node)
       table.insert(context_types, type)
@@ -531,7 +532,15 @@ end
 -- Setup
 
 function M.setup(options)
-  config = vim.tbl_deep_extend("force", {}, defaultConfig, options or {})
+  local userOptions = options or {}
+
+  config = vim.tbl_deep_extend("force", {}, defaultConfig, userOptions)
+  config.patterns =
+    vim.tbl_deep_extend("force", {}, DEFAULT_TYPE_PATTERNS, userOptions.patterns or {})
+
+  for filetype, patterns in pairs(config.patterns) do
+    config.patterns[filetype] = vim.tbl_map(word_pattern, patterns)
+  end
 
   if config.enable then
     M.enable()
