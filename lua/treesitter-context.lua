@@ -496,7 +496,7 @@ function M.open()
   end
 end
 
-function M.enable()
+function M.enable(update)
   local throttle = config.throttle and 'throttled_' or ''
   nvim_augroup('treesitter_context', {
     {'WinScrolled', '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
@@ -510,7 +510,10 @@ function M.enable()
     {'User',        'SessionSavePost',     'silent lua require("treesitter-context").open()'},
   })
 
-  M.throttled_update_context()
+  if update then
+    M.throttled_update_context()
+  end
+
   enabled = true
 end
 
@@ -525,7 +528,7 @@ function M.toggleEnabled()
     if enabled then
         M.disable()
     else
-        M.enable()
+        M.enable(true)
     end
 end
 
@@ -543,7 +546,7 @@ function M.setup(options)
   end
 
   if config.enable then
-    M.enable()
+    M.enable(false)
   else
     M.disable()
   end
@@ -551,7 +554,7 @@ end
 
 M.setup()
 
-api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable()')
+api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable(true)')
 api.nvim_command('command! TSContextDisable lua require("treesitter-context").disable()')
 api.nvim_command('command! TSContextToggle  lua require("treesitter-context").toggleEnabled()')
 api.nvim_command('highlight default link TreesitterContext NormalFloat')
