@@ -58,6 +58,7 @@ local INDENT_PATTERN = '^%s+'
 
 -- Script variables
 
+local didSetup = false
 local enabled = nil
 local winid = nil
 local bufnr = api.nvim_create_buf(false, true)
@@ -498,7 +499,7 @@ end
 
 function M.enable()
   local throttle = config.throttle and 'throttled_' or ''
-  nvim_augroup('treesitter_context', {
+  nvim_augroup('treesitter_context_update', {
     {'WinScrolled', '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
     {'BufEnter',    '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
     {'WinEnter',    '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
@@ -515,7 +516,7 @@ function M.enable()
 end
 
 function M.disable()
-  nvim_augroup('treesitter_context', {})
+  nvim_augroup('treesitter_context_update', {})
 
   M.close()
   enabled = false
@@ -529,9 +530,17 @@ function M.toggleEnabled()
     end
 end
 
+function M.onVimEnter()
+  if didSetup then return end
+  -- Setup with default options if user didn't call setup()
+  M.setup()
+end
+
 -- Setup
 
 function M.setup(options)
+  didSetup = true
+
   local userOptions = options or {}
 
   config = vim.tbl_deep_extend("force", {}, defaultConfig, userOptions)
@@ -549,11 +558,14 @@ function M.setup(options)
   end
 end
 
-M.setup()
-
 api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable()')
 api.nvim_command('command! TSContextDisable lua require("treesitter-context").disable()')
 api.nvim_command('command! TSContextToggle  lua require("treesitter-context").toggleEnabled()')
+
 api.nvim_command('highlight default link TreesitterContext NormalFloat')
+
+nvim_augroup('treesitter_context', {
+  {'VimEnter', '*', 'lua require("treesitter-context").onVimEnter()'},
+})
 
 return M
