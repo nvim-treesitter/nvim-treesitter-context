@@ -23,7 +23,7 @@ ffi.cdef'int curwin_col_off(void);'
 -- Tells us at which node type to stop when highlighting a multi-line
 -- node. If not specified, the highlighting stops after the first line.
 local last_types = {
-  ['function'] = {
+  [word_pattern('function')] = {
     c = 'function_declarator',
     cpp = 'function_declarator',
     lua = 'parameters',
@@ -106,7 +106,23 @@ local get_type_pattern = function(node, type_patterns)
   return nil
 end
 
-local get_text_for_node = function(node, type)
+local function find_node(node, type)
+  local children = ts_utils.get_named_children(node)
+  for _, child in ipairs(children) do
+    if child:type() == type then
+      return child
+    end
+  end
+  for _, child in ipairs(children) do
+    local deep_child = find_node(child, type)
+    if deep_child ~= nil then
+      return deep_child
+    end
+  end
+  return nil
+end
+
+local get_text_for_node = function(node)
   local start_row, start_col = node:start()
   local end_row, end_col     = node:end_()
 
@@ -117,24 +133,22 @@ local get_text_for_node = function(node, type)
   end
   start_col = 0
 
+  local type = get_type_pattern(node, config.patterns.default) or node:type()
   local filetype = api.nvim_buf_get_option(0, 'filetype')
   local last_type = (last_types[type] or {})[filetype]
   local last_position = nil
 
   if last_type ~= nil then
-    for child, _ in node:iter_children() do
-      local ctype = child:type()
+    local child = find_node(node, last_type)
 
-      if ctype == last_type then
-        last_position = {child:end_()}
+    if child ~= nil then
+      last_position = {child:end_()}
 
-        end_row = last_position[1]
-        end_col = last_position[2]
-        local last_index = end_row - start_row
-        lines = slice(lines, 1, last_index + 1)
-        lines[#lines] = slice(lines[#lines], 1, end_col)
-        break
-      end
+      end_row = last_position[1]
+      end_col = last_position[2]
+      local last_index = end_row - start_row
+      lines = slice(lines, 1, last_index + 1)
+      lines[#lines] = slice(lines[#lines], 1, end_col)
     end
   end
 
