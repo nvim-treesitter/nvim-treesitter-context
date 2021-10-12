@@ -294,27 +294,67 @@ function M.get_parent_matches()
   local filetype = api.nvim_buf_get_option(0, 'filetype')
   local lines = 0
   local last_row = -1
-  local first_visible_line = api.nvim_call_function('line', { 'w0' })
+  local current_line = api.nvim_call_function('line', { '.' }) - 1
+  local first_visible_line = api.nvim_call_function('line', { 'w0' }) - 1
+  local capacity = current_line - first_visible_line
+  local is_full = false
+  local n_visible = 0
 
   while current ~= nil do
+    if lines >= capacity then
+      is_full = true
+      break
+    end
+
     local position = {current:start()}
     local row = position[1]
 
     if is_valid(current, filetype)
-        and row > 0
-        and row < (first_visible_line - 1)
-        and row ~= last_row then
-      table.insert(parent_matches, current)
+      and row > 0
+      and row ~= last_row then
 
-      if row ~= last_row then
+      if row < current_line then
+        if row >= first_visible_line then
+          n_visible = n_visible + 1
+        end
+        table.insert(parent_matches, current)
+      end
+
+      if row < first_visible_line then
         lines = lines + 1
         last_row = position[1]
       end
       if config.max_lines > 0 and lines >= config.max_lines then
+        is_full = true
         break
       end
     end
     current = current:parent()
+  end
+
+  first_visible_line = first_visible_line + lines
+
+  for i = n_visible, 1, -1 do
+    local position = {parent_matches[i]:start()}
+    local row = position[1]
+
+    if row >= first_visible_line then
+      break
+    end
+
+    if is_full then
+      table.remove(parent_matches)
+    else
+      lines = lines + 1
+      first_visible_line = first_visible_line + 1
+      is_full = lines >= capacity or
+        config.max_lines > 0 and lines >= config.max_lines
+    end
+    n_visible = n_visible - 1
+  end
+
+  for i = 1, n_visible do
+    table.remove(parent_matches, 1)
   end
 
   return parent_matches
