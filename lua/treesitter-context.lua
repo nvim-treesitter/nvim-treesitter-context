@@ -240,6 +240,7 @@ local function display_window(width, height, row, col)
       col = col,
     })
   end
+  api.nvim_win_set_option(winid, 'wrap', false)
   api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
 end
 
