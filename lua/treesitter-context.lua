@@ -10,6 +10,7 @@ local word_pattern = utils.word_pattern
 local defaultConfig = {
   enable = true,
   throttle = false,
+  pin = true,
   max_lines = 0, -- no limit
 }
 
@@ -298,11 +299,12 @@ function M.get_parent_matches()
   local current_line = api.nvim_call_function('line', { '.' }) - 1
   local first_visible_line = api.nvim_call_function('line', { 'w0' }) - 1
   local capacity = current_line - first_visible_line
+  local scroll = 0
   local is_full = false
   local n_visible = 0
 
   while current ~= nil do
-    if lines >= capacity then
+    if lines >= capacity and not config.pin then
       is_full = true
       break
     end
@@ -348,8 +350,10 @@ function M.get_parent_matches()
     else
       lines = lines + 1
       first_visible_line = first_visible_line + 1
-      is_full = lines >= capacity or
-        config.max_lines > 0 and lines >= config.max_lines
+      is_full = config.max_lines > 0 and lines >= config.max_lines
+      if not config.pin then
+        is_full = is_full or lines >= capacity
+      end
     end
     n_visible = n_visible - 1
   end
@@ -358,7 +362,11 @@ function M.get_parent_matches()
     table.remove(parent_matches, 1)
   end
 
-  return parent_matches
+  if config.pin then
+    scroll = lines - capacity
+  end
+
+  return parent_matches, scroll
 end
 
 function M.update_context()
@@ -368,7 +376,7 @@ function M.update_context()
     return
   end
 
-  local context = M.get_parent_matches()
+  local context, scroll = M.get_parent_matches()
 
   context_nodes = {}
   context_types = {}
@@ -385,7 +393,7 @@ function M.update_context()
   end
 
   if #context_nodes ~= 0 then
-    M.open()
+    M.open(scroll)
   else
     M.close()
   end
@@ -423,7 +431,7 @@ function M.close()
   winid = nil
 end
 
-function M.open()
+function M.open(scroll)
   if #context_nodes == 0 then return end
   if context_nodes == previous_nodes then return end
 
@@ -436,6 +444,10 @@ function M.open()
   local win_height = math.max(1, #context_nodes)
 
   display_window(win_width, win_height, 0, gutter_width)
+
+  if scroll and scroll > 0 then
+    vim.cmd('execute "normal! ' .. scroll .. '\\<C-y>"')
+  end
 
   -- Set text
 
