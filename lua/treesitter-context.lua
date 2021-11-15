@@ -61,7 +61,7 @@ local INDENT_PATTERN = '^%s+'
 local didSetup = false
 local enabled = nil
 local winid = nil
-local bufnr = api.nvim_create_buf(false, true)
+local _bufnr = nil -- Don't access directly, use get_buf()
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local context_nodes = {}
 local context_types = {}
@@ -217,8 +217,24 @@ do
   end
 end
 
+local function get_buf()
+  if _bufnr == nil or not api.nvim_buf_is_valid(_bufnr) then
+    _bufnr = api.nvim_create_buf(false, true)
+  end
+  return _bufnr
+end
+
+local function delete_buf()
+  if _bufnr == nil or not api.nvim_buf_is_valid(_bufnr) then
+    return
+  end
+  api.nvim_buf_delete(_bufnr, { force = true })
+  _bufnr = nil
+end
+
 local function display_window(width, height, row, col)
   if winid == nil or not api.nvim_win_is_valid(winid) then
+    local bufnr = get_buf()
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
       width = width,
@@ -413,6 +429,7 @@ function M.open()
     table.insert(context_indents, indents)
   end
 
+  local bufnr = get_buf()
   api.nvim_buf_set_lines(bufnr, 0, -1, false, context_text)
 
   -- api.nvim_command('echom ' .. vim.fn.json_encode({
@@ -531,8 +548,8 @@ end
 
 function M.disable()
   nvim_augroup('treesitter_context_update', {})
-
   M.close()
+  delete_buf()
   enabled = false
 end
 
