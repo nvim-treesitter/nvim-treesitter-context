@@ -225,10 +225,9 @@ local function get_buf()
 end
 
 local function delete_buf()
-  if _bufnr == nil or not api.nvim_buf_is_valid(_bufnr) then
-    return
+  if _bufnr ~= nil and api.nvim_buf_is_valid(_bufnr) then
+    api.nvim_buf_delete(_bufnr, { force = true })
   end
-  api.nvim_buf_delete(_bufnr, { force = true })
   _bufnr = nil
 end
 
