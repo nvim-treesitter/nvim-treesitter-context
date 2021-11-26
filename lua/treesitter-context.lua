@@ -318,14 +318,22 @@ local function get_parent_matches()
   local last_row = -1
   local topline = vim.fn.line('w0')
 
-  while node do
-    local row = node:start()
+   -- save nodes in a table to iterate from top to bottom
+  local parents = {}
+  while node ~= nil do
+    parents[#parents+1] = node
+    node = node:parent()
+  end
 
-    if is_valid(node, vim.bo.filetype)
+ for i = #parents, 1, -1 do
+    local parent = parents[i]
+    local row = parent:start()
+
+    if is_valid(parent, vim.bo.filetype)
         and row > 0
-        and row < (topline - 1)
+        and row < (topline + #parent_matches - 1)
         and row ~= last_row then
-      table.insert(parent_matches, node)
+      table.insert(parent_matches, 1, parent)
 
       if row ~= last_row then
         lines = lines + 1
@@ -336,7 +344,6 @@ local function get_parent_matches()
         break
       end
     end
-    node = node:parent()
   end
 
   return reverse_table(parent_matches)
