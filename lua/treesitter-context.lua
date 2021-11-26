@@ -296,15 +296,23 @@ function M.get_parent_matches()
   local last_row = -1
   local first_visible_line = api.nvim_call_function('line', { 'w0' })
 
+  -- save nodes in a table to iterate from top to bottom
+  local parents = {}
   while current ~= nil do
-    local position = {current:start()}
+    parents[#parents+1] = current
+    current = current:parent()
+  end
+
+  for i = #parents, 1, -1 do
+    local parent = parents[i]
+    local position = {parent:start()}
     local row = position[1]
 
-    if is_valid(current, filetype)
+    if is_valid(parent, filetype)
         and row > 0
-        and row < (first_visible_line - 1)
+        and row < (first_visible_line + #parent_matches - 1)
         and row ~= last_row then
-      table.insert(parent_matches, current)
+      table.insert(parent_matches, 1, parent)
 
       if row ~= last_row then
         lines = lines + 1
@@ -314,7 +322,6 @@ function M.get_parent_matches()
         break
       end
     end
-    current = current:parent()
   end
 
   return parent_matches
