@@ -514,15 +514,16 @@ end
 function M.enable()
   local throttle = config.throttle and 'throttled_' or ''
   nvim_augroup('treesitter_context_update', {
-    {'WinScrolled', '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
-    {'BufEnter',    '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
-    {'WinEnter',    '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
-    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
-    {'CursorMoved', '*',                   'silent lua require("treesitter-context").do_au_cursor_moved_vertical()'},
-    {'WinLeave',    '*',                   'silent lua require("treesitter-context").close()'},
-    {'VimResized',  '*',                   'silent lua require("treesitter-context").open()'},
-    {'User',        'SessionSavePre',      'silent lua require("treesitter-context").close()'},
-    {'User',        'SessionSavePost',     'silent lua require("treesitter-context").open()'},
+    {'WinScrolled',    '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
+    {'BufEnter',       '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
+    {'WinEnter',       '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
+    {'User',           'CursorMovedVertical', 'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
+    {'CursorMoved',    '*',                   'silent lua require("treesitter-context").do_au_cursor_moved_vertical()'},
+    {'PackerComplete', '*',                   'silent lua require("treesitter-context").close()'},
+    {'WinLeave',       '*',                   'silent lua require("treesitter-context").close()'},
+    {'VimResized',     '*',                   'silent lua require("treesitter-context").open()'},
+    {'User',           'SessionSavePre',      'silent lua require("treesitter-context").close()'},
+    {'User',           'SessionSavePost',     'silent lua require("treesitter-context").open()'},
   })
 
   M.throttled_update_context()
