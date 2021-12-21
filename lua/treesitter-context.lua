@@ -11,6 +11,7 @@ local defaultConfig = {
   enable = true,
   throttle = false,
   max_lines = 0, -- no limit
+  line_numbers = false,
 }
 
 local config = {}
@@ -61,7 +62,9 @@ local INDENT_PATTERN = '^%s+'
 local didSetup = false
 local enabled = nil
 local winid = nil
+local gutter_winid = nil
 local bufnr = api.nvim_create_buf(false, true)
+local gutter_bufnr = api.nvim_create_buf(false, true)
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local context_nodes = {}
 local context_types = {}
@@ -217,7 +220,7 @@ do
   end
 end
 
-local function display_window(width, height, row, col)
+local function display_context_window(width, height, row, col)
   if winid == nil or not api.nvim_win_is_valid(winid) then
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
@@ -243,6 +246,31 @@ local function display_window(width, height, row, col)
   api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
 end
 
+local function display_gutter_window(width, height, row, col)
+  if gutter_winid == nil or not api.nvim_win_is_valid(gutter_winid) then
+    gutter_winid = api.nvim_open_win(gutter_bufnr, false, {
+      relative = 'win',
+      width = width,
+      height = height,
+      row = row,
+      col = col,
+      focusable = false,
+      style = 'minimal',
+      noautocmd = true,
+    })
+    api.nvim_win_set_var(gutter_winid, 'treesitter_context_line_number', true)
+  else
+    api.nvim_win_set_config(gutter_winid, {
+      win = api.nvim_get_current_win(),
+      relative = 'win',
+      width = width,
+      height = height,
+      row = row,
+      col = col,
+    })
+  end
+  api.nvim_win_set_option(gutter_winid, 'winhl', 'NormalFloat:TreesitterContextLineNumber')
+end
 -- Exports
 
 local M = {
@@ -380,6 +408,16 @@ function M.close()
     api.nvim_win_close(winid, true)
   end
   winid = nil
+
+  if gutter_winid ~= nil and api.nvim_win_is_valid(gutter_winid) then
+    -- Can't close other windows when the command-line window is open
+    if api.nvim_call_function("getcmdwintype", {}) ~= "" then
+      return
+    end
+
+    api.nvim_win_close(gutter_winid, true)
+  end
+  gutter_winid = nil
 end
 
 function M.open()
@@ -394,7 +432,10 @@ function M.open()
   local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
   local win_height = math.max(1, #context_nodes)
 
-  display_window(win_width, win_height, 0, gutter_width)
+  display_context_window(win_width, win_height, 0, gutter_width)
+  if config.line_numbers then
+    display_gutter_window(gutter_width, win_height, 0, 0)
+  end
 
   -- Set text
 
@@ -402,6 +443,8 @@ function M.open()
   local context_lines = {}
   local context_text = {}
   local context_indents = {}
+
+  local context_linenumbers_text = {}
 
   for i in ipairs(context_nodes) do
     local lines, range = get_text_for_node(context_nodes[i])
@@ -411,9 +454,19 @@ function M.open()
     table.insert(context_ranges, range)
     table.insert(context_text, text)
     table.insert(context_indents, indents)
+
+    if config.line_numbers then
+      local linenumber_string = string.format("%d", range[1] + 1)
+      local padding_string = string.rep(" ", gutter_width - 1 - string.len(linenumber_string))
+      local gutter_string = padding_string .. linenumber_string .. " "
+      table.insert(context_linenumbers_text, gutter_string)
+    end
   end
 
   api.nvim_buf_set_lines(bufnr, 0, -1, false, context_text)
+  if config.line_numbers then
+    api.nvim_buf_set_lines(gutter_bufnr, 0, -1, false, context_linenumbers_text)
+  end
 
   -- api.nvim_command('echom ' .. vim.fn.json_encode({
   --   type = target_node:type(),
@@ -577,6 +630,7 @@ api.nvim_command('command! TSContextDisable lua require("treesitter-context").di
 api.nvim_command('command! TSContextToggle  lua require("treesitter-context").toggleEnabled()')
 
 api.nvim_command('highlight default link TreesitterContext NormalFloat')
+api.nvim_command "highlight default link TreesitterContextLineNumber LineNr"
 
 nvim_augroup('treesitter_context', {
   {'VimEnter', '*', 'lua require("treesitter-context").onVimEnter()'},

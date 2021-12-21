@@ -29,6 +29,7 @@ require'treesitter-context'.setup{
     enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
     throttle = true, -- Throttles plugin updates (may improve performance)
     max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
+    line_numbers = false, -- Whether line numbers should be shown alongside the context.
     patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
         -- For all filetypes
         -- Note that setting an entry here replaces all other patterns for this entry.
@@ -61,3 +62,6 @@ require'treesitter-context'.setup{
 
 Use the highlight group `TreesitterContext` to change the colors of the
 context. Per default it links to `NormalFloat`.
+
+Use the highlight group `TreesitterContextLineNumber` to change the colors of the
+context line numbers if `line_numbers` is set. Per default it links to `LineNr`.
