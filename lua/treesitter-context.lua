@@ -32,6 +32,17 @@ local last_types = {
   },
 }
 
+-- Tells us which leading child node type to skip when highlighting a
+-- multi-line node.
+local skip_leading_types = {
+  [word_pattern('class')] = {
+    php = 'attribute_list',
+  },
+  [word_pattern('method')] = {
+    php = 'attribute_list',
+  },
+}
+
 -- There are language-specific
 local DEFAULT_TYPE_PATTERNS = {
   -- These catch most generic groups, eg "function_declaration" or "function_block"
@@ -124,6 +135,20 @@ local function find_node(node, type)
 end
 
 local get_text_for_node = function(node)
+  local type = get_type_pattern(node, config.patterns.default) or node:type()
+  local filetype = api.nvim_buf_get_option(0, 'filetype')
+
+  local skip_leading_type = (skip_leading_types[type] or {})[filetype]
+  if skip_leading_type then
+    local children = ts_utils.get_named_children(node)
+    for _, child in ipairs(children) do
+      if child:type() ~= skip_leading_type then
+        node = child
+        break
+      end
+    end
+  end
+
   local start_row, start_col = node:start()
   local end_row, end_col     = node:end_()
 
@@ -134,8 +159,6 @@ local get_text_for_node = function(node)
   end
   start_col = 0
 
-  local type = get_type_pattern(node, config.patterns.default) or node:type()
-  local filetype = api.nvim_buf_get_option(0, 'filetype')
   local last_type = (last_types[type] or {})[filetype]
   local last_position = nil
 
