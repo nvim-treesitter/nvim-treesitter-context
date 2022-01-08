@@ -53,6 +53,7 @@ local DEFAULT_TYPE_PATTERNS = {
     'architecture_body',
     'entity_declaration',
   },
+  exact_patterns = {},
 }
 local INDENT_PATTERN = '^%s+'
 
@@ -560,9 +561,14 @@ function M.setup(options)
   config = vim.tbl_deep_extend("force", {}, defaultConfig, userOptions)
   config.patterns =
     vim.tbl_deep_extend("force", {}, DEFAULT_TYPE_PATTERNS, userOptions.patterns or {})
+  config.exact_patterns =
+    vim.tbl_deep_extend("force", {}, userOptions.exact_patterns or {})
 
   for filetype, patterns in pairs(config.patterns) do
-    config.patterns[filetype] = vim.tbl_map(word_pattern, patterns)
+    -- Map with word_pattern only if users don't need exact pattern matching
+    if not config.exact_patterns[filetype] then
+        config.patterns[filetype] = vim.tbl_map(word_pattern, patterns)
+    end
   end
 
   if config.enable then
