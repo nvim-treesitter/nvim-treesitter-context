@@ -411,7 +411,7 @@ function M.close()
 
   if gutter_winid ~= nil and api.nvim_win_is_valid(gutter_winid) then
     -- Can't close other windows when the command-line window is open
-    if api.nvim_call_function("getcmdwintype", {}) ~= "" then
+    if api.nvim_call_function('getcmdwintype', {}) ~= '' then
       return
     end
 
@@ -456,9 +456,9 @@ function M.open()
     table.insert(context_indents, indents)
 
     if config.line_numbers then
-      local linenumber_string = string.format("%d", range[1] + 1)
-      local padding_string = string.rep(" ", gutter_width - 1 - string.len(linenumber_string))
-      local gutter_string = padding_string .. linenumber_string .. " "
+      local linenumber_string = string.format('%d', range[1] + 1)
+      local padding_string = string.rep(' ', gutter_width - 1 - string.len(linenumber_string))
+      local gutter_string = padding_string .. linenumber_string .. ' '
       table.insert(context_linenumbers_text, gutter_string)
     end
   end
@@ -630,7 +630,7 @@ api.nvim_command('command! TSContextDisable lua require("treesitter-context").di
 api.nvim_command('command! TSContextToggle  lua require("treesitter-context").toggleEnabled()')
 
 api.nvim_command('highlight default link TreesitterContext NormalFloat')
-api.nvim_command "highlight default link TreesitterContextLineNumber LineNr"
+api.nvim_command('highlight default link TreesitterContextLineNumber LineNr')
 
 nvim_augroup('treesitter_context', {
   {'VimEnter', '*', 'lua require("treesitter-context").onVimEnter()'},
