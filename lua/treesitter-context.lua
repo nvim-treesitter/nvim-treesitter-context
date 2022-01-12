@@ -32,6 +32,8 @@ local last_types = {
     c = 'function_declarator',
     cpp = 'function_declarator',
     lua = 'parameters',
+    python = 'parameters',
+    rust = 'parameters',
     javascript = 'formal_parameters',
     typescript = 'formal_parameters',
   },
