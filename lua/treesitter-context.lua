@@ -80,8 +80,8 @@ local INDENT_PATTERN = '^%s+'
 
 local didSetup = false
 local enabled = nil
-local win_id = nil
-local _buf_nr = nil -- Don't access directly, use get_buf()
+local context_win_id = nil
+local _context_buf_nr = nil -- Don't access directly, use get_context_buf_nr()
 local ns = vim_api.nvim_create_namespace('nvim-treesitter-context')
 local context_nodes = {}
 local context_types = {}
@@ -253,24 +253,24 @@ do
   end
 end
 
-local function get_buf()
-  if _buf_nr == nil or not vim_api.nvim_buf_is_valid(_buf_nr) then
-    _buf_nr = vim_api.nvim_create_buf(false, true)
+local function get_context_buf_nr()
+  if _context_buf_nr == nil or not vim_api.nvim_buf_is_valid(_context_buf_nr) then
+    _context_buf_nr = vim_api.nvim_create_buf(false, true)
   end
-  return _buf_nr
+  return _context_buf_nr
 end
 
 local function delete_buf()
-  if _buf_nr ~= nil and vim_api.nvim_buf_is_valid(_buf_nr) then
-    vim_api.nvim_buf_delete(_buf_nr, { force = true })
+  if _context_buf_nr ~= nil and vim_api.nvim_buf_is_valid(_context_buf_nr) then
+    vim_api.nvim_buf_delete(_context_buf_nr, { force = true })
   end
-  _buf_nr = nil
+  _context_buf_nr = nil
 end
 
 local function display_window(width, height, row, col)
-  if win_id == nil or not vim_api.nvim_win_is_valid(win_id) then
-    local buf_nr = get_buf()
-    win_id = vim_api.nvim_open_win(buf_nr, false, {
+  if context_win_id == nil or not vim_api.nvim_win_is_valid(context_win_id) then
+    local context_buf_nr = get_context_buf_nr()
+    context_win_id = vim_api.nvim_open_win(context_buf_nr, false, {
       relative = 'win',
       width = width,
       height = height,
@@ -280,9 +280,9 @@ local function display_window(width, height, row, col)
       style = 'minimal',
       noautocmd = true,
     })
-    vim_api.nvim_win_set_var(win_id, 'treesitter_context', true)
+    vim_api.nvim_win_set_var(context_win_id, 'treesitter_context', true)
   else
-    vim_api.nvim_win_set_config(win_id, {
+    vim_api.nvim_win_set_config(context_win_id, {
       win = vim_api.nvim_get_current_win(),
       relative = 'win',
       width = width,
@@ -291,7 +291,7 @@ local function display_window(width, height, row, col)
       col = col,
     })
   end
-  vim_api.nvim_win_set_option(win_id, 'winhl', 'NormalFloat:TreesitterContext')
+  vim_api.nvim_win_set_option(context_win_id, 'winhl', 'NormalFloat:TreesitterContext')
 end
 
 -- Exports
@@ -422,15 +422,15 @@ end
 function M.close()
   previous_nodes = nil
 
-  if win_id ~= nil and vim_api.nvim_win_is_valid(win_id) then
+  if context_win_id ~= nil and vim_api.nvim_win_is_valid(context_win_id) then
     -- Can't close other windows when the command-line window is open
     if vim_api.nvim_call_function('getcmdwintype', {}) ~= '' then
       return
     end
 
-    vim_api.nvim_win_close(win_id, true)
+    vim_api.nvim_win_close(context_win_id, true)
   end
-  win_id = nil
+  context_win_id = nil
 end
 
 function M.open()
@@ -464,8 +464,8 @@ function M.open()
     table.insert(context_indents, indents)
   end
 
-  local buf_nr = get_buf()
-  vim_api.nvim_buf_set_lines(buf_nr, 0, -1, false, context_text)
+  local context_buf_nr = get_context_buf_nr()
+  vim_api.nvim_buf_set_lines(context_buf_nr, 0, -1, false, context_text)
 
   -- vim_api.nvim_command('echom ' .. vim_fn.json_encode({
   --   type = target_node:type(),
@@ -474,7 +474,7 @@ function M.open()
 
   -- Highlight
 
-  vim_api.nvim_buf_clear_namespace(buf_nr, ns, 0, -1)
+  vim_api.nvim_buf_clear_namespace(context_buf_nr, ns, 0, -1)
 
   local buf_highlighter = Highlighter.active[saved_buf_nr] or nil
   local buf_queries = nil
@@ -488,9 +488,9 @@ function M.open()
     end
   else
     local current_ft = vim_api.nvim_buf_get_option(0, 'filetype')
-    local buffer_ft  = vim_api.nvim_buf_get_option(buf_nr, 'filetype')
+    local buffer_ft  = vim_api.nvim_buf_get_option(context_buf_nr, 'filetype')
     if current_ft ~= buffer_ft then
-      vim_api.nvim_buf_set_option(buf_nr, 'filetype', current_ft)
+      vim_api.nvim_buf_set_option(context_buf_nr, 'filetype', current_ft)
     end
     return
   end
@@ -554,7 +554,7 @@ function M.open()
         local hl_start_col = atom_start_col + offset
         local hl_end_col   = atom_end_col + offset
 
-        vim_api.nvim_buf_set_extmark(buf_nr, ns,
+        vim_api.nvim_buf_set_extmark(context_buf_nr, ns,
           hl_start_row, hl_start_col,
           { end_line = hl_end_row, end_col = hl_end_col,
             hl_group = hl })
