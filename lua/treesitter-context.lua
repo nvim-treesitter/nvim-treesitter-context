@@ -637,5 +637,8 @@ api.nvim_command('highlight default link TreesitterContext NormalFloat')
 nvim_augroup('treesitter_context', {
   {'VimEnter', '*', 'lua require("treesitter-context").onVimEnter()'},
 })
+if vim.v.vim_did_enter then
+  M.onVimEnter()
+end
 
 return M
