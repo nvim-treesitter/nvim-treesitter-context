@@ -332,42 +332,214 @@ function M.get_context(opts)
   return matches
 end
 
+local function range_contains_range(
+  outer_start_line, outer_start_col, outer_end_line, outer_end_col,
+  inner_start_line, inner_start_col, inner_end_line, inner_end_col
+)
+  local start_fits = outer_start_line < inner_start_line or
+      (outer_start_line == inner_start_line and outer_start_col <= inner_start_col)
+  local end_fits = inner_end_line < outer_end_line or
+      (inner_end_line == outer_end_line and inner_end_col <= outer_end_col)
+
+  return start_fits and end_fits
+end
+
+local function node_range_contains_range(node, start_line, start_col, end_line, end_col)
+  local node_start_line, node_start_col, node_end_line, node_end_col = node:range()
+  return range_contains_range(node_start_line, node_start_col, node_end_line, node_end_col,
+      start_line, start_col, end_line, end_col)
+end
+
+local function range_contains_node_range(start_line, start_col, end_line, end_col, node)
+  return range_contains_range(start_line, start_col, end_line, end_col, node:range())
+end
+
+local function get_lang_tree_for_range(start_line, start_col, end_line, end_col, root_lang_tree)
+  if end_line == nil then end_line = start_line end
+  if end_col == nil then end_col = start_col end
+  if root_lang_tree == nil then
+    if not parsers.has_parser() then return end
+    root_lang_tree = parsers.get_parser()
+  end
+  return root_lang_tree:language_for_range({start_line, start_col, end_line, end_col})
+end
+
+local function get_root_for_range(start_line, start_col, end_line, end_col, root_lang_tree)
+  local lang_tree =
+    get_lang_tree_for_range(start_line, start_col, end_line, end_col, root_lang_tree)
+  for _, tree in ipairs(lang_tree:trees()) do
+    local root = tree:root()
+    if root and node_range_contains_range(root, start_line, start_col, end_line, end_col) then
+      return root, tree, lang_tree
+    end
+  end
+  -- This isn't a likely scenario, since the range must belong to a tree somewhere.
+  return nil, nil, lang_tree, start_line, start_col, end_line, end_col
+end
+
+local function get_node_for_range(start_line, start_col, end_line, end_col, root_lang_tree)
+  if end_line == nil then end_line = start_line end
+  if end_col == nil then end_col = start_col end
+  local root, tree, lang_tree =
+    get_root_for_range(start_line, start_col, end_line, end_col, root_lang_tree)
+  if not root then return end
+  return root:named_descendant_for_range(start_line, start_col, end_line, end_col)
+end
+
+local function get_pos_for_pos_expr(pos_expr)
+  local curpos = vim_fn.getpos(pos_expr)
+  -- buf_num, l_num, col, off
+  return curpos[1], curpos[2], curpos[3], curpos[4]
+end
+M.get_pos_for_pos_expr = get_pos_for_pos_expr
+
+local function get_position_for_pos_expr(pos_expr)
+  if expr == nil then expr = '.' end
+  local buf_num, l_num, col, off = get_pos_for_pos_expr(pos_expr)
+  return l_num - 1, col - 1 + off, buf_num
+end
+M.get_position_for_pos_expr = get_position_for_pos_expr
+
+local function get_range_for_pos_exprs(start_pos_expr, end_pos_expr, is_selection)
+  if is_selection == nil then
+    is_selection = start_pos_expr == nil and end_pos_expr == nil
+  end
+  if start_pos_expr == nil then
+    start_pos_expr = is_selection and 'v' or '.'
+  end
+  local start_line, start_col, start_buf_num = get_position_for_pos_expr(start_pos_expr)
+  local end_line, end_col, end_buf_num
+  if end_pos_expr == nil and not is_selection then
+    end_line, end_col, end_buf_num = start_line, start_col, start_buf_num
+  else
+    if end_pos_expr == nil then end_pos_expr = '.' end
+    end_line, end_col, end_buf_num = get_position_for_pos_expr(end_pos_expr)
+    if is_selection and end_pos_expr == '.' then
+      local mode = vim_fn.mode()
+      if mode == 'V' then
+        if start_pos_expr == 'v' then
+          start_col = 0
+        end
+        end_col = 2^31 - 2
+      end
+    end
+  end
+  return start_line, start_col, end_line, end_col, start_buf_num, end_buf_num
+end
+M.get_range_for_pos_exprs = get_range_for_pos_exprs
+
+local function get_node_for_pos_exprs(start_pos_expr, end_pos_expr, is_selection, root_lang_tree)
+  local start_line, start_col, end_line, end_col, start_buf_num, end_buf_num =
+    get_range_for_pos_exprs(start_pos_expr, end_pos_expr, is_selection)
+  if start_buf_num ~= end_buf_num then return end
+  return get_node_for_range(start_line, start_col, end_line, end_col, root_lang_tree), start_buf_num
+end
+M.get_node_for_pos_exprs = get_node_for_pos_exprs
+
+local function get_cursor_position(win_id)
+  if win_id == nil then win_id = 0 end
+  local cursor = vim_api.nvim_win_get_cursor(win_id)
+  return cursor[1] - 1, cursor[2]
+end
+local function get_line_for_line_expr(line_expr, win_id)
+  if win_id == nil then
+    return vim_fn.line(line_expr) - 1
+  end
+  return vim_fn.line(line_expr, win_id) - 1
+end
+M.get_line_for_line_expr = get_line_for_line_expr
+local function get_length_for_line(line, buf_id)
+  if buf_id == nil or buf_id == 0 then
+    return vim_fn.col({line + 1, '$'}) - 1
+  end
+  return #vim_api.nvim_buf_get_lines(buf_id, line, line + 1, false)[1]
+end
+M.get_length_for_line = get_length_for_line
+
 function M.get_parent_matches()
   if not parsers.has_parser() then return nil end
 
   -- FIXME: use TS queries when possible
   -- local matches = ts_query.get_capture_matches(0, '@scope.node', 'locals')
 
-  local current = ts_utils.get_node_at_cursor()
-  if not current then return end
-
-  local parent_matches = {}
+  local first_context_win_line = get_line_for_line_expr('w0')
+  local last_context_win_line = first_context_win_line - 1
+  local cursor_line = get_cursor_position()
+  local max_last_context_win_line = cursor_line - 1
+  if config.max_lines > 0 and last_context_win_line + config.max_lines < max_last_context_win_line then
+    max_last_context_win_line = last_context_win_line + config.max_lines
+  end
   local filetype = vim_api.nvim_buf_get_option(0, 'filetype')
-  local lines = 0
-  local last_row = -1
-  local first_visible_line = vim_api.nvim_call_function('line', { 'w0' })
 
-  while current ~= nil do
-    local position = {current:start()}
-    local row = position[1]
+  -- print(string.format('context: first_context_win_line %d, max_last_context_win_line %d',
+  --     first_context_win_line, max_last_context_win_line))
+  local parent_matches = {}
+  local start_line, start_col = first_context_win_line, 0
+  while start_line <= max_last_context_win_line + 1 do
+    local retry_lines = false
 
-    if is_valid(current, filetype)
-        and row > 0
-        and row < (first_visible_line - 1)
-        and row ~= last_row then
-      table.insert(parent_matches, current)
+    last_context_win_line = first_context_win_line - 1
+    local end_line, end_col = start_line, get_length_for_line(start_line)
+    -- print(string.format('context:   start_line %d, end_line %d', start_line, end_line))
+    local current = get_node_for_range(start_line, start_col, end_line, end_col)
+    if not current then break end
 
-      if row ~= last_row then
-        lines = lines + 1
-        last_row = position[1]
+    parent_matches = {}
+    local previous_start_line = start_line
+    while current ~= nil do
+      local current_start_line = current:start()
+      -- local current_end_line = current:end_()
+
+      local is_current_valid = is_valid(current, filetype)
+      -- print(string.format('context:     testing previous_start_line %d, current_start_line %d, current_end_line %d, last_context_win_line %d, %s%s',
+      --   previous_start_line, current_start_line, current_end_line, last_context_win_line, current:type(), is_current_valid and ' (valid)' or ''))
+      if is_current_valid and current_start_line < previous_start_line then
+        last_context_win_line = last_context_win_line + 1
+        if last_context_win_line >= start_line then
+          -- print(string.format('context:       retry_lines from last_context_win_line >= start_line'))
+          retry_lines = true
+          start_line = last_context_win_line + 1
+          break
+        end
+        table.insert(parent_matches, current)
+        previous_start_line = current_start_line
+        -- print(string.format('context:       new previous_start_line %d', previous_start_line))
       end
-      if config.max_lines > 0 and lines >= config.max_lines then
-        break
+
+      if not retry_lines then
+        if last_context_win_line >= max_last_context_win_line then
+          -- print(string.format('context:     skipping remaining from last_context_win_line >= max_last_context_win_line'))
+          break
+        end
+        current = current:parent()
       end
     end
-    current = current:parent()
+    if not retry_lines then break end
   end
-
+  -- print(string.format('context:  last_context_win_line %d, max_last_context_win_line %d',
+  --   last_context_win_line, max_last_context_win_line))
+  do
+    local last_parent_match_ix, first_parent_match_ix = 1, #parent_matches
+    while last_parent_match_ix <= first_parent_match_ix do
+      local last_parent_match_start_line = parent_matches[last_parent_match_ix]:start()
+      -- print(string.format('context:  testing last_parent_match_start_line %d, last_context_win_line %d',
+      --   last_parent_match_start_line, last_context_win_line))
+      if last_parent_match_start_line == last_context_win_line then
+        last_context_win_line = last_context_win_line - 1
+        -- print(string.format('context:    trimming parent_match_start_line == last_context_win_line'))
+      else
+        break
+      end
+      last_parent_match_ix = last_parent_match_ix + 1
+    end
+    local parent_matches_reversed = {}
+    local i = 1
+    for j = first_parent_match_ix, last_parent_match_ix, -1 do
+      parent_matches_reversed[i] = parent_matches[j]
+      i = i + 1
+    end
+    parent_matches = parent_matches_reversed
+  end
   return parent_matches
 end
 
@@ -385,8 +557,7 @@ function M.update_context()
 
   if context then
 
-    for i = #context, 1, -1 do
-      local node = context[i]
+    for _, node in ipairs(context) do
       local type = get_type_pattern(node, config.patterns.default) or node:type()
 
       table.insert(context_nodes, node)
