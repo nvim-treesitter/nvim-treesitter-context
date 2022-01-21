@@ -628,9 +628,9 @@ function M.setup(options)
   end
 end
 
-api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable()')
-api.nvim_command('command! TSContextDisable lua require("treesitter-context").disable()')
-api.nvim_command('command! TSContextToggle  lua require("treesitter-context").toggleEnabled()')
+api.nvim_command('command! -bar TSContextEnable  lua require("treesitter-context").enable()')
+api.nvim_command('command! -bar TSContextDisable lua require("treesitter-context").disable()')
+api.nvim_command('command! -bar TSContextToggle  lua require("treesitter-context").toggleEnabled()')
 
 api.nvim_command('highlight default link TreesitterContext NormalFloat')
 
