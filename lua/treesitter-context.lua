@@ -1,4 +1,5 @@
-local api = vim.api
+local vim_fn = vim.fn
+local vim_api = vim.api
 local ts_utils = require'nvim-treesitter.ts_utils'
 local Highlighter = vim.treesitter.highlighter
 -- local ts_query = require('nvim-treesitter.query')
@@ -15,7 +16,7 @@ local defaultConfig = {
 
 local config = {}
 
-local has_textoff = vim.fn.has('nvim-0.6')
+local has_textoff = vim_fn.has('nvim-0.6')
 
 local ffi = nil
 if not has_textoff then
@@ -79,9 +80,9 @@ local INDENT_PATTERN = '^%s+'
 
 local didSetup = false
 local enabled = nil
-local winid = nil
-local _bufnr = nil -- Don't access directly, use get_buf()
-local ns = api.nvim_create_namespace('nvim-treesitter-context')
+local win_id = nil
+local _buf_nr = nil -- Don't access directly, use get_buf()
+local ns = vim_api.nvim_create_namespace('nvim-treesitter-context')
 local context_nodes = {}
 local context_types = {}
 local previous_nodes = nil
@@ -89,7 +90,7 @@ local previous_nodes = nil
 
 -- Helper functions
 local log_message = function(value)
-  api.nvim_command('echom ' .. vim.fn.json_encode(value))
+  vim_api.nvim_command('echom ' .. vim_fn.json_encode(value))
 end
 
 local get_target_node = function()
@@ -143,7 +144,7 @@ end
 
 local get_text_for_node = function(node)
   local type = get_type_pattern(node, config.patterns.default) or node:type()
-  local filetype = api.nvim_buf_get_option(0, 'filetype')
+  local filetype = vim_api.nvim_buf_get_option(0, 'filetype')
 
   local skip_leading_type = (skip_leading_types[type] or {})[filetype]
   if skip_leading_type then
@@ -162,7 +163,7 @@ local get_text_for_node = function(node)
   local lines = ts_utils.get_node_text(node)
 
   if start_col ~= 0 then
-    lines[1] = api.nvim_buf_get_lines(0, start_row, start_row + 1, false)[1]
+    lines[1] = vim_api.nvim_buf_get_lines(0, start_row, start_row + 1, false)[1]
   end
   start_col = 0
 
@@ -223,27 +224,27 @@ local get_gutter_width = function()
   if not has_textoff then
     return ffi.C.curwin_col_off();
   else
-    return vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].textoff
+    return vim_fn.getwininfo(vim.api.nvim_get_current_win())[1].textoff
   end
 end
 
 local nvim_augroup = function(group_name, definitions)
-  api.nvim_command('augroup ' .. group_name)
-  api.nvim_command('autocmd!')
+  vim_api.nvim_command('augroup ' .. group_name)
+  vim_api.nvim_command('autocmd!')
   for _, def in ipairs(definitions) do
     local command = table.concat({'autocmd', unpack(def)}, ' ')
-    if api.nvim_call_function('exists', {'##' .. def[1]}) ~= 0 then
-      api.nvim_command(command)
+    if vim_api.nvim_call_function('exists', {'##' .. def[1]}) ~= 0 then
+      vim_api.nvim_command(command)
     end
   end
-  api.nvim_command('augroup END')
+  vim_api.nvim_command('augroup END')
 end
 
 local cursor_moved_vertical
 do
   local line
   cursor_moved_vertical = function()
-    local newline =  vim.api.nvim_win_get_cursor(0)[1]
+    local newline =  vim_api.nvim_win_get_cursor(0)[1]
     if newline ~= line then
       line = newline
       return true
@@ -253,23 +254,23 @@ do
 end
 
 local function get_buf()
-  if _bufnr == nil or not api.nvim_buf_is_valid(_bufnr) then
-    _bufnr = api.nvim_create_buf(false, true)
+  if _buf_nr == nil or not vim_api.nvim_buf_is_valid(_buf_nr) then
+    _buf_nr = vim_api.nvim_create_buf(false, true)
   end
-  return _bufnr
+  return _buf_nr
 end
 
 local function delete_buf()
-  if _bufnr ~= nil and api.nvim_buf_is_valid(_bufnr) then
-    api.nvim_buf_delete(_bufnr, { force = true })
+  if _buf_nr ~= nil and vim_api.nvim_buf_is_valid(_buf_nr) then
+    vim_api.nvim_buf_delete(_buf_nr, { force = true })
   end
-  _bufnr = nil
+  _buf_nr = nil
 end
 
 local function display_window(width, height, row, col)
-  if winid == nil or not api.nvim_win_is_valid(winid) then
-    local bufnr = get_buf()
-    winid = api.nvim_open_win(bufnr, false, {
+  if win_id == nil or not vim_api.nvim_win_is_valid(win_id) then
+    local buf_nr = get_buf()
+    win_id = vim_api.nvim_open_win(buf_nr, false, {
       relative = 'win',
       width = width,
       height = height,
@@ -279,10 +280,10 @@ local function display_window(width, height, row, col)
       style = 'minimal',
       noautocmd = true,
     })
-    api.nvim_win_set_var(winid, 'treesitter_context', true)
+    vim_api.nvim_win_set_var(win_id, 'treesitter_context', true)
   else
-    api.nvim_win_set_config(winid, {
-      win = api.nvim_get_current_win(),
+    vim_api.nvim_win_set_config(win_id, {
+      win = vim_api.nvim_get_current_win(),
       relative = 'win',
       width = width,
       height = height,
@@ -290,7 +291,7 @@ local function display_window(width, height, row, col)
       col = col,
     })
   end
-  api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
+  vim_api.nvim_win_set_option(win_id, 'winhl', 'NormalFloat:TreesitterContext')
 end
 
 -- Exports
@@ -315,7 +316,7 @@ function M.get_context(opts)
   local matches = {}
   local expr = cursor_node
 
-  local filetype = api.nvim_buf_get_option(0, 'filetype')
+  local filetype = vim_api.nvim_buf_get_option(0, 'filetype')
   while expr do
     local is_match, type = is_valid(expr, filetype)
     if is_match then
@@ -341,10 +342,10 @@ function M.get_parent_matches()
   if not current then return end
 
   local parent_matches = {}
-  local filetype = api.nvim_buf_get_option(0, 'filetype')
+  local filetype = vim_api.nvim_buf_get_option(0, 'filetype')
   local lines = 0
   local last_row = -1
-  local first_visible_line = api.nvim_call_function('line', { 'w0' })
+  local first_visible_line = vim_api.nvim_call_function('line', { 'w0' })
 
   while current ~= nil do
     local position = {current:start()}
@@ -371,8 +372,8 @@ function M.get_parent_matches()
 end
 
 function M.update_context()
-  if api.nvim_get_option('buftype') ~= '' or
-      vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
+  if vim_api.nvim_get_option('buftype') ~= '' or
+      vim_fn.getwinvar(0, '&previewwindow') ~= 0 then
     M.close()
     return
   end
@@ -421,15 +422,15 @@ end
 function M.close()
   previous_nodes = nil
 
-  if winid ~= nil and api.nvim_win_is_valid(winid) then
+  if win_id ~= nil and vim_api.nvim_win_is_valid(win_id) then
     -- Can't close other windows when the command-line window is open
-    if api.nvim_call_function('getcmdwintype', {}) ~= '' then
+    if vim_api.nvim_call_function('getcmdwintype', {}) ~= '' then
       return
     end
 
-    api.nvim_win_close(winid, true)
+    vim_api.nvim_win_close(win_id, true)
   end
-  winid = nil
+  win_id = nil
 end
 
 function M.open()
@@ -438,10 +439,10 @@ function M.open()
 
   previous_nodes = context_nodes
 
-  local saved_bufnr = api.nvim_get_current_buf()
+  local saved_buf_nr = vim_api.nvim_get_current_buf()
 
   local gutter_width = get_gutter_width()
-  local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
+  local win_width  = math.max(1, vim_api.nvim_win_get_width(0) - gutter_width)
   local win_height = math.max(1, #context_nodes)
 
   display_window(win_width, win_height, 0, gutter_width)
@@ -463,19 +464,19 @@ function M.open()
     table.insert(context_indents, indents)
   end
 
-  local bufnr = get_buf()
-  api.nvim_buf_set_lines(bufnr, 0, -1, false, context_text)
+  local buf_nr = get_buf()
+  vim_api.nvim_buf_set_lines(buf_nr, 0, -1, false, context_text)
 
-  -- api.nvim_command('echom ' .. vim.fn.json_encode({
+  -- vim_api.nvim_command('echom ' .. vim_fn.json_encode({
   --   type = target_node:type(),
   --   text = ts_utils.get_node_text(target_node),
   -- }))
 
   -- Highlight
 
-  api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+  vim_api.nvim_buf_clear_namespace(buf_nr, ns, 0, -1)
 
-  local buf_highlighter = Highlighter.active[saved_bufnr] or nil
+  local buf_highlighter = Highlighter.active[saved_buf_nr] or nil
   local buf_queries = nil
   local buf_query = nil
 
@@ -486,10 +487,10 @@ function M.open()
       return
     end
   else
-    local current_ft = api.nvim_buf_get_option(0, 'filetype')
-    local buffer_ft  = api.nvim_buf_get_option(bufnr, 'filetype')
+    local current_ft = vim_api.nvim_buf_get_option(0, 'filetype')
+    local buffer_ft  = vim_api.nvim_buf_get_option(buf_nr, 'filetype')
     if current_ft ~= buffer_ft then
-      api.nvim_buf_set_option(bufnr, 'filetype', current_ft)
+      vim_api.nvim_buf_set_option(buf_nr, 'filetype', current_ft)
     end
     return
   end
@@ -511,7 +512,7 @@ function M.open()
 
     local captures =
       buf_query:query()
-        :iter_captures(target_node, saved_bufnr, start_row, current_node:end_())
+        :iter_captures(target_node, saved_buf_nr, start_row, current_node:end_())
 
     local last_line = nil
     local last_offset = nil
@@ -553,7 +554,7 @@ function M.open()
         local hl_start_col = atom_start_col + offset
         local hl_end_col   = atom_end_col + offset
 
-        api.nvim_buf_set_extmark(bufnr, ns,
+        vim_api.nvim_buf_set_extmark(buf_nr, ns,
           hl_start_row, hl_start_col,
           { end_line = hl_end_row, end_col = hl_end_col,
             hl_group = hl })
@@ -628,11 +629,11 @@ function M.setup(options)
   end
 end
 
-api.nvim_command('command! -bar TSContextEnable  lua require("treesitter-context").enable()')
-api.nvim_command('command! -bar TSContextDisable lua require("treesitter-context").disable()')
-api.nvim_command('command! -bar TSContextToggle  lua require("treesitter-context").toggleEnabled()')
+vim_api.nvim_command('command! -bar TSContextEnable  lua require("treesitter-context").enable()')
+vim_api.nvim_command('command! -bar TSContextDisable lua require("treesitter-context").disable()')
+vim_api.nvim_command('command! -bar TSContextToggle  lua require("treesitter-context").toggleEnabled()')
 
-api.nvim_command('highlight default link TreesitterContext NormalFloat')
+vim_api.nvim_command('highlight default link TreesitterContext NormalFloat')
 
 nvim_augroup('treesitter_context', {
   {'VimEnter', '*', 'lua require("treesitter-context").onVimEnter()'},
