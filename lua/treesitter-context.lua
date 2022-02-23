@@ -13,6 +13,7 @@ end
 local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
+  min_window_height = 0,
   line_numbers = true,
   multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
   trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
@@ -687,6 +688,11 @@ local update = throttle_fn(function()
     end
 
     previous_nodes = context
+
+    if api.nvim_win_get_height(0) < config.min_window_height then
+      M.close()
+      return
+    end
 
     open(context)
   else
