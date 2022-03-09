@@ -351,9 +351,13 @@ function M.get_parent_matches()
     local row = position[1]
 
     if is_valid(current, filetype)
-        and row > 0
-        and row < (first_visible_line - 1)
-        and row ~= last_row then
+        and ((
+            row > 0
+            and row < (first_visible_line - 1)
+            and row ~= last_row
+        ) or (
+            config.show_all_context
+        )) then
       table.insert(parent_matches, current)
 
       if row ~= last_row then
