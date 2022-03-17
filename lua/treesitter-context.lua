@@ -280,6 +280,7 @@ local function display_window(width, height, row, col)
       noautocmd = true,
     })
     api.nvim_win_set_var(winid, 'treesitter_context', true)
+    api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
   else
     api.nvim_win_set_config(winid, {
       win = api.nvim_get_current_win(),
@@ -290,7 +291,6 @@ local function display_window(width, height, row, col)
       col = col,
     })
   end
-  api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
 end
 
 -- Exports
@@ -432,6 +432,27 @@ function M.close()
   winid = nil
 end
 
+local function set_lines(bufnr, lines)
+  local clines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local redraw = false
+  if #clines ~= #lines then
+    redraw = true
+  else
+    for i, l in ipairs(clines) do
+      if l ~= lines[i] then
+        redraw = true
+        break
+      end
+    end
+  end
+
+  if redraw then
+    api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  end
+
+  return redraw
+end
+
 function M.open()
   if #context_nodes == 0 then return end
   if context_nodes == previous_nodes then return end
@@ -464,7 +485,10 @@ function M.open()
   end
 
   local bufnr = get_buf()
-  api.nvim_buf_set_lines(bufnr, 0, -1, false, context_text)
+  if not set_lines(bufnr, context_text) then
+    -- Context didn't change, can return here
+    return
+  end
 
   -- api.nvim_command('echom ' .. vim.fn.json_encode({
   --   type = target_node:type(),
