@@ -196,16 +196,11 @@ end
 
 -- Merge lines, removing the indentation after 1st line
 local merge_lines = function(lines)
-  local text = ''
-  for i, line in ipairs(lines) do
-    if i == 1 then
-      text = text .. line
-    else
-      text = text .. line:gsub(INDENT_PATTERN, '')
-    end
-    text = text .. ' '
+  local text = { lines[1] }
+  for i = 2, #lines do
+    text[i] = lines[i]:gsub(INDENT_PATTERN, '')
   end
-  return text
+  return table.concat(text, ' ')
 end
 
 -- Get indentation for lines except first
