@@ -70,3 +70,6 @@ require'treesitter-context'.setup{
 
 Use the highlight group `TreesitterContext` to change the colors of the
 context. Per default it links to `NormalFloat`.
+
+Use the highlight group `TreesitterContextLineNumber` to change the colors of the
+context line numbers if `line_numbers` is set. Per default it links to `LineNr`.
