@@ -8,9 +8,11 @@ implemented with [nvim-treesitter](https://github.com/nvim-treesitter/nvim-trees
 
 ## Install
 
-```vim
-Plug 'nvim-treesitter/nvim-treesitter'
-Plug 'romgrk/nvim-treesitter-context'
+via packer
+
+```lua
+use 'nvim-treesitter/nvim-treesitter'
+use 'lewis6991/nvim-treesitter-context'
 ```
 
 ## Screenshot
@@ -57,7 +59,7 @@ require'treesitter-context'.setup{
         -- Example for a specific filetype with Lua patterns
         -- Treat patterns.rust as a Lua pattern (i.e "^impl_item$" will
         -- exactly match "impl_item" only)
-        -- rust = true, 
+        -- rust = true,
     }
 }
 ```
