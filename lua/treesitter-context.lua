@@ -276,6 +276,7 @@ local function display_window(width, height, row, col)
     })
     api.nvim_win_set_var(winid, 'treesitter_context', true)
     api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
+    api.nvim_win_set_option(winid, 'foldenable', false)
   else
     api.nvim_win_set_config(winid, {
       win = api.nvim_get_current_win(),
