@@ -1,6 +1,6 @@
 local api = vim.api
 local ts_utils = require'nvim-treesitter.ts_utils'
-local Highlighter = vim.treesitter.highlighter
+local highlighter = vim.treesitter.highlighter
 -- local ts_query = require('nvim-treesitter.query')
 local parsers = require'nvim-treesitter.parsers'
 local utils = require'treesitter-context.utils'
@@ -79,7 +79,7 @@ local INDENT_PATTERN = '^%s+'
 
 local didSetup = false
 local enabled
-local winid
+local context_winid
 local gutter_winid
 local gutter_bufnr, context_bufnr -- Don't access directly, use get_bufs()
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
@@ -264,21 +264,20 @@ local function delete_bufs()
   gutter_bufnr = nil
 end
 
-local function display_context_window(width, height, row, col)
-  if winid == nil or not api.nvim_win_is_valid(winid) then
-    local _, bufnr = get_bufs()
+local function display_window(bufnr, winid, width, height, col, ty, hl)
+  if not winid or not api.nvim_win_is_valid(winid) then
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
       width = width,
       height = height,
-      row = row,
+      row = 0,
       col = col,
       focusable = false,
       style = 'minimal',
       noautocmd = true,
     })
-    api.nvim_win_set_var(winid, 'treesitter_context', true)
-    api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
+    api.nvim_win_set_var(winid, ty, true)
+    api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:'..hl)
     api.nvim_win_set_option(winid, 'foldenable', false)
   else
     api.nvim_win_set_config(winid, {
@@ -286,37 +285,11 @@ local function display_context_window(width, height, row, col)
       relative = 'win',
       width = width,
       height = height,
-      row = row,
+      row = 0,
       col = col,
     })
   end
-end
-
-local function display_gutter_window(width, height, row, col)
-  if gutter_winid == nil or not api.nvim_win_is_valid(gutter_winid) then
-    local bufnr = get_bufs()
-    gutter_winid = api.nvim_open_win(bufnr, false, {
-      relative = 'win',
-      width = width,
-      height = height,
-      row = row,
-      col = col,
-      focusable = false,
-      style = 'minimal',
-      noautocmd = true,
-    })
-    api.nvim_win_set_var(gutter_winid, 'treesitter_context_line_number', true)
-    api.nvim_win_set_option(gutter_winid, 'winhl', 'NormalFloat:TreesitterContextLineNumber')
-  else
-    api.nvim_win_set_config(gutter_winid, {
-      win = api.nvim_get_current_win(),
-      relative = 'win',
-      width = width,
-      height = height,
-      row = row,
-      col = col,
-    })
-  end
+  return winid
 end
 
 -- Exports
@@ -408,7 +381,6 @@ function M.update_context()
   context_types = {}
 
   if context then
-
     for i = #context, 1, -1 do
       local node = context[i]
       local type = get_type_pattern(node, config.patterns.default) or node:type()
@@ -446,15 +418,15 @@ end
 function M.close()
   previous_nodes = nil
 
-  if winid ~= nil and api.nvim_win_is_valid(winid) then
+  if context_winid ~= nil and api.nvim_win_is_valid(context_winid) then
     -- Can't close other windows when the command-line window is open
     if api.nvim_call_function('getcmdwintype', {}) ~= '' then
       return
     end
 
-    api.nvim_win_close(winid, true)
+    api.nvim_win_close(context_winid, true)
   end
-  winid = nil
+  context_winid = nil
 
   if gutter_winid and api.nvim_win_is_valid(gutter_winid) then
     -- Can't close other windows when the command-line window is open
@@ -489,8 +461,13 @@ local function set_lines(bufnr, lines)
 end
 
 function M.open()
-  if #context_nodes == 0 then return end
-  if context_nodes == previous_nodes then return end
+  if #context_nodes == 0 then
+    return
+  end
+
+  if context_nodes == previous_nodes then
+    return
+  end
 
   previous_nodes = context_nodes
 
@@ -500,94 +477,80 @@ function M.open()
   local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
   local win_height = math.max(1, #context_nodes)
 
-  display_context_window(win_width, win_height, 0, gutter_width)
-  display_gutter_window(gutter_width, win_height, 0, 0)
+  local gbufnr, bufnr = get_bufs()
+
+  gutter_winid = display_window(
+    gbufnr, gutter_winid, gutter_width, win_height, 0,
+    'treesitter_context_line_number', 'TreesitterContextLineNumber')
+
+  context_winid = display_window(
+    bufnr, context_winid, win_width, win_height, gutter_width,
+    'treesitter_context', 'TreesitterContext')
 
   -- Set text
 
-  local context_ranges = {}
-  local context_lines = {}
   local context_text = {}
-  local context_indents = {}
-  local context_linenumbers_text = {}
+  local lno_text = {}
 
-  for i in ipairs(context_nodes) do
-    local lines, range = get_text_for_node(context_nodes[i])
+  local contexts = {}
+
+  for _, node in ipairs(context_nodes) do
+    local lines, range = get_text_for_node(node)
     local text = merge_lines(lines)
-    local indents = get_indents(lines)
-    table.insert(context_lines, lines)
-    table.insert(context_ranges, range)
+
+    contexts[#contexts+1] = {
+      node = node,
+      lines = lines,
+      range = range,
+      indents = get_indents(lines),
+    }
+
     table.insert(context_text, text)
-    table.insert(context_indents, indents)
 
     local linenumber_string = string.format('%d', range[1] + 1)
     local padding_string = string.rep(' ', gutter_width - 1 - string.len(linenumber_string))
     local gutter_string = padding_string .. linenumber_string .. ' '
-    table.insert(context_linenumbers_text, gutter_string)
+    table.insert(lno_text, gutter_string)
   end
 
-  local gbufnr, bufnr = get_bufs()
   if not set_lines(bufnr, context_text) then
     -- Context didn't change, can return here
     return
   end
 
-  set_lines(gbufnr, context_linenumbers_text)
-
-  -- api.nvim_command('echom ' .. vim.fn.json_encode({
-  --   type = target_node:type(),
-  --   text = ts_utils.get_node_text(target_node),
-  -- }))
+  set_lines(gbufnr, lno_text)
 
   -- Highlight
 
   api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 
-  local buf_highlighter = Highlighter.active[saved_bufnr] or nil
-  local buf_queries
-  local buf_query
+  local buf_highlighter = highlighter.active[saved_bufnr]
 
-  if buf_highlighter then
-    buf_queries = buf_highlighter._queries
-    buf_query = buf_queries[vim.bo.filetype]
-    if buf_query == nil then
-      return
-    end
-  else
-    local current_ft = api.nvim_buf_get_option(0, 'filetype')
-    local buffer_ft  = api.nvim_buf_get_option(bufnr, 'filetype')
+  if not buf_highlighter then
+    -- Use standard highlighting when TS highlighting is not available
+    local current_ft = vim.bo.filetype
+    local buffer_ft  = vim.bo[bufnr].filetype
     if current_ft ~= buffer_ft then
       api.nvim_buf_set_option(bufnr, 'filetype', current_ft)
     end
     return
   end
 
-  for i in ipairs(context_nodes) do
-    local current_node = context_nodes[i]
-    local range = context_ranges[i]
-    local indents = context_indents[i]
-    local lines = context_lines[i]
+  local buf_query = buf_highlighter:get_query(vim.bo.filetype)
 
-    local start_row = range[1]
-    -- local start_col = range[2]
-    local end_row   = range[3]
-    local end_col   = range[4]
+  local query = buf_query:query()
+
+  for i, context in ipairs(contexts) do
+    local start_row, _, end_row, end_col = unpack(context.range)
+    local indents = context.indents
+    local lines = context.lines
 
     local target_node = get_target_node()
 
-    local start_row_absolute = current_node:start()
+    local start_row_absolute = context.node:start()
 
-    local captures =
-      buf_query:query()
-        :iter_captures(target_node, saved_bufnr, start_row, current_node:end_())
-
-    local last_line = nil
-    local last_offset = nil
-
-    for capture, node in captures do
-      local hl = buf_query.hl_cache[capture]
-      local atom_start_row, atom_start_col,
-            atom_end_row,   atom_end_col = node:range()
+    for capture, node in query:iter_captures(target_node, saved_bufnr, start_row, context.node:end_()) do
+      local atom_start_row, atom_start_col, atom_end_row, atom_end_col = node:range()
 
       if atom_end_row > end_row or
         (atom_end_row == end_row and atom_end_col > end_col) then
@@ -595,33 +558,23 @@ function M.open()
       end
 
       if atom_start_row >= start_row_absolute then
-
         local intended_start_row = atom_start_row - start_row_absolute
 
-        local offset
-        if intended_start_row == last_line then
-          offset = last_offset
-        else
-          -- Add 1 for each space added between lines when
-          -- we replace "\n" with " "
-          offset = intended_start_row
-          -- Add the length of each precending lines
-          for j = 1, intended_start_row do
-            offset = offset + #lines[j] - indents[j]
-          end
-          -- Remove the indentation negative offset for current line
-          offset = offset - (indents[intended_start_row + 1])
+        -- Add 1 for each space added between lines when
+        -- we replace "\n" with " "
+        local offset = intended_start_row
+        -- Add the length of each preceding lines
+        for j = 1, intended_start_row do
+          offset = offset + #lines[j] - indents[j]
         end
+        -- Remove the indentation negative offset for current line
+        offset = offset - indents[intended_start_row + 1]
 
-        local hl_start_row = i - 1
-        local hl_end_row   = i - 1
-        local hl_start_col = atom_start_col + offset
-        local hl_end_col   = atom_end_col + offset
-
-        api.nvim_buf_set_extmark(bufnr, ns,
-          hl_start_row, hl_start_col,
-          { end_line = hl_end_row, end_col = hl_end_col,
-            hl_group = hl })
+        api.nvim_buf_set_extmark(bufnr, ns, i - 1, atom_start_col + offset, {
+          end_line = i - 1,
+          end_col = atom_end_col + offset,
+          hl_group = buf_query.hl_cache[capture]
+        })
       end
     end
   end
