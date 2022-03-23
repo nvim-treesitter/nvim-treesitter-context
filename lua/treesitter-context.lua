@@ -78,15 +78,14 @@ local INDENT_PATTERN = '^%s+'
 -- Script variables
 
 local didSetup = false
-local enabled = nil
-local winid = nil
-local gutter_winid = nil
-local _bufnr = nil -- Don't access directly, use get_buf()
-local gutter_bufnr = api.nvim_create_buf(false, true)
+local enabled
+local winid
+local gutter_winid
+local gutter_bufnr, context_bufnr -- Don't access directly, use get_bufs()
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local context_nodes = {}
 local context_types = {}
-local previous_nodes = nil
+local previous_nodes
 
 local get_target_node = function()
   local tree = parsers.get_parser():parse()[1]
@@ -118,7 +117,6 @@ local get_type_pattern = function(node, type_patterns)
       return rgx
     end
   end
-  return nil
 end
 
 local function find_node(node, type)
@@ -134,7 +132,6 @@ local function find_node(node, type)
       return deep_child
     end
   end
-  return nil
 end
 
 local get_text_for_node = function(node)
@@ -243,23 +240,33 @@ do
   end
 end
 
-local function get_buf()
-  if _bufnr == nil or not api.nvim_buf_is_valid(_bufnr) then
-    _bufnr = api.nvim_create_buf(false, true)
+local function get_bufs()
+  if not context_bufnr or not api.nvim_buf_is_valid(context_bufnr) then
+    context_bufnr = api.nvim_create_buf(false, true)
   end
-  return _bufnr
+
+  if not gutter_bufnr or not api.nvim_buf_is_valid(gutter_bufnr) then
+    gutter_bufnr = api.nvim_create_buf(false, true)
+  end
+
+  return gutter_bufnr, context_bufnr
 end
 
-local function delete_buf()
-  if _bufnr ~= nil and api.nvim_buf_is_valid(_bufnr) then
-    api.nvim_buf_delete(_bufnr, { force = true })
+local function delete_bufs()
+  if context_bufnr and api.nvim_buf_is_valid(context_bufnr) then
+    api.nvim_buf_delete(context_bufnr, { force = true })
   end
-  _bufnr = nil
+  context_bufnr = nil
+
+  if gutter_bufnr and api.nvim_buf_is_valid(gutter_bufnr) then
+    api.nvim_buf_delete(gutter_bufnr, { force = true })
+  end
+  gutter_bufnr = nil
 end
 
 local function display_context_window(width, height, row, col)
   if winid == nil or not api.nvim_win_is_valid(winid) then
-    local bufnr = get_buf()
+    local _, bufnr = get_bufs()
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
       width = width,
@@ -287,7 +294,8 @@ end
 
 local function display_gutter_window(width, height, row, col)
   if gutter_winid == nil or not api.nvim_win_is_valid(gutter_winid) then
-    gutter_winid = api.nvim_open_win(gutter_bufnr, false, {
+    local bufnr = get_bufs()
+    gutter_winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
       width = width,
       height = height,
@@ -518,13 +526,13 @@ function M.open()
     table.insert(context_linenumbers_text, gutter_string)
   end
 
-  local bufnr = get_buf()
+  local gbufnr, bufnr = get_bufs()
   if not set_lines(bufnr, context_text) then
     -- Context didn't change, can return here
     return
   end
 
-  set_lines(gutter_bufnr, context_linenumbers_text)
+  set_lines(gbufnr, context_linenumbers_text)
 
   -- api.nvim_command('echom ' .. vim.fn.json_encode({
   --   type = target_node:type(),
@@ -640,7 +648,7 @@ end
 function M.disable()
   nvim_augroup('treesitter_context_update', {})
   M.close()
-  delete_buf()
+  delete_bufs()
   enabled = false
 end
 
