@@ -136,7 +136,7 @@ end
 
 local get_text_for_node = function(node)
   local type = get_type_pattern(node, config.patterns.default) or node:type()
-  local filetype = api.nvim_buf_get_option(0, 'filetype')
+  local filetype = vim.bo.filetype
 
   local skip_leading_type = (skip_leading_types[type] or {})[filetype]
   if skip_leading_type then
@@ -160,12 +160,13 @@ local get_text_for_node = function(node)
   start_col = 0
 
   local last_type = (last_types[type] or {})[filetype]
-  local last_position = nil
 
-  if last_type ~= nil then
+  local last_position
+
+  if last_type then
     local child = find_node(node, last_type)
 
-    if child ~= nil then
+    if child then
       last_position = {child:end_()}
 
       end_row = last_position[1]
@@ -176,7 +177,7 @@ local get_text_for_node = function(node)
     end
   end
 
-  if last_position == nil then
+  if not last_position then
     lines = slice(lines, 1, 1)
     end_row = start_row
     end_col = #lines[1]
@@ -231,7 +232,7 @@ local cursor_moved_vertical
 do
   local line
   cursor_moved_vertical = function()
-    local newline =  vim.api.nvim_win_get_cursor(0)[1]
+    local newline = vim.api.nvim_win_get_cursor(0)[1]
     if newline ~= line then
       line = newline
       return true
@@ -313,20 +314,21 @@ local function get_parent_matches()
   -- local matches = ts_query.get_capture_matches(0, '@scope.node', 'locals')
 
   local current = ts_utils.get_node_at_cursor()
-  if not current then return end
+  if not current then
+    return
+  end
 
   local parent_matches = {}
-  local filetype = api.nvim_buf_get_option(0, 'filetype')
   local lines = 0
   local last_row = -1
-  local first_visible_line = api.nvim_call_function('line', { 'w0' })
+  local topline = vim.fn.line('w0')
 
   while current do
     local row = current:start()
 
-    if is_valid(current, filetype)
+    if is_valid(current, vim.bo.filetype)
         and row > 0
-        and row < (first_visible_line - 1)
+        and row < (topline - 1)
         and row ~= last_row then
       table.insert(parent_matches, current)
 
@@ -362,8 +364,8 @@ function M.update_context()
       local node = context[i]
       local type = get_type_pattern(node, config.patterns.default) or node:type()
 
-      table.insert(context_nodes, node)
-      table.insert(context_types, type)
+      context_nodes[#context_nodes+1] = node
+      context_types[#context_types+1] = type
     end
   end
 
@@ -394,23 +396,17 @@ end
 
 function M.close()
   previous_nodes = nil
+  -- Can't close other windows when the command-line window is open
+  if api.nvim_call_function('getcmdwintype', {}) ~= '' then
+    return
+  end
 
   if context_winid ~= nil and api.nvim_win_is_valid(context_winid) then
-    -- Can't close other windows when the command-line window is open
-    if api.nvim_call_function('getcmdwintype', {}) ~= '' then
-      return
-    end
-
     api.nvim_win_close(context_winid, true)
   end
   context_winid = nil
 
   if gutter_winid and api.nvim_win_is_valid(gutter_winid) then
-    -- Can't close other windows when the command-line window is open
-    if api.nvim_call_function('getcmdwintype', {}) ~= '' then
-      return
-    end
-
     api.nvim_win_close(gutter_winid, true)
   end
   gutter_winid = nil
@@ -462,18 +458,18 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
 
     local target_node = get_target_node()
 
-    local start_row_absolute = context.node:start()
+    local start_row_abs = context.node:start()
 
     for capture, node in query:iter_captures(target_node, bufnr, start_row, context.node:end_()) do
-      local atom_start_row, atom_start_col, atom_end_row, atom_end_col = node:range()
+      local node_start_row, node_start_col, node_end_row, node_end_col = node:range()
 
-      if atom_end_row > end_row or
-        (atom_end_row == end_row and atom_end_col > end_col) then
+      if node_end_row > end_row or
+        (node_end_row == end_row and node_end_col > end_col) then
         break
       end
 
-      if atom_start_row >= start_row_absolute then
-        local intended_start_row = atom_start_row - start_row_absolute
+      if node_start_row >= start_row_abs then
+        local intended_start_row = node_start_row - start_row_abs
 
         -- Add 1 for each space added between lines when
         -- we replace "\n" with " "
@@ -485,9 +481,10 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
         -- Remove the indentation negative offset for current line
         offset = offset - indents[intended_start_row + 1]
 
-        api.nvim_buf_set_extmark(ctx_bufnr, ns, i - 1, atom_start_col + offset, {
-          end_line = i - 1,
-          end_col = atom_end_col + offset,
+        local row = i - 1
+        api.nvim_buf_set_extmark(ctx_bufnr, ns, row, node_start_col + offset, {
+          end_line = row,
+          end_col = node_end_col + offset,
           hl_group = buf_query.hl_cache[capture]
         })
       end
