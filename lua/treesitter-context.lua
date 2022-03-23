@@ -219,15 +219,15 @@ local get_gutter_width = function()
 end
 
 local nvim_augroup = function(group_name, definitions)
-  api.nvim_command('augroup ' .. group_name)
-  api.nvim_command('autocmd!')
+  vim.cmd('augroup ' .. group_name)
+  vim.cmd('autocmd!')
   for _, def in ipairs(definitions) do
     local command = table.concat({'autocmd', unpack(def)}, ' ')
     if api.nvim_call_function('exists', {'##' .. def[1]}) ~= 0 then
-      api.nvim_command(command)
+      vim.cmd(command)
     end
   end
-  api.nvim_command('augroup END')
+  vim.cmd('augroup END')
 end
 
 local cursor_moved_vertical
@@ -685,12 +685,12 @@ function M.setup(options)
   end
 end
 
-api.nvim_command('command! TSContextEnable  lua require("treesitter-context").enable()')
-api.nvim_command('command! TSContextDisable lua require("treesitter-context").disable()')
-api.nvim_command('command! TSContextToggle  lua require("treesitter-context").toggleEnabled()')
+vim.cmd('command! TSContextEnable  lua require("treesitter-context").enable()')
+vim.cmd('command! TSContextDisable lua require("treesitter-context").disable()')
+vim.cmd('command! TSContextToggle  lua require("treesitter-context").toggleEnabled()')
 
-api.nvim_command('highlight default link TreesitterContext NormalFloat')
-api.nvim_command('highlight default link TreesitterContextLineNumber LineNr')
+vim.cmd('highlight default link TreesitterContext NormalFloat')
+vim.cmd('highlight default link TreesitterContextLineNumber LineNr')
 
 nvim_augroup('treesitter_context', {
   {'VimEnter', '*', 'lua require("treesitter-context").onVimEnter()'},
