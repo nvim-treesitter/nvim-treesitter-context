@@ -86,12 +86,6 @@ local context_nodes = {}
 local context_types = {}
 local previous_nodes = nil
 
-
--- Helper functions
-local log_message = function(value)
-  api.nvim_command('echom ' .. vim.fn.json_encode(value))
-end
-
 local get_target_node = function()
   local tree = parsers.get_parser():parse()[1]
   return tree:root()
@@ -301,9 +295,8 @@ function M.do_au_cursor_moved_vertical()
   end
 end
 
-function M.get_context(opts)
+function M.get_context(_)
   if not parsers.has_parser() then return nil end
-  local options = opts or {}
 
   local cursor_node = ts_utils.get_node_at_cursor()
   if not cursor_node then return nil end
@@ -496,8 +489,8 @@ function M.open()
   api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 
   local buf_highlighter = Highlighter.active[saved_bufnr] or nil
-  local buf_queries = nil
-  local buf_query = nil
+  local buf_queries
+  local buf_query
 
   if buf_highlighter then
     buf_queries = buf_highlighter._queries
@@ -521,7 +514,7 @@ function M.open()
     local lines = context_lines[i]
 
     local start_row = range[1]
-    local start_col = range[2]
+    -- local start_col = range[2]
     local end_row   = range[3]
     local end_col   = range[4]
 
@@ -549,9 +542,6 @@ function M.open()
       if atom_start_row >= start_row_absolute then
 
         local intended_start_row = atom_start_row - start_row_absolute
-        local intended_end_row   = atom_end_row   - start_row_absolute
-        local intended_start_col = atom_start_col
-        local intended_end_col   = atom_end_col
 
         local offset
         if intended_start_row == last_line then
