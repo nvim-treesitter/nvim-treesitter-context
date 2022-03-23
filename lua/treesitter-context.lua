@@ -304,33 +304,10 @@ function M.do_au_cursor_moved_vertical()
   end
 end
 
-function M.get_context(_)
-  if not parsers.has_parser() then return nil end
-
-  local cursor_node = ts_utils.get_node_at_cursor()
-  if not cursor_node then return nil end
-
-  local matches = {}
-  local expr = cursor_node
-
-  local filetype = api.nvim_buf_get_option(0, 'filetype')
-  while expr do
-    local is_match, type = is_valid(expr, filetype)
-    if is_match then
-      table.insert(matches, 1, {expr, type})
-    end
-    expr = expr:parent()
+local function get_parent_matches()
+  if not parsers.has_parser() then
+    return
   end
-
-  if #matches == 0 then
-    return nil
-  end
-
-  return matches
-end
-
-function M.get_parent_matches()
-  if not parsers.has_parser() then return nil end
 
   -- FIXME: use TS queries when possible
   -- local matches = ts_query.get_capture_matches(0, '@scope.node', 'locals')
@@ -344,9 +321,8 @@ function M.get_parent_matches()
   local last_row = -1
   local first_visible_line = api.nvim_call_function('line', { 'w0' })
 
-  while current ~= nil do
-    local position = {current:start()}
-    local row = position[1]
+  while current do
+    local row = current:start()
 
     if is_valid(current, filetype)
         and row > 0
@@ -356,8 +332,9 @@ function M.get_parent_matches()
 
       if row ~= last_row then
         lines = lines + 1
-        last_row = position[1]
+        last_row = row
       end
+
       if config.max_lines > 0 and lines >= config.max_lines then
         break
       end
@@ -369,13 +346,13 @@ function M.get_parent_matches()
 end
 
 function M.update_context()
-  if api.nvim_get_option('buftype') ~= '' or
+  if vim.bo.buftype ~= '' or
       vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
     M.close()
     return
   end
 
-  local context = M.get_parent_matches()
+  local context = get_parent_matches()
 
   context_nodes = {}
   context_types = {}
@@ -460,78 +437,16 @@ local function set_lines(bufnr, lines)
   return redraw
 end
 
-function M.open()
-  if #context_nodes == 0 then
-    return
-  end
+local function highlight_contexts(bufnr, ctx_bufnr, contexts)
+  api.nvim_buf_clear_namespace(ctx_bufnr, ns, 0, -1)
 
-  if context_nodes == previous_nodes then
-    return
-  end
-
-  previous_nodes = context_nodes
-
-  local saved_bufnr = api.nvim_get_current_buf()
-
-  local gutter_width = get_gutter_width()
-  local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
-  local win_height = math.max(1, #context_nodes)
-
-  local gbufnr, bufnr = get_bufs()
-
-  gutter_winid = display_window(
-    gbufnr, gutter_winid, gutter_width, win_height, 0,
-    'treesitter_context_line_number', 'TreesitterContextLineNumber')
-
-  context_winid = display_window(
-    bufnr, context_winid, win_width, win_height, gutter_width,
-    'treesitter_context', 'TreesitterContext')
-
-  -- Set text
-
-  local context_text = {}
-  local lno_text = {}
-
-  local contexts = {}
-
-  for _, node in ipairs(context_nodes) do
-    local lines, range = get_text_for_node(node)
-    local text = merge_lines(lines)
-
-    contexts[#contexts+1] = {
-      node = node,
-      lines = lines,
-      range = range,
-      indents = get_indents(lines),
-    }
-
-    table.insert(context_text, text)
-
-    local linenumber_string = string.format('%d', range[1] + 1)
-    local padding_string = string.rep(' ', gutter_width - 1 - string.len(linenumber_string))
-    local gutter_string = padding_string .. linenumber_string .. ' '
-    table.insert(lno_text, gutter_string)
-  end
-
-  if not set_lines(bufnr, context_text) then
-    -- Context didn't change, can return here
-    return
-  end
-
-  set_lines(gbufnr, lno_text)
-
-  -- Highlight
-
-  api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-
-  local buf_highlighter = highlighter.active[saved_bufnr]
+  local buf_highlighter = highlighter.active[bufnr]
 
   if not buf_highlighter then
     -- Use standard highlighting when TS highlighting is not available
     local current_ft = vim.bo.filetype
-    local buffer_ft  = vim.bo[bufnr].filetype
-    if current_ft ~= buffer_ft then
-      api.nvim_buf_set_option(bufnr, 'filetype', current_ft)
+    if current_ft ~= vim.bo[ctx_bufnr].filetype then
+      api.nvim_buf_set_option(ctx_bufnr, 'filetype', current_ft)
     end
     return
   end
@@ -549,7 +464,7 @@ function M.open()
 
     local start_row_absolute = context.node:start()
 
-    for capture, node in query:iter_captures(target_node, saved_bufnr, start_row, context.node:end_()) do
+    for capture, node in query:iter_captures(target_node, bufnr, start_row, context.node:end_()) do
       local atom_start_row, atom_start_col, atom_end_row, atom_end_col = node:range()
 
       if atom_end_row > end_row or
@@ -570,7 +485,7 @@ function M.open()
         -- Remove the indentation negative offset for current line
         offset = offset - indents[intended_start_row + 1]
 
-        api.nvim_buf_set_extmark(bufnr, ns, i - 1, atom_start_col + offset, {
+        api.nvim_buf_set_extmark(ctx_bufnr, ns, i - 1, atom_start_col + offset, {
           end_line = i - 1,
           end_col = atom_end_col + offset,
           hl_group = buf_query.hl_cache[capture]
@@ -578,6 +493,68 @@ function M.open()
       end
     end
   end
+end
+
+local function build_lno_str(lnum, width)
+  return string.format('%'..width..'d', lnum)
+end
+
+function M.open()
+  if #context_nodes == 0 then
+    return
+  end
+
+  if context_nodes == previous_nodes then
+    return
+  end
+
+  previous_nodes = context_nodes
+
+  local bufnr = api.nvim_get_current_buf()
+
+  local gutter_width = get_gutter_width()
+  local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
+  local win_height = math.max(1, #context_nodes)
+
+  local gbufnr, ctx_bufnr = get_bufs()
+
+  gutter_winid = display_window(
+    gbufnr, gutter_winid, gutter_width, win_height, 0,
+    'treesitter_context_line_number', 'TreesitterContextLineNumber')
+
+  context_winid = display_window(
+    ctx_bufnr, context_winid, win_width, win_height, gutter_width,
+    'treesitter_context', 'TreesitterContext')
+
+  -- Set text
+
+  local context_text = {}
+  local lno_text = {}
+  local contexts = {}
+
+  for _, node in ipairs(context_nodes) do
+    local lines, range = get_text_for_node(node)
+    local text = merge_lines(lines)
+
+    contexts[#contexts+1] = {
+      node = node,
+      lines = lines,
+      range = range,
+      indents = get_indents(lines),
+    }
+
+    table.insert(context_text, text)
+    table.insert(lno_text, build_lno_str(range[1]+1, gutter_width-1))
+  end
+
+  if not set_lines(ctx_bufnr, context_text) then
+    -- Context didn't change, can return here
+    return
+  end
+
+  set_lines(gbufnr, lno_text)
+
+  highlight_contexts(bufnr, ctx_bufnr, contexts)
 end
 
 function M.enable()
@@ -618,8 +595,6 @@ function M.onVimEnter()
   -- Setup with default options if user didn't call setup()
   M.setup()
 end
-
--- Setup
 
 function M.setup(options)
   didSetup = true
