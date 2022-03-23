@@ -87,7 +87,7 @@ local context_nodes = {}
 local context_types = {}
 local previous_nodes
 
-local get_target_node = function()
+local get_root_node = function()
   local tree = parsers.get_parser():parse()[1]
   return tree:root()
 end
@@ -100,11 +100,9 @@ local is_valid = function(node, filetype)
     end
   end
   local filetype_patterns = config.patterns[filetype]
-  if filetype_patterns ~= nil then
-    for _, rgx in ipairs(filetype_patterns) do
-      if node_type:find(rgx) then
-        return true, rgx
-      end
+  for _, rgx in ipairs(filetype_patterns or {}) do
+    if node_type:find(rgx) then
+      return true, rgx
     end
   end
   return false
@@ -310,11 +308,10 @@ local function get_parent_matches()
     return
   end
 
-  -- FIXME: use TS queries when possible
-  -- local matches = ts_query.get_capture_matches(0, '@scope.node', 'locals')
+  local lnum, col = unpack(api.nvim_win_get_cursor(0))
 
-  local current = ts_utils.get_node_at_cursor()
-  if not current then
+  local node = get_root_node():named_descendant_for_range(lnum-1, col, lnum-1, col)
+  if not node then
     return
   end
 
@@ -323,14 +320,14 @@ local function get_parent_matches()
   local last_row = -1
   local topline = vim.fn.line('w0')
 
-  while current do
-    local row = current:start()
+  while node do
+    local row = node:start()
 
-    if is_valid(current, vim.bo.filetype)
+    if is_valid(node, vim.bo.filetype)
         and row > 0
         and row < (topline - 1)
         and row ~= last_row then
-      table.insert(parent_matches, current)
+      table.insert(parent_matches, node)
 
       if row ~= last_row then
         lines = lines + 1
@@ -341,7 +338,7 @@ local function get_parent_matches()
         break
       end
     end
-    current = current:parent()
+    node = node:parent()
   end
 
   return parent_matches
@@ -450,17 +447,16 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   local buf_query = buf_highlighter:get_query(vim.bo.filetype)
 
   local query = buf_query:query()
+  local root = get_root_node()
 
   for i, context in ipairs(contexts) do
     local start_row, _, end_row, end_col = unpack(context.range)
     local indents = context.indents
     local lines = context.lines
 
-    local target_node = get_target_node()
-
     local start_row_abs = context.node:start()
 
-    for capture, node in query:iter_captures(target_node, bufnr, start_row, context.node:end_()) do
+    for capture, node in query:iter_captures(root, bufnr, start_row, context.node:end_()) do
       local node_start_row, node_start_col, node_end_row, node_end_col = node:range()
 
       if node_end_row > end_row or
