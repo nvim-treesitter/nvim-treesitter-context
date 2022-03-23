@@ -15,14 +15,6 @@ local defaultConfig = {
 
 local config = {}
 
-local has_textoff = vim.fn.has('nvim-0.6')
-
-local ffi = nil
-if not has_textoff then
-  ffi = require("ffi")
-  ffi.cdef'int curwin_col_off(void);'
-end
-
 -- Constants
 
 -- Tells us at which node type to stop when highlighting a multi-line
@@ -207,11 +199,7 @@ local get_indents = function(lines)
 end
 
 local get_gutter_width = function()
-  if not has_textoff then
-    return ffi.C.curwin_col_off();
-  else
-    return vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].textoff
-  end
+  return vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].textoff
 end
 
 local nvim_augroup = function(group_name, definitions)
