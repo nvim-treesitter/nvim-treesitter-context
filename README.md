@@ -1,3 +1,6 @@
+
+Maintained fork of https://github.com/romgrk/nvim-treesitter-context
+
 # nvim-treesitter-context
 
 Lightweight alternative to [context.vim](https://github.com/wellle/context.vim)
