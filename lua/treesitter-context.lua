@@ -291,6 +291,7 @@ local function display_window(width, height, row, col)
     })
   end
   api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:TreesitterContext')
+  api.nvim_win_set_option(winid, 'foldmethod', 'manual')
 end
 
 -- Exports
