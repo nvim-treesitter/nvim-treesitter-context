@@ -598,11 +598,11 @@ function M.disable()
 end
 
 function M.toggleEnabled()
-    if enabled then
-        M.disable()
-    else
-        M.enable()
-    end
+  if enabled then
+    M.disable()
+  else
+    M.enable()
+  end
 end
 
 function M.onVimEnter()
@@ -627,7 +627,7 @@ function M.setup(options)
   for filetype, patterns in pairs(config.patterns) do
     -- Map with word_pattern only if users don't need exact pattern matching
     if not config.exact_patterns[filetype] then
-        config.patterns[filetype] = vim.tbl_map(word_pattern, patterns)
+      config.patterns[filetype] = vim.tbl_map(word_pattern, patterns)
     end
   end
 
