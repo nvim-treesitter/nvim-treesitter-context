@@ -69,14 +69,11 @@ local INDENT_PATTERN = '^%s+'
 
 -- Script variables
 
-local didSetup = false
-local enabled
-local context_winid
-local gutter_winid
+local did_setup = false
+local enabled = false
+local gutter_winid, context_winid
 local gutter_bufnr, context_bufnr -- Don't access directly, use get_bufs()
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
-local context_nodes = {}
-local context_types = {}
 local previous_nodes
 
 local get_root_node = function()
@@ -291,6 +288,19 @@ function M.do_au_cursor_moved_vertical()
   end
 end
 
+local function reverse_table(t)
+  local r = {}
+
+  if t then
+    r = {}
+    for i = #t, 1, -1 do
+      r[#r+1] = t[i]
+    end
+  end
+
+  return r
+end
+
 local function get_parent_matches()
   if not parsers.has_parser() then
     return
@@ -329,37 +339,9 @@ local function get_parent_matches()
     node = node:parent()
   end
 
-  return parent_matches
+  return reverse_table(parent_matches)
 end
 
-function M.update_context()
-  if vim.bo.buftype ~= '' or
-      vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
-    M.close()
-    return
-  end
-
-  local context = get_parent_matches()
-
-  context_nodes = {}
-  context_types = {}
-
-  if context then
-    for i = #context, 1, -1 do
-      local node = context[i]
-      local type = get_type_pattern(node, config.patterns.default) or node:type()
-
-      context_nodes[#context_nodes+1] = node
-      context_types[#context_types+1] = type
-    end
-  end
-
-  if #context_nodes ~= 0 then
-    M.open()
-  else
-    M.close()
-  end
-end
 
 do
   local running = false
@@ -480,22 +462,12 @@ local function build_lno_str(lnum, width)
   return string.format('%'..width..'d', lnum)
 end
 
-function M.open()
-  if #context_nodes == 0 then
-    return
-  end
-
-  if context_nodes == previous_nodes then
-    return
-  end
-
-  previous_nodes = context_nodes
-
+local function open(ctx_nodes)
   local bufnr = api.nvim_get_current_buf()
 
   local gutter_width = get_gutter_width()
   local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
-  local win_height = math.max(1, #context_nodes)
+  local win_height = math.max(1, #ctx_nodes)
 
   local gbufnr, ctx_bufnr = get_bufs()
 
@@ -513,7 +485,7 @@ function M.open()
   local lno_text = {}
   local contexts = {}
 
-  for _, node in ipairs(context_nodes) do
+  for _, node in ipairs(ctx_nodes) do
     local lines, range = get_text_for_node(node)
     local text = merge_lines(lines)
 
@@ -538,18 +510,43 @@ function M.open()
   highlight_contexts(bufnr, ctx_bufnr, contexts)
 end
 
+function M.update_context()
+  if vim.bo.buftype ~= '' or
+      vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
+    M.close()
+    return
+  end
+
+  local context = get_parent_matches()
+
+  if context and #context ~= 0 then
+    if context == previous_nodes then
+      return
+    end
+
+    previous_nodes = context
+
+    open(context)
+  else
+    M.close()
+  end
+end
+
 function M.enable()
+  local pfx = 'silent lua require("treesitter-context").'
   local throttle = config.throttle and 'throttled_' or ''
+  local update = pfx..throttle..'update_context()'
+
   nvim_augroup('treesitter_context_update', {
-    {'WinScrolled', '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
-    {'BufEnter',    '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
-    {'WinEnter',    '*',                   'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
-    {'User',        'CursorMovedVertical', 'silent lua require("treesitter-context").' .. throttle .. 'update_context()'},
-    {'CursorMoved', '*',                   'silent lua require("treesitter-context").do_au_cursor_moved_vertical()'},
-    {'WinLeave',    '*',                   'silent lua require("treesitter-context").close()'},
-    {'VimResized',  '*',                   'silent lua require("treesitter-context").open()'},
-    {'User',        'SessionSavePre',      'silent lua require("treesitter-context").close()'},
-    {'User',        'SessionSavePost',     'silent lua require("treesitter-context").open()'},
+    {'WinScrolled', '*',                   update},
+    {'BufEnter',    '*',                   update},
+    {'WinEnter',    '*',                   update},
+    {'User',        'CursorMovedVertical', update},
+    {'CursorMoved', '*',                   pfx..'do_au_cursor_moved_vertical()'},
+    {'WinLeave',    '*',                   pfx..'close()'},
+    {'VimResized',  '*',                   update},
+    {'User',        'SessionSavePre',      pfx..'close()'},
+    {'User',        'SessionSavePost',     update},
   })
 
   M.throttled_update_context()
@@ -563,7 +560,7 @@ function M.disable()
   enabled = false
 end
 
-function M.toggleEnabled()
+function M.toggle()
   if enabled then
     M.disable()
   else
@@ -572,21 +569,22 @@ function M.toggleEnabled()
 end
 
 function M.onVimEnter()
-  if didSetup then return end
+  if did_setup then
+    return
+  end
+
   -- Setup with default options if user didn't call setup()
   M.setup()
 end
 
 function M.setup(options)
-  didSetup = true
+  did_setup = true
 
   local userOptions = options or {}
 
-  config = vim.tbl_deep_extend("force", {}, defaultConfig, userOptions)
-  config.patterns =
-    vim.tbl_deep_extend("force", {}, DEFAULT_TYPE_PATTERNS, userOptions.patterns or {})
-  config.exact_patterns =
-    vim.tbl_deep_extend("force", {}, userOptions.exact_patterns or {})
+  config                = vim.tbl_deep_extend("force", {}, defaultConfig, userOptions)
+  config.patterns       = vim.tbl_deep_extend("force", {}, DEFAULT_TYPE_PATTERNS, userOptions.patterns or {})
+  config.exact_patterns = vim.tbl_deep_extend("force", {}, userOptions.exact_patterns or {})
 
   for filetype, patterns in pairs(config.patterns) do
     -- Map with word_pattern only if users don't need exact pattern matching
@@ -604,7 +602,7 @@ end
 
 vim.cmd('command! TSContextEnable  lua require("treesitter-context").enable()')
 vim.cmd('command! TSContextDisable lua require("treesitter-context").disable()')
-vim.cmd('command! TSContextToggle  lua require("treesitter-context").toggleEnabled()')
+vim.cmd('command! TSContextToggle  lua require("treesitter-context").toggle()')
 
 vim.cmd('highlight default link TreesitterContext NormalFloat')
 vim.cmd('highlight default link TreesitterContextLineNumber LineNr')
