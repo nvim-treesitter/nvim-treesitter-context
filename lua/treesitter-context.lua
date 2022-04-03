@@ -447,11 +447,13 @@ function M.open()
   display_window(win_width, win_height, 0, gutter_width)
 
   -- Adjust &scrolloff to prevent the cursor from moving below the window
-  local so = vim.fn.getwinvar(0, '&scrolloff')
-  if win_height > so then
-      vim.fn.setwinvar(0, '&scrolloff', win_height)
-  else
-      vim.fn.setwinvar(0, '&scrolloff', -1)
+  if config.max_lines <= 0 then
+      local so = vim.fn.getwinvar(0, '&scrolloff')
+      if win_height > so then
+          vim.fn.setwinvar(0, '&scrolloff', win_height)
+      else
+          vim.fn.setwinvar(0, '&scrolloff', -1)
+      end
   end
 
   -- Set text
