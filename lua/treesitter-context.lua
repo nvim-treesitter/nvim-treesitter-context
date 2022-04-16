@@ -3,9 +3,10 @@ local ts_utils = require'nvim-treesitter.ts_utils'
 local highlighter = vim.treesitter.highlighter
 -- local ts_query = require('nvim-treesitter.query')
 local parsers = require'nvim-treesitter.parsers'
-local utils = require'treesitter-context.utils'
-local slice = utils.slice
-local word_pattern = utils.word_pattern
+
+local function word_pattern(p)
+  return '%f[%w]' .. p .. '%f[^%w]'
+end
 
 local defaultConfig = {
   enable = true,
@@ -187,13 +188,13 @@ local function get_text_for_node(node)
       end_row = last_position[1]
       end_col = last_position[2]
       local last_index = end_row - start_row
-      lines = slice(lines, 1, last_index + 1)
-      lines[#lines] = slice(lines[#lines], 1, end_col)
+      lines = vim.list_slice(lines, 1, last_index + 1)
+      lines[#lines] = lines[#lines]:sub(1, end_col)
     end
   end
 
   if not last_position then
-    lines = slice(lines, 1, 1)
+    lines = vim.list_slice(lines, 1, 1)
     end_row = start_row
     end_col = #lines[1]
   end
