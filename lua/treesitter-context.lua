@@ -84,12 +84,12 @@ local gutter_bufnr, context_bufnr -- Don't access directly, use get_bufs()
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local previous_nodes
 
-local get_root_node = function()
+local function get_root_node()
   local tree = parsers.get_parser():parse()[1]
   return tree:root()
 end
 
-local is_excluded = function(node, filetype)
+local function is_excluded(node, filetype)
   local node_type = node:type()
   for _, rgx in ipairs(config.exclude_patterns.default) do
     if node_type:find(rgx) then
@@ -105,7 +105,7 @@ local is_excluded = function(node, filetype)
   return false
 end
 
-local is_valid = function(node, filetype)
+local function is_valid(node, filetype)
   if is_excluded(node, filetype) then
     return false
   end
@@ -125,7 +125,7 @@ local is_valid = function(node, filetype)
   return false
 end
 
-local get_type_pattern = function(node, type_patterns)
+local function get_type_pattern(node, type_patterns)
   local node_type = node:type()
   for _, rgx in ipairs(type_patterns) do
     if node_type:find(rgx) then
@@ -149,7 +149,7 @@ local function find_node(node, type)
   end
 end
 
-local get_text_for_node = function(node)
+local function get_text_for_node(node)
   local type = get_type_pattern(node, config.patterns.default) or node:type()
   local filetype = vim.bo.filetype
 
@@ -204,7 +204,7 @@ local get_text_for_node = function(node)
 end
 
 -- Merge lines, removing the indentation after 1st line
-local merge_lines = function(lines)
+local function merge_lines(lines)
   local text = { lines[1] }
   for i = 2, #lines do
     text[i] = lines[i]:gsub(INDENT_PATTERN, '')
@@ -213,7 +213,7 @@ local merge_lines = function(lines)
 end
 
 -- Get indentation for lines except first
-local get_indents = function(lines)
+local function get_indents(lines)
   local indents = vim.tbl_map(function(line)
     local indent = line:match(INDENT_PATTERN)
     return indent and #indent or 0
@@ -223,11 +223,11 @@ local get_indents = function(lines)
   return indents
 end
 
-local get_gutter_width = function()
+local function get_gutter_width()
   return vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].textoff
 end
 
-local nvim_augroup = function(group_name, definitions)
+local function nvim_augroup(group_name, definitions)
   vim.cmd('augroup ' .. group_name)
   vim.cmd('autocmd!')
   for _, def in ipairs(definitions) do
