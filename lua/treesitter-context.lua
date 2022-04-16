@@ -65,6 +65,14 @@ local DEFAULT_TYPE_PATTERNS = {
   },
   exact_patterns = {},
 }
+
+local DEFAULT_TYPE_EXCLUDE_PATTERNS = {
+  default = {},
+  teal = {
+    'function_body',
+  },
+}
+
 local INDENT_PATTERN = '^%s+'
 
 -- Script variables
@@ -81,17 +89,37 @@ local get_root_node = function()
   return tree:root()
 end
 
+local is_excluded = function(node, filetype)
+  local node_type = node:type()
+  for _, rgx in ipairs(config.exclude_patterns.default) do
+    if node_type:find(rgx) then
+      return true
+    end
+  end
+  local filetype_patterns = config.exclude_patterns[filetype]
+  for _, rgx in ipairs(filetype_patterns or {}) do
+    if node_type:find(rgx) then
+      return true
+    end
+  end
+  return false
+end
+
 local is_valid = function(node, filetype)
+  if is_excluded(node, filetype) then
+    return false
+  end
+
   local node_type = node:type()
   for _, rgx in ipairs(config.patterns.default) do
     if node_type:find(rgx) then
-      return true, rgx
+      return true
     end
   end
   local filetype_patterns = config.patterns[filetype]
   for _, rgx in ipairs(filetype_patterns or {}) do
     if node_type:find(rgx) then
-      return true, rgx
+      return true
     end
   end
   return false
@@ -589,9 +617,10 @@ function M.setup(options)
 
   local userOptions = options or {}
 
-  config                = vim.tbl_deep_extend("force", {}, defaultConfig, userOptions)
-  config.patterns       = vim.tbl_deep_extend("force", {}, DEFAULT_TYPE_PATTERNS, userOptions.patterns or {})
-  config.exact_patterns = vim.tbl_deep_extend("force", {}, userOptions.exact_patterns or {})
+  config                  = vim.tbl_deep_extend("force", {}, defaultConfig, userOptions)
+  config.patterns         = vim.tbl_deep_extend("force", {}, DEFAULT_TYPE_PATTERNS, userOptions.patterns or {})
+  config.exclude_patterns = vim.tbl_deep_extend("force", {}, DEFAULT_TYPE_EXCLUDE_PATTERNS, userOptions.exclude_patterns or {})
+  config.exact_patterns   = vim.tbl_deep_extend("force", {}, userOptions.exact_patterns or {})
 
   for filetype, patterns in pairs(config.patterns) do
     -- Map with word_pattern only if users don't need exact pattern matching
