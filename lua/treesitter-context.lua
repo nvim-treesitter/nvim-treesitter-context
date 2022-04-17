@@ -1,8 +1,10 @@
 local api = vim.api
 local ts_utils = require'nvim-treesitter.ts_utils'
 local highlighter = vim.treesitter.highlighter
--- local ts_query = require('nvim-treesitter.query')
 local parsers = require'nvim-treesitter.parsers'
+
+local augroup = api.nvim_create_augroup
+local command = api.nvim_create_user_command
 
 local function word_pattern(p)
   return '%f[%w]' .. p .. '%f[^%w]'
@@ -228,18 +230,6 @@ local function get_gutter_width()
   return vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].textoff
 end
 
-local function nvim_augroup(group_name, definitions)
-  vim.cmd('augroup ' .. group_name)
-  vim.cmd('autocmd!')
-  for _, def in ipairs(definitions) do
-    local command = table.concat({'autocmd', unpack(def)}, ' ')
-    if api.nvim_call_function('exists', {'##' .. def[1]}) ~= 0 then
-      vim.cmd(command)
-    end
-  end
-  vim.cmd('augroup END')
-end
-
 local cursor_moved_vertical
 do
   local line
@@ -290,8 +280,8 @@ local function display_window(bufnr, winid, width, height, col, ty, hl)
       noautocmd = true,
     })
     api.nvim_win_set_var(winid, ty, true)
-    api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:'..hl)
-    api.nvim_win_set_option(winid, 'foldenable', false)
+    vim.wo[winid].winhl = 'NormalFloat:'..hl
+    vim.wo[winid].foldenable = false
   else
     api.nvim_win_set_config(winid, {
       win = api.nvim_get_current_win(),
@@ -311,17 +301,10 @@ local M = {
   config = config,
 }
 
-function M.do_au_cursor_moved_vertical()
-  if cursor_moved_vertical() then
-    vim.cmd [[doautocmd <nomodeline> User CursorMovedVertical]]
-  end
-end
-
 local function reverse_table(t)
   local r = {}
 
   if t then
-    r = {}
     for i = #t, 1, -1 do
       r[#r+1] = t[i]
     end
@@ -347,14 +330,14 @@ local function get_parent_matches()
   local last_row = -1
   local topline = vim.fn.line('w0')
 
-   -- save nodes in a table to iterate from top to bottom
+  -- save nodes in a table to iterate from top to bottom
   local parents = {}
   while node ~= nil do
     parents[#parents+1] = node
     node = node:parent()
   end
 
- for i = #parents, 1, -1 do
+  for i = #parents, 1, -1 do
     local parent = parents[i]
     local row = parent:start()
 
@@ -378,29 +361,24 @@ local function get_parent_matches()
   return reverse_table(parent_matches)
 end
 
-
-do
+local function throttle_fn(fn)
   local running = false
-
-  function M.throttled_update_context()
-    if running then return end
-    running = true
-    vim.defer_fn(function()
-      local status, err = pcall(M.update_context)
-
-      if not status then
-        print('Failed to get context: ' .. err)
-      end
-
-      running = false
-    end, 100)
+  return function()
+    if not running then
+      running = true
+      vim.defer_fn(function()
+        fn()
+        running = false
+      end, 100)
+    end
   end
 end
 
-function M.close()
+
+local function close()
   previous_nodes = nil
   -- Can't close other windows when the command-line window is open
-  if api.nvim_call_function('getcmdwintype', {}) ~= '' then
+  if vim.fn.getcmdwintype() ~= '' then
     return
   end
 
@@ -546,10 +524,9 @@ local function open(ctx_nodes)
   highlight_contexts(bufnr, ctx_bufnr, contexts)
 end
 
-function M.update_context()
-  if vim.bo.buftype ~= '' or
-      vim.fn.getwinvar(0, '&previewwindow') ~= 0 then
-    M.close()
+local function update_context()
+  if vim.bo.buftype ~= '' or vim.wo.previewwindow then
+    close()
     return
   end
 
@@ -564,34 +541,61 @@ function M.update_context()
 
     open(context)
   else
-    M.close()
+    close()
+  end
+end
+
+local throttled_update_context = throttle_fn(update_context)
+
+local function autocmd_for_group(group)
+  local gid = augroup(group, {})
+  return function(event, opts)
+    if opts then
+      if type(opts) == 'function' then
+        opts = { callback = opts }
+      elseif opts[1] then
+        opts.callback = opts[1]
+        opts[1] = nil
+      end
+    else
+      opts = {}
+    end
+    opts.group = gid
+    api.nvim_create_autocmd(event, opts)
+  end
+end
+
+local function update()
+  if config.throttle then
+    throttled_update_context()
+  else
+    update_context()
   end
 end
 
 function M.enable()
-  local pfx = 'silent lua require("treesitter-context").'
-  local throttle = config.throttle and 'throttled_' or ''
-  local update = pfx..throttle..'update_context()'
+  local autocmd = autocmd_for_group('treesitter_context_update')
 
-  nvim_augroup('treesitter_context_update', {
-    {'WinScrolled', '*',                   update},
-    {'BufEnter',    '*',                   update},
-    {'WinEnter',    '*',                   update},
-    {'User',        'CursorMovedVertical', update},
-    {'CursorMoved', '*',                   pfx..'do_au_cursor_moved_vertical()'},
-    {'WinLeave',    '*',                   pfx..'close()'},
-    {'VimResized',  '*',                   update},
-    {'User',        'SessionSavePre',      pfx..'close()'},
-    {'User',        'SessionSavePost',     update},
-  })
+  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
 
-  M.throttled_update_context()
+  autocmd('CursorMoved', function()
+    if cursor_moved_vertical() then
+      update()
+    end
+  end)
+
+  autocmd('WinLeave', close)
+
+  autocmd('User', {close , pattern = 'SessionSavePre'  })
+  autocmd('User', {update, pattern = 'SessionSavePost' })
+
+  update()
   enabled = true
 end
 
 function M.disable()
-  nvim_augroup('treesitter_context_update', {})
-  M.close()
+  augroup('treesitter_context_update', {})
+  close()
   delete_bufs()
   enabled = false
 end
@@ -604,16 +608,10 @@ function M.toggle()
   end
 end
 
-function M.onVimEnter()
+function M.setup(options)
   if did_setup then
     return
   end
-
-  -- Setup with default options if user didn't call setup()
-  M.setup()
-end
-
-function M.setup(options)
   did_setup = true
 
   local userOptions = options or {}
@@ -637,15 +635,16 @@ function M.setup(options)
   end
 end
 
-vim.cmd('command! TSContextEnable  lua require("treesitter-context").enable()')
-vim.cmd('command! TSContextDisable lua require("treesitter-context").disable()')
-vim.cmd('command! TSContextToggle  lua require("treesitter-context").toggle()')
+command('TSContextEnable' , M.enable , {})
+command('TSContextDisable', M.disable, {})
+command('TSContextToggle' , M.toggle , {})
 
-vim.cmd('highlight default link TreesitterContext NormalFloat')
-vim.cmd('highlight default link TreesitterContextLineNumber LineNr')
+api.nvim_set_hl(0, 'TreesitterContext'          , {link = 'NormalFloat', default = true})
+api.nvim_set_hl(0, 'TreesitterContextLineNumber', {link = 'LineNr'     , default = true})
 
-nvim_augroup('treesitter_context', {
-  {'VimEnter', '*', 'lua require("treesitter-context").onVimEnter()'},
-})
+-- Setup with default options if user didn't call setup()
+autocmd_for_group('treesitter_context')('VimEnter', function()
+  M.setup()
+end)
 
 return M
