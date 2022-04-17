@@ -6,6 +6,12 @@ Maintained fork of https://github.com/romgrk/nvim-treesitter-context
 Lightweight alternative to [context.vim](https://github.com/wellle/context.vim)
 implemented with [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter).
 
+## Requirements
+
+Neovim >= v0.7.x
+
+Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
+
 ## Install
 
 via packer
