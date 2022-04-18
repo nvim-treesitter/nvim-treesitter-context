@@ -485,9 +485,11 @@ local function open(ctx_nodes)
 
   local gbufnr, ctx_bufnr = get_bufs()
 
-  gutter_winid = display_window(
-    gbufnr, gutter_winid, gutter_width, win_height, 0,
-    'treesitter_context_line_number', 'TreesitterContextLineNumber')
+  if vim.wo.number or vim.wo.relativenumber then
+    gutter_winid = display_window(
+      gbufnr, gutter_winid, gutter_width, win_height, 0,
+      'treesitter_context_line_number', 'TreesitterContextLineNumber')
+  end
 
   context_winid = display_window(
     ctx_bufnr, context_winid, win_width, win_height, gutter_width,
