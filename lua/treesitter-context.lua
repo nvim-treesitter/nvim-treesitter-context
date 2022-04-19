@@ -313,7 +313,11 @@ local function reverse_table(t)
   return r
 end
 
-local function get_parent_matches()
+local function get_parent_matches(max_lines)
+  if max_lines == 0 then
+    return
+  end
+
   if not parsers.has_parser() then
     return
   end
@@ -352,7 +356,7 @@ local function get_parent_matches()
         last_row = row
       end
 
-      if config.max_lines > 0 and lines >= config.max_lines then
+      if lines >= max_lines then
         break
       end
     end
@@ -526,13 +530,27 @@ local function open(ctx_nodes)
   highlight_contexts(bufnr, ctx_bufnr, contexts)
 end
 
+local function calc_max_lines(config_max)
+  local max_lines = config_max
+  max_lines = max_lines == 0 and -1 or max_lines
+
+  if max_lines ~= -1 then
+    local wintop = vim.fn.line('w0')
+    local cursor = vim.fn.line('.')
+    local max_from_cursor = cursor - wintop
+    max_lines = math.min(max_lines, max_from_cursor)
+  end
+
+  return max_lines
+end
+
 local function update_context()
   if vim.bo.buftype ~= '' or vim.wo.previewwindow then
     close()
     return
   end
 
-  local context = get_parent_matches()
+  local context = get_parent_matches(calc_max_lines(config.max_lines))
 
   if context and #context ~= 0 then
     if context == previous_nodes then
