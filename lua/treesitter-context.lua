@@ -534,11 +534,13 @@ local function calc_max_lines(config_max)
   local max_lines = config_max
   max_lines = max_lines == 0 and -1 or max_lines
 
+  local wintop = vim.fn.line('w0')
+  local cursor = vim.fn.line('.')
+  local max_from_cursor = cursor - wintop
   if max_lines ~= -1 then
-    local wintop = vim.fn.line('w0')
-    local cursor = vim.fn.line('.')
-    local max_from_cursor = cursor - wintop
     max_lines = math.min(max_lines, max_from_cursor)
+  else
+    max_lines = max_from_cursor
   end
 
   return max_lines
