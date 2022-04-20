@@ -423,12 +423,12 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
     -- Use standard highlighting when TS highlighting is not available
     local current_ft = vim.bo.filetype
     if current_ft ~= vim.bo[ctx_bufnr].filetype then
-      api.nvim_buf_set_option(ctx_bufnr, 'filetype', current_ft)
+      vim.bo[ctx_bufnr].filetype = current_ft
     end
     return
   end
 
-  local buf_query = buf_highlighter:get_query(vim.bo.filetype)
+  local buf_query = buf_highlighter:get_query(parsers.ft_to_lang(vim.bo.filetype))
 
   local query = buf_query:query()
   local root = get_root_node()
