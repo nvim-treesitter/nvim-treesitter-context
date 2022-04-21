@@ -59,6 +59,7 @@ local DEFAULT_TYPE_PATTERNS = {
     'case',
   },
   tex = {
+    'chapter',
     'section',
     'subsection',
     'subsubsection',
