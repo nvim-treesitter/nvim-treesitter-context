@@ -58,6 +58,11 @@ local DEFAULT_TYPE_PATTERNS = {
     'switch',
     'case',
   },
+  tex = {
+    'section',
+    'subsection',
+    'subsubsection',
+  },
   rust = {
     'impl_item',
   },
