@@ -352,7 +352,7 @@ local function get_parent_matches(max_lines)
     local row = parent:start()
 
     if is_valid(parent, vim.bo.filetype)
-        and row > 0
+        and row >= 0
         and row < (topline + #parent_matches - 1)
         and row ~= last_row then
       table.insert(parent_matches, 1, parent)
