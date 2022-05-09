@@ -12,7 +12,6 @@ end
 
 local defaultConfig = {
   enable = true,
-  throttle = false,
   max_lines = 0, -- no limit
 }
 
@@ -379,7 +378,7 @@ local function throttle_fn(fn)
       vim.defer_fn(function()
         fn()
         running = false
-      end, 100)
+      end, 50)
     end
   end
 end
@@ -552,7 +551,7 @@ local function calc_max_lines(config_max)
   return max_lines
 end
 
-local function update_context()
+local update = throttle_fn(function()
   if vim.bo.buftype ~= '' or vim.wo.previewwindow then
     close()
     return
@@ -571,9 +570,7 @@ local function update_context()
   else
     close()
   end
-end
-
-local throttled_update_context = throttle_fn(update_context)
+end)
 
 local function autocmd_for_group(group)
   local gid = augroup(group, {})
@@ -590,14 +587,6 @@ local function autocmd_for_group(group)
     end
     opts.group = gid
     api.nvim_create_autocmd(event, opts)
-  end
-end
-
-local function update()
-  if config.throttle then
-    throttled_update_context()
-  else
-    update_context()
   end
 end
 
