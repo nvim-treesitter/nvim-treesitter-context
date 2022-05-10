@@ -485,6 +485,24 @@ local function build_lno_str(lnum, width)
   return string.format('%'..width..'d', lnum)
 end
 
+local function get_relative_line_num(ctx_node_line_num)
+  local cursor_line_num = vim.fn.line(".")
+  local num_folded_lines = 0
+  -- Find all folds between the context node and the cursor
+  local current_line = ctx_node_line_num
+  while current_line < cursor_line_num do
+    local fold_end = vim.fn.foldclosedend(current_line)
+    if fold_end == -1 then
+      current_line = current_line + 1
+    else
+      num_folded_lines = num_folded_lines + fold_end - current_line
+      current_line = fold_end + 1
+    end
+  end
+  return cursor_line_num - ctx_node_line_num - num_folded_lines
+end
+
+
 local function open(ctx_nodes)
   local bufnr = api.nvim_get_current_buf()
 
@@ -522,15 +540,23 @@ local function open(ctx_nodes)
     }
 
     table.insert(context_text, text)
-    table.insert(lno_text, build_lno_str(range[1]+1, gutter_width-1))
+
+    local line_num
+    local ctx_line_num = range[1] + 1
+    if vim.o.relativenumber then
+      line_num = get_relative_line_num(ctx_line_num)
+    else
+      line_num = ctx_line_num
+    end
+    table.insert(lno_text, build_lno_str(line_num, gutter_width-1))
   end
 
+  set_lines(gbufnr, lno_text)
   if not set_lines(ctx_bufnr, context_text) then
     -- Context didn't change, can return here
     return
   end
 
-  set_lines(gbufnr, lno_text)
 
   highlight_contexts(bufnr, ctx_bufnr, contexts)
 end
