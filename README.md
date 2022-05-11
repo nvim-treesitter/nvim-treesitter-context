@@ -11,12 +11,20 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
 
 ## Install
 
+via vim-plug
+
+```vim
+Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'romgrk/nvim-treesitter-context'
+```
+
 via packer
 
 ```lua
 use 'nvim-treesitter/nvim-treesitter'
-use 'lewis6991/nvim-treesitter-context'
+use 'romgrk/nvim-treesitter-context'
 ```
+
 
 ## Screenshot
 
