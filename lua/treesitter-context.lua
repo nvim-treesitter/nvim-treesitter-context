@@ -461,7 +461,7 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
         local intended_start_row = node_start_row - start_row_abs
 
         -- Add 1 for each space added between lines when
-        -- we replace "\n" with " "
+        -- we replace '\n' with ' '
         local offset = intended_start_row
         -- Add the length of each preceding lines
         for j = 1, intended_start_row do
@@ -486,7 +486,7 @@ local function build_lno_str(lnum, width)
 end
 
 local function get_relative_line_num(ctx_node_line_num)
-  local cursor_line_num = vim.fn.line(".")
+  local cursor_line_num = vim.fn.line('.')
   local num_folded_lines = 0
   -- Find all folds between the context node and the cursor
   local current_line = ctx_node_line_num
@@ -659,10 +659,10 @@ function M.setup(options)
 
   local userOptions = options or {}
 
-  config                  = vim.tbl_deep_extend("force", {}, defaultConfig, userOptions)
-  config.patterns         = vim.tbl_deep_extend("force", {}, DEFAULT_TYPE_PATTERNS, userOptions.patterns or {})
-  config.exclude_patterns = vim.tbl_deep_extend("force", {}, DEFAULT_TYPE_EXCLUDE_PATTERNS, userOptions.exclude_patterns or {})
-  config.exact_patterns   = vim.tbl_deep_extend("force", {}, userOptions.exact_patterns or {})
+  config                  = vim.tbl_deep_extend('force', {}, defaultConfig, userOptions)
+  config.patterns         = vim.tbl_deep_extend('force', {}, DEFAULT_TYPE_PATTERNS, userOptions.patterns or {})
+  config.exclude_patterns = vim.tbl_deep_extend('force', {}, DEFAULT_TYPE_EXCLUDE_PATTERNS, userOptions.exclude_patterns or {})
+  config.exact_patterns   = vim.tbl_deep_extend('force', {}, userOptions.exact_patterns or {})
 
   for filetype, patterns in pairs(config.patterns) do
     -- Map with word_pattern only if users don't need exact pattern matching
