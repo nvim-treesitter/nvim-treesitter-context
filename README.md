@@ -3,11 +3,19 @@
 Lightweight alternative to [context.vim](https://github.com/wellle/context.vim)
 implemented with [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter).
 
+## Requirements
+
+Neovim >= v0.7.x
+
+Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
+
 ## Install
 
-```vim
-Plug 'nvim-treesitter/nvim-treesitter'
-Plug 'romgrk/nvim-treesitter-context'
+via packer
+
+```lua
+use 'nvim-treesitter/nvim-treesitter'
+use 'lewis6991/nvim-treesitter-context'
 ```
 
 ## Screenshot
@@ -27,7 +35,6 @@ behavior is to update its content on `CursorMoved`.
 ```lua
 require'treesitter-context'.setup{
     enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
-    throttle = true, -- Throttles plugin updates (may improve performance)
     max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
     patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
         -- For all filetypes
@@ -54,7 +61,7 @@ require'treesitter-context'.setup{
         -- Example for a specific filetype with Lua patterns
         -- Treat patterns.rust as a Lua pattern (i.e "^impl_item$" will
         -- exactly match "impl_item" only)
-        -- rust = true, 
+        -- rust = true,
     }
 }
 ```
@@ -67,3 +74,6 @@ require'treesitter-context'.setup{
 
 Use the highlight group `TreesitterContext` to change the colors of the
 context. Per default it links to `NormalFloat`.
+
+Use the highlight group `TreesitterContextLineNumber` to change the colors of the
+context line numbers if `line_numbers` is set. Per default it links to `LineNr`.
