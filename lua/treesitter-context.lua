@@ -13,6 +13,7 @@ end
 local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
+  zindex = 40,
 }
 
 local config = {}
@@ -283,6 +284,7 @@ local function display_window(bufnr, winid, width, height, col, ty, hl)
       focusable = false,
       style = 'minimal',
       noautocmd = true,
+      zindex = config.zindex,
     })
     api.nvim_win_set_var(winid, ty, true)
     vim.wo[winid].winhl = 'NormalFloat:'..hl
