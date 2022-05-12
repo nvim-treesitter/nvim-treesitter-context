@@ -15,14 +15,14 @@ via vim-plug
 
 ```vim
 Plug 'nvim-treesitter/nvim-treesitter'
-Plug 'romgrk/nvim-treesitter-context'
+Plug 'nvim-treesitter/nvim-treesitter-context'
 ```
 
 via packer
 
 ```lua
 use 'nvim-treesitter/nvim-treesitter'
-use 'romgrk/nvim-treesitter-context'
+use 'nvim-treesitter/nvim-treesitter-context'
 ```
 
 
