@@ -13,7 +13,7 @@ end
 local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
-  zindex = 40,
+  zindex = 20,
 }
 
 local config = {}

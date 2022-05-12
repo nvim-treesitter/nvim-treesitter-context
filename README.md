@@ -75,7 +75,7 @@ require'treesitter-context'.setup{
     -- [!] The options below are exposed but shouldn't require your attention,
     --     you can safely ignore them.
 
-    zindex = 40, -- The Z-index of the context window
+    zindex = 20, -- The Z-index of the context window
 }
 ```
 
