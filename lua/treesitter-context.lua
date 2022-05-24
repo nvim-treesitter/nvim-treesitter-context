@@ -13,6 +13,7 @@ end
 local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
+  multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
   zindex = 20,
 }
 
@@ -201,7 +202,7 @@ local function get_text_for_node(node)
     end
   end
 
-  if not last_position then
+  if not last_position or #lines > config.multiline_threshold then
     lines = vim.list_slice(lines, 1, 1)
     end_row = start_row
     end_col = #lines[1]
