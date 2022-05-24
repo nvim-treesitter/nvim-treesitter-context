@@ -15,6 +15,7 @@ local defaultConfig = {
   max_lines = 0, -- no limit
   multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
   zindex = 20,
+  separator = nil,
 }
 
 local config = {}
@@ -276,6 +277,7 @@ end
 
 local function display_window(bufnr, winid, width, height, col, ty, hl)
   if not winid or not api.nvim_win_is_valid(winid) then
+    local sep = config.separator
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
       width = width,
@@ -286,6 +288,7 @@ local function display_window(bufnr, winid, width, height, col, ty, hl)
       style = 'minimal',
       noautocmd = true,
       zindex = config.zindex,
+      border = sep and {'', '', '', '', sep, sep, sep, ''} or nil,
     })
     api.nvim_win_set_var(winid, ty, true)
     vim.wo[winid].winhl = 'NormalFloat:'..hl
