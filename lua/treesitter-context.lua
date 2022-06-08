@@ -312,18 +312,6 @@ local M = {
   config = config,
 }
 
-local function reverse_table(t)
-  local r = {}
-
-  if t then
-    for i = #t, 1, -1 do
-      r[#r+1] = t[i]
-    end
-  end
-
-  return r
-end
-
 local function get_parent_matches(max_lines)
   if max_lines == 0 then
     return
@@ -352,8 +340,7 @@ local function get_parent_matches(max_lines)
     node = node:parent()
   end
 
-  for i = #parents, 1, -1 do
-    local parent = parents[i]
+  for _, parent in ipairs(parents) do
     local row = parent:start()
 
     if is_valid(parent, vim.bo.filetype)
@@ -373,7 +360,7 @@ local function get_parent_matches(max_lines)
     end
   end
 
-  return reverse_table(parent_matches)
+  return parent_matches
 end
 
 local function throttle_fn(fn)
