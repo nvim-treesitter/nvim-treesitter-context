@@ -13,8 +13,11 @@ end
 local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
+  multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
   zindex = 20,
   mode = 'cursor', -- Choices: 'cursor', 'topline'
+  separator = nil,
+
 }
 
 local config = {}
@@ -202,7 +205,7 @@ local function get_text_for_node(node)
     end
   end
 
-  if not last_position then
+  if not last_position or #lines > config.multiline_threshold then
     lines = vim.list_slice(lines, 1, 1)
     end_row = start_row
     end_col = #lines[1]
@@ -276,6 +279,7 @@ end
 
 local function display_window(bufnr, winid, width, height, col, ty, hl)
   if not winid or not api.nvim_win_is_valid(winid) then
+    local sep = config.separator
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
       width = width,
@@ -286,6 +290,7 @@ local function display_window(bufnr, winid, width, height, col, ty, hl)
       style = 'minimal',
       noautocmd = true,
       zindex = config.zindex,
+      border = sep and {'', '', '', '', sep, sep, sep, ''} or nil,
     })
     api.nvim_win_set_var(winid, ty, true)
     vim.wo[winid].winhl = 'NormalFloat:'..hl
@@ -308,18 +313,6 @@ end
 local M = {
   config = config,
 }
-
-local function reverse_table(t)
-  local r = {}
-
-  if t then
-    for i = #t, 1, -1 do
-      r[#r+1] = t[i]
-    end
-  end
-
-  return r
-end
 
 local function get_parent_matches(max_lines)
   if max_lines == 0 then
@@ -354,8 +347,7 @@ local function get_parent_matches(max_lines)
     node = node:parent()
   end
 
-  for i = #parents, 1, -1 do
-    local parent = parents[i]
+  for _, parent in ipairs(parents) do
     local row = parent:start()
 
     if is_valid(parent, vim.bo.filetype)
@@ -375,7 +367,7 @@ local function get_parent_matches(max_lines)
     end
   end
 
-  return reverse_table(parent_matches)
+  return parent_matches
 end
 
 local function throttle_fn(fn)
