@@ -29,6 +29,7 @@ local last_named_fields = {
     c = { 'declarator' },
     cpp = { 'declarator' },
     lua = { 'parameters' },
+    teal = { 'signature' },
     python = { 'return_type', 'parameters' },
     rust = { 'return_type', 'parameters' },
     javascript =  { 'parameters' },
