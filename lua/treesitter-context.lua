@@ -6,9 +6,7 @@ local parsers = require'nvim-treesitter.parsers'
 local augroup = api.nvim_create_augroup
 local command = api.nvim_create_user_command
 
-local function word_pattern(p)
-  return '%f[%w]' .. p .. '%f[^%w]'
-end
+local M = {}
 
 local defaultConfig = {
   enable = true,
@@ -18,71 +16,440 @@ local defaultConfig = {
   zindex = 20,
   mode = 'cursor', -- Choices: 'cursor', 'topline'
   separator = nil,
-
 }
 
 local config = {}
 
 -- Constants
+local CATEGORY = {
+  CLASS = 1,
+  INTERFACE = 2,
+  STRUCT = 3,
+  ENUM = 4,
+  FUNCTION = 5,
+  METHOD = 6,
+  FOR = 7,
+  WHILE = 8,
+  IF = 9,
+  SWITCH = 10,
+  CASE = 11,
+  SECTION = 12,
+}
 
--- Tells us at which node type to stop when highlighting a multi-line
--- node. If not specified, the highlighting stops after the first line.
-local last_nodes
-local QUERY_FIELD_NAME = 1
-local QUERY_NODE_TYPE = 2
-do
-  local function f(name)
-      return {
-          name = name,
-          kind = QUERY_FIELD_NAME,
-      }
-  end
-
-  local function t(name)
-      return {
-          name = name,
-          kind = QUERY_NODE_TYPE,
-      }
-  end
-
-  last_nodes = {
-    [word_pattern('function')] = {
-      c = { f'declarator' },
-      cpp = { f'declarator' },
-      lua = { f'parameters' },
-      teal = { f'signature' },
-      python = { f'return_type', f'parameters' },
-      rust = { f'return_type', f'parameters' },
-      javascript =  { f'parameters' },
-      typescript = { f'return_type', f'parameters' },
-    },
-    [word_pattern('method')] = {
-      lua = { f'parameters' },
-      javascript =  { f'parameters' },
-      typescript = { f'return_type', f'parameters' },
-    },
-    [word_pattern('class')] = {
-      cpp = { t'base_class_clause', f'name' }
-    }
-  }
-end
-
--- Tells us which leading child node type to skip when highlighting a
--- multi-line node.
-local skip_leading_types = {
-  [word_pattern('class')] = {
-    php = 'attribute_list',
-  },
-  [word_pattern('method')] = {
-    php = 'attribute_list',
+local DEFAULT_CATEGORIES = {
+  default = {
+    CATEGORY.CLASS,
+    CATEGORY.INTERFACE,
+    CATEGORY.STRUCT,
+    CATEGORY.ENUM,
+    CATEGORY.FUNCTION,
+    CATEGORY.METHOD,
+    CATEGORY.FOR,
+    CATEGORY.WHILE,
+    CATEGORY.IF,
+    CATEGORY.SWITCH,
+    CATEGORY.CASE,
+    CATEGORY.SECTION,
   },
 }
 
--- There are language-specific
-local DEFAULT_TYPE_PATTERNS = {
-  -- These catch most generic groups, eg "function_declaration" or "function_block"
+local QUERY = {
+  FIELD_NAME = 1,
+  NODE_TYPE = 2,
+}
+
+function M.field_name_query(name)
+  return {
+    name = name,
+    kind = QUERY.FIELD_NAME,
+  }
+end
+
+function M.node_type_query(name)
+  return {
+    name = name,
+    kind = QUERY.NODE_TYPE,
+  }
+end
+
+local DEFAULT_QUERIES
+do
+  local f = M.field_name_query
+  local t = M.node_type_query
+
+  DEFAULT_QUERIES = {
+    c = {
+      ['struct_specifier'] = {
+        category = CATEGORY.STRUCT,
+        last = { f'name' },
+      },
+      ['enum_specifier'] = {
+        category = CATEGORY.ENUM,
+        last = { f'name' },
+      },
+      ['function_definition'] = {
+        category = CATEGORY.FUNCTION,
+        last = { f'declarator' },
+      },
+      ['for_statement'] = {
+        category = CATEGORY.FOR,
+        last = { f'update', f'condition', f'initializer' },
+      },
+      ['while_statement' ] = {
+        category = CATEGORY.WHILE,
+        last = { f'condition' },
+      },
+      ['if_statement' ] = {
+        category = CATEGORY.IF,
+        last = { f'condition' },
+      },
+      ['switch_statement' ] = {
+        category = CATEGORY.SWITCH,
+        last = { f'condition' },
+      },
+      ['case_statement' ] = {
+        category = CATEGORY.CASE,
+        last = { f'value' },
+      },
+    },
+    cpp = {
+      ['class_specifier'] = {
+        category = CATEGORY.CLASS,
+        last = { t'base_class_clause', f'name' },
+      },
+      ['struct_specifier'] = {
+        category = CATEGORY.STRUCT,
+        last = { t'base_class_clause', f'name' },
+      },
+      ['enum_specifier'] = {
+        category = CATEGORY.ENUM,
+        last = { f'name' },
+      },
+      ['function_definition'] = {
+        category = CATEGORY.FUNCTION,
+        last = { f'declarator' },
+      },
+      ['for_statement'] = {
+        category = CATEGORY.FOR,
+        last = { f'update', f'condition', f'initializer' },
+      },
+      ['while_statement' ] = {
+        category = CATEGORY.WHILE,
+        last = { f'condition' },
+      },
+      ['if_statement' ] = {
+        category = CATEGORY.IF,
+        last = { f'condition' },
+      },
+      ['switch_statement' ] = {
+        category = CATEGORY.SWITCH,
+        last = { f'condition' },
+      },
+      ['case_statement' ] = {
+        category = CATEGORY.CASE,
+        last = { f'value' },
+      },
+    },
+    rust = {
+      ['impl_item'] = {
+        category = CATEGORY.CLASS,
+        last = { f'type' },
+      },
+      ['trait_item'] = {
+        category = CATEGORY.INTERFACE,
+        last = { f'bounds', f'name' },
+      },
+      ['struct_item'] = {
+        category = CATEGORY.STRUCT,
+        last = { f'name' },
+      },
+      ['enum_item'] = {
+        category = CATEGORY.ENUM,
+        last = { f'name' },
+      },
+      ['function_item'] = {
+        category = CATEGORY.FUNCTION,
+        last = { f'return_type', f'parameters' },
+      },
+      ['for_expression'] = {
+        category = CATEGORY.FOR,
+        last = { f'value' },
+      },
+      ['while_expression'] = {
+        category = CATEGORY.WHILE,
+        last = { f'condition' },
+      },
+      ['while_let_expression'] = {
+        category = CATEGORY.WHILE,
+        last = { f'value' },
+      },
+      ['loop_expression'] = {
+        category = CATEGORY.WHILE,
+      },
+      ['if_expression' ] = {
+        category = CATEGORY.IF,
+        last = { f'condition' },
+      },
+      ['if_let_expression' ] = {
+        category = CATEGORY.IF,
+        last = { f'value' },
+      },
+      ['match_expression' ] = {
+        category = CATEGORY.SWITCH,
+        last = { f'value' },
+      },
+      ['match_arm' ] = {
+        category = CATEGORY.CASE,
+        last = { f'pattern' },
+      },
+    },
+    javascript = {
+      ['class_declaration'] = {
+        category = CATEGORY.CLASS,
+        last = { t'class_heritage', f'name' },
+      },
+      ['function_declaration'] = {
+        category = CATEGORY.FUNCTION,
+        last = { f'parameters' },
+      },
+      ['method_declaration'] = {
+        category = CATEGORY.METHOD,
+        last = { f'parameters' },
+      },
+      ['for_statement'] = {
+        category = CATEGORY.FOR,
+        last = { f'increment' },
+      },
+      ['for_in_statement'] = {
+        category = CATEGORY.FOR,
+        last = { f'right' },
+      },
+      ['while_statement'] = {
+        category = CATEGORY.WHILE,
+        last = { f'condition' },
+      },
+      ['if_statement' ] = {
+        category = CATEGORY.IF,
+        last = { f'condition' },
+      },
+      ['switch_statement' ] = {
+        category = CATEGORY.SWITCH,
+        last = { f'value' },
+      },
+      ['switch_case' ] = {
+        category = CATEGORY.CASE,
+        last = { f'pattern' },
+      },
+      ['switch_default' ] = {
+        category = CATEGORY.CASE,
+      },
+    },
+    typesript = {
+      ['class_declaration'] = {
+        category = CATEGORY.CLASS,
+        last = { t'class_heritage', f'name' },
+      },
+      ['interface_declaration'] = {
+        category = CATEGORY.INTERFACE,
+        last = { t'extends_type_clause', f'name' },
+      },
+      ['function_declaration'] = {
+        category = CATEGORY.FUNCTION,
+        last = { f'return_type', f'parameters' },
+      },
+      ['method_declaration'] = {
+        category = CATEGORY.METHOD,
+        last = { f'return_type', f'parameters' },
+      },
+      ['for_statement'] = {
+        category = CATEGORY.FOR,
+        last = { f'increment' },
+      },
+      ['for_in_statement'] = {
+        category = CATEGORY.FOR,
+        last = { f'right' },
+      },
+      ['while_statement'] = {
+        category = CATEGORY.WHILE,
+        last = { f'condition' },
+      },
+      ['if_statement' ] = {
+        category = CATEGORY.IF,
+        last = { f'condition' },
+      },
+      ['switch_statement' ] = {
+        category = CATEGORY.SWITCH,
+        last = { f'value' },
+      },
+      ['switch_case' ] = {
+        category = CATEGORY.CASE,
+        last = { f'pattern' },
+      },
+      ['switch_default' ] = {
+        category = CATEGORY.CASE,
+      },
+    },
+    lua = {
+      ['function_declaration' ] = {
+        category = CATEGORY.FUNCTION,
+        last = { f'parameters' },
+      },
+      ['for_statement'] = {
+        category = CATEGORY.FOR,
+        last = { f'clause' },
+      },
+      ['while_statement'] = {
+        category = CATEGORY.WHILE,
+        last = { f'condition' },
+      },
+      ['if_statement'] = {
+        category = CATEGORY.IF,
+        last = { f'condition' },
+      },
+    },
+    teal = {
+      ['record_declaration' ] = {
+        category = CATEGORY.CLASS,
+        last = { f'name' },
+      },
+      ['enum_declaration' ] = {
+        category = CATEGORY.ENUM,
+        last = { f'name' },
+      },
+      ['function_statement' ] = {
+        category = CATEGORY.FUNCTION,
+        last = { f'signature' },
+      },
+      ['numeric_for_statement'] = {
+        category = CATEGORY.FOR,
+        last = { f'step', f'target' },
+      },
+      ['generic_for_statement'] = {
+        category = CATEGORY.FOR,
+        last = { f'iterator' },
+      },
+      ['while_statement'] = {
+        category = CATEGORY.WHILE,
+        last = { f'condition' },
+      },
+      ['if_statement'] = {
+        category = CATEGORY.IF,
+        last = { f'condition' },
+      },
+    },
+    python = {
+      ['class_definition'] = {
+        category = CATEGORY.CLASS,
+        last = { f'superclasses', f'name' },
+      },
+      ['function_definition' ] = {
+        category = CATEGORY.FUNCTION,
+        last = { f'return_type', f'parameters' },
+      },
+      ['for_statement'] = {
+        category = CATEGORY.FOR,
+        last = { f'right' },
+      },
+      ['while_statement'] = {
+        category = CATEGORY.WHILE,
+        last = { f'condition' },
+      },
+      ['if_statement'] = {
+        category = CATEGORY.IF,
+        last = { f'condition' },
+      },
+      ['with_statement'] = {
+        category = CATEGORY.IF,
+        last = { f'with_clause' },
+      },
+      ['match_statement'] = {
+        category = CATEGORY.SWITCH,
+        last = { f'subject' },
+      },
+      ['case_clause'] = {
+        category = CATEGORY.CASE,
+        last = { f'pattern' },
+      },
+    },
+    php = {
+      ['class_declaration'] = {
+        category = CATEGORY.CLASS,
+        -- TODO: fix error when highighting
+        -- skip = { f'attributes' },
+        last = { t'class_interface_clause', t'base_clause', f'name' },
+      },
+      ['interface_declaration'] = {
+        category = CATEGORY.INTERFACE,
+        last = { t'base_clause', f'name' },
+      },
+      ['enum_declaration'] = {
+        category = CATEGORY.ENUM,
+        last = { f'name' },
+      },
+      ['method_declaration'] = {
+        category = CATEGORY.METHOD,
+        -- TODO: fix error when highighting
+        -- skip = { f'attributes' },
+        last = { f'return_type', f'parameters' },
+      },
+      ['for_statement'] = {
+        category = CATEGORY.FOR,
+      },
+      ['foreach_statement'] = {
+        category = CATEGORY.FOR,
+      },
+      ['while_statement'] = {
+        category = CATEGORY.WHILE,
+        last = { f'condition' },
+      },
+      ['if_statement'] = {
+        category = CATEGORY.IF,
+        last = { f'condition' },
+      },
+      ['switch_statement'] = {
+        category = CATEGORY.SWITCH,
+        last = { f'condition' },
+      },
+      ['case_statement'] = {
+        category = CATEGORY.CASE,
+        last = { f'value' },
+      },
+      ['default_statement'] = {
+        category = CATEGORY.CASE,
+      },
+    },
+    tex = {
+      ['part'] = {
+        category = CATEGORY.SECTION,
+        last = { f'text' },
+      },
+      ['chapter'] = {
+        category = CATEGORY.SECTION,
+        last = { f'text' },
+      },
+      ['section'] = {
+        category = CATEGORY.SECTION,
+        last = { f'text' },
+      },
+      ['subsection'] = {
+        category = CATEGORY.SECTION,
+        last = { f'text' },
+      },
+      ['subsubsection'] = {
+        category = CATEGORY.SECTION,
+        last = { f'text' },
+      },
+    },
+  }
+end
+
+local DEFAULT_FALLBACK_PATTERNS = {
+   -- These catch most generic groups, eg "function_declaration" or "function_block"
   default = {
     'class',
+    'interface',
+    'struct',
+    'enum',
     'function',
     'method',
     'for',
@@ -90,15 +457,6 @@ local DEFAULT_TYPE_PATTERNS = {
     'if',
     'switch',
     'case',
-  },
-  tex = {
-    'chapter',
-    'section',
-    'subsection',
-    'subsubsection',
-  },
-  rust = {
-    'impl_item',
   },
   scala = {
     'object_definition',
@@ -108,14 +466,10 @@ local DEFAULT_TYPE_PATTERNS = {
     'architecture_body',
     'entity_declaration',
   },
-  exact_patterns = {},
 }
 
-local DEFAULT_TYPE_EXCLUDE_PATTERNS = {
+local DEFAULT_EXCLUDE_PATTERNS = {
   default = {},
-  teal = {
-    'function_body',
-  },
 }
 
 local INDENT_PATTERN = '^%s+'
@@ -129,65 +483,76 @@ local gutter_bufnr, context_bufnr -- Don't access directly, use get_bufs()
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local previous_nodes
 
+local function word_pattern(p)
+  return '%f[%w]' .. p .. '%f[^%w]'
+end
+
 local function get_root_node()
   local tree = parsers.get_parser():parse()[1]
   return tree:root()
 end
 
-local function is_excluded(node, filetype)
+local function category_is_enabled(category, filetype)
+  local filetype_categories = config.categories[filetype]
+  if filetype_categories then
+    return vim.tbl_contains(filetype_categories, category)
+  else
+    return vim.tbl_contains(config.categories.default, category)
+  end
+end
+
+local function matches_pattern(node, patterns, filetype)
   local node_type = node:type()
-  for _, rgx in ipairs(config.exclude_patterns.default) do
+  for _, rgx in ipairs(patterns.default) do
     if node_type:find(rgx) then
       return true
     end
   end
-  local filetype_patterns = config.exclude_patterns[filetype]
+
+  local filetype_patterns = patterns[filetype]
+  if not filetype_patterns then
+      return false
+  end
+
   for _, rgx in ipairs(filetype_patterns or {}) do
     if node_type:find(rgx) then
       return true
     end
   end
+
   return false
 end
 
 local function is_valid(node, filetype)
-  if is_excluded(node, filetype) then
+  if matches_pattern(node, config.exclude_patterns, filetype) then
     return false
   end
 
   local node_type = node:type()
-  for _, rgx in ipairs(config.patterns.default) do
-    if node_type:find(rgx) then
-      return true
+  local queries = config.queries[filetype]
+  if queries then
+    for t, q in pairs(queries) do
+      if node_type == t then
+        return category_is_enabled(q.category)
+      end
     end
-  end
-  local filetype_patterns = config.patterns[filetype]
-  for _, rgx in ipairs(filetype_patterns or {}) do
-    if node_type:find(rgx) then
-      return true
-    end
-  end
-  return false
-end
 
-local function get_type_pattern(node, type_patterns)
-  local node_type = node:type()
-  for _, rgx in ipairs(type_patterns) do
-    if node_type:find(rgx) then
-      return rgx
-    end
+    return false
+  else
+    return matches_pattern(node, config.fallback_patterns, filetype)
   end
 end
 
-local function find_node(node, query)
-  if query.kind == QUERY_FIELD_NAME then
+local function find_last_node(node, query)
+  if query.kind == QUERY.FIELD_NAME then
     local fields = node:field(query.name)
     if fields and fields[1] then
-      return fields[1]
+      return fields[#fields]
     end
-  elseif query.kind == QUERY_NODE_TYPE then
+  elseif query.kind == QUERY.NODE_TYPE then
     local children = ts_utils.get_named_children(node)
-    for _, c in ipairs(children) do
+    for i = #children, 1, -1 do
+      local c = children[i]
       if c:type() == query.name then
         return c
       end
@@ -196,38 +561,50 @@ local function find_node(node, query)
 end
 
 local function get_text_for_node(node)
-  local type = get_type_pattern(node, config.patterns.default) or node:type()
   local filetype = vim.bo.filetype
+  local node_type = node:type()
+  local query = (config.queries[filetype] or {})[node_type]
 
-  local skip_leading_type = (skip_leading_types[type] or {})[filetype]
-  if skip_leading_type then
-    local children = ts_utils.get_named_children(node)
-    for _, child in ipairs(children) do
-      if child:type() ~= skip_leading_type then
-        node = child
+  local start_row, start_col = node:start()
+  local end_row, end_col     = node:end_()
+
+  if query and query.skip then
+    for child, field in node:iter_children() do
+      local skip = false
+      for _, q in ipairs(query.skip) do
+        if q.kind == QUERY.FIELD_NAME and field == q.name then
+          skip = true
+          break
+        elseif q.kind == QUERY.NODE_TYPE and child:type() == q.name then
+          skip = true
+          break
+        end
+      end
+      if not skip then
+        start_row, start_col = child:start()
         break
       end
     end
   end
 
-  local start_row, start_col = node:start()
-  local end_row, end_col     = node:end_()
-
   local lines = vim.split(vim.treesitter.query.get_node_text(node, 0), '\n')
+  local orig_start_row = node:start()
+  if orig_start_row ~= start_row then
+      local diff = orig_start_row - start_col
+      lines = vim.list_slice(lines, diff, #lines)
+  end
 
   if start_col ~= 0 then
     lines[1] = api.nvim_buf_get_lines(0, start_row, start_row + 1, false)[1]
   end
   start_col = 0
 
-  local queries = (last_nodes[type] or {})[filetype]
-
   local last_position
 
-  if queries then
+  if query and query.last then
     local child
-    for _, q in ipairs(queries) do
-      local n = find_node(node, q)
+    for _, q in ipairs(query.last) do
+      local n = find_last_node(node, q)
       if n then
         child = n
         break
@@ -350,9 +727,7 @@ end
 
 -- Exports
 
-local M = {
-  config = config,
-}
+M.config = config
 
 local function get_parent_matches(max_lines)
   if max_lines == 0 then
@@ -722,17 +1097,14 @@ function M.setup(options)
   did_setup = true
 
   local userOptions = options or {}
+  config                   = vim.tbl_deep_extend('force', defaultConfig, userOptions or {})
+  config.categories        = vim.tbl_deep_extend('force', DEFAULT_CATEGORIES, userOptions.categories or {})
+  config.queries           = vim.tbl_deep_extend('force', DEFAULT_QUERIES, userOptions.queries or {})
+  config.exclude_patterns  = vim.tbl_deep_extend('force', DEFAULT_EXCLUDE_PATTERNS, userOptions.exclude_patterns or {})
+  config.fallback_patterns = vim.tbl_deep_extend('force', DEFAULT_FALLBACK_PATTERNS, userOptions.fallback_patterns or {})
 
-  config                  = vim.tbl_deep_extend('force', {}, defaultConfig, userOptions)
-  config.patterns         = vim.tbl_deep_extend('force', {}, DEFAULT_TYPE_PATTERNS, userOptions.patterns or {})
-  config.exclude_patterns = vim.tbl_deep_extend('force', {}, DEFAULT_TYPE_EXCLUDE_PATTERNS, userOptions.exclude_patterns or {})
-  config.exact_patterns   = vim.tbl_deep_extend('force', {}, userOptions.exact_patterns or {})
-
-  for filetype, patterns in pairs(config.patterns) do
-    -- Map with word_pattern only if users don't need exact pattern matching
-    if not config.exact_patterns[filetype] then
-      config.patterns[filetype] = vim.tbl_map(word_pattern, patterns)
-    end
+  for filetype, patterns in pairs(config.fallback_patterns) do
+    config.fallback_patterns[filetype] = vim.tbl_map(word_pattern, patterns)
   end
 
   if config.enable then
