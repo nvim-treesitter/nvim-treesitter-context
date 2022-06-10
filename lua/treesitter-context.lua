@@ -15,7 +15,9 @@ local defaultConfig = {
   max_lines = 0, -- no limit
   multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
   zindex = 20,
+  mode = 'cursor', -- Choices: 'cursor', 'topline'
   separator = nil,
+
 }
 
 local config = {}
@@ -321,7 +323,12 @@ local function get_parent_matches(max_lines)
     return
   end
 
-  local lnum, col = unpack(api.nvim_win_get_cursor(0))
+  local lnum, col
+  if config.mode == 'topline' then
+    lnum, col = vim.fn.line('w0'), 0
+  else -- default to 'cursor'
+    lnum, col = unpack(api.nvim_win_get_cursor(0))
+  end
 
   local node = get_root_node():named_descendant_for_range(lnum-1, col, lnum-1, col)
   if not node then
