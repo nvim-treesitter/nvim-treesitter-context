@@ -24,23 +24,45 @@ local config = {}
 
 -- Tells us at which node type to stop when highlighting a multi-line
 -- node. If not specified, the highlighting stops after the first line.
-local last_named_fields = {
-  [word_pattern('function')] = {
-    c = { 'declarator' },
-    cpp = { 'declarator' },
-    lua = { 'parameters' },
-    teal = { 'signature' },
-    python = { 'return_type', 'parameters' },
-    rust = { 'return_type', 'parameters' },
-    javascript =  { 'parameters' },
-    typescript = { 'return_type', 'parameters' },
-  },
-  [word_pattern('method')] = {
-    lua = { 'parameters' },
-    javascript =  { 'parameters' },
-    typescript = { 'return_type', 'parameters' },
-  },
-}
+local last_nodes
+local QUERY_FIELD_NAME = 1
+local QUERY_NODE_TYPE = 2
+do
+  local function f(name)
+      return {
+          name = name,
+          kind = QUERY_FIELD_NAME,
+      }
+  end
+
+  local function t(name)
+      return {
+          name = name,
+          kind = QUERY_NODE_TYPE,
+      }
+  end
+
+  last_nodes = {
+    [word_pattern('function')] = {
+      c = { f'declarator' },
+      cpp = { f'declarator' },
+      lua = { f'parameters' },
+      teal = { f'signature' },
+      python = { f'return_type', f'parameters' },
+      rust = { f'return_type', f'parameters' },
+      javascript =  { f'parameters' },
+      typescript = { f'return_type', f'parameters' },
+    },
+    [word_pattern('method')] = {
+      lua = { f'parameters' },
+      javascript =  { f'parameters' },
+      typescript = { f'return_type', f'parameters' },
+    },
+    [word_pattern('class')] = {
+      cpp = { t'base_class_clause', f'name' }
+    }
+  }
+end
 
 -- Tells us which leading child node type to skip when highlighting a
 -- multi-line node.
@@ -151,6 +173,22 @@ local function get_type_pattern(node, type_patterns)
   end
 end
 
+local function find_node(node, query)
+  if query.kind == QUERY_FIELD_NAME then
+    local fields = node:field(query.name)
+    if fields and fields[1] then
+      return fields[1]
+    end
+  elseif query.kind == QUERY_NODE_TYPE then
+    local children = ts_utils.get_named_children(node)
+    for _, c in ipairs(children) do
+      if c:type() == query.name then
+        return c
+      end
+    end
+  end
+end
+
 local function get_text_for_node(node)
   local type = get_type_pattern(node, config.patterns.default) or node:type()
   local filetype = vim.bo.filetype
@@ -176,16 +214,16 @@ local function get_text_for_node(node)
   end
   start_col = 0
 
-  local named_fields = (last_named_fields[type] or {})[filetype]
+  local queries = (last_nodes[type] or {})[filetype]
 
   local last_position
 
-  if named_fields then
+  if queries then
     local child
-    for _, f in ipairs(named_fields) do
-      local fields = node:field(f)
-      if fields and fields[1] then
-        child = fields[1]
+    for _, q in ipairs(queries) do
+      local n = find_node(node, q)
+      if n then
+        child = n
         break
       end
     end
