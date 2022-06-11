@@ -362,7 +362,7 @@ local function get_parent_matches(max_lines)
 
   local lnum, col
   if config.mode == 'topline' then
-    lnum, col = vim.fn.line('w0'), 0
+    lnum, col = vim.fn.line('w0'), 999
   else -- default to 'cursor'
     lnum, col = unpack(api.nvim_win_get_cursor(0))
   end
