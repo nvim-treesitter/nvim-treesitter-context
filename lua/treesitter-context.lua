@@ -383,16 +383,18 @@ local function get_parent_matches(max_lines)
     node = node:parent()
   end
 
-  for _, parent in ipairs(parents) do
+  for i = #parents, 1, -1 do
+    local parent = parents[i]
     local row = parent:start()
 
     if is_valid(parent, vim.bo.filetype)
         and row >= 0
-        and row < (topline + #parent_matches - 1)
-        and row ~= last_row then
-      table.insert(parent_matches, 1, parent)
+        and row < (topline + #parent_matches - 1) then
 
-      if row ~= last_row then
+      if row == last_row then
+        parent_matches[#parent_matches] = parent
+      else
+        table.insert(parent_matches, parent)
         lines = lines + 1
         last_row = row
       end
