@@ -14,6 +14,7 @@ local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
   multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
+  truncate_side = "outer", -- "inner" or "outer", which context lines to truncate if `max_lines` is exceeded.
   zindex = 20,
   mode = 'cursor', -- Choices: 'cursor', 'topline'
   separator = nil,
@@ -372,7 +373,6 @@ local function get_parent_matches(max_lines)
   end
 
   local parent_matches = {}
-  local lines = 0
   local last_row = -1
   local topline = vim.fn.line('w0')
 
@@ -395,17 +395,24 @@ local function get_parent_matches(max_lines)
         parent_matches[#parent_matches] = parent
       else
         table.insert(parent_matches, parent)
-        lines = lines + 1
         last_row = row
-      end
-
-      if lines >= max_lines then
-        break
       end
     end
   end
 
-  return parent_matches
+  if config.truncate_side == "inner" then
+    return vim.list_slice(
+      parent_matches,
+      1,
+      math.min(#parent_matches, max_lines)
+    )
+  elseif config.truncate_side == "outer" then
+    return vim.list_slice(
+      parent_matches,
+      math.max(1, #parent_matches - max_lines + 1),
+      #parent_matches
+    )
+  end
 end
 
 local function throttle_fn(fn)
