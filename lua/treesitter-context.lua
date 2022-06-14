@@ -100,7 +100,7 @@ local DEFAULT_TYPE_PATTERNS = {
     'impl_item',
   },
   scala = {
-    'object',
+    'object_definition',
   },
   vhdl = {
     'process_statement',
