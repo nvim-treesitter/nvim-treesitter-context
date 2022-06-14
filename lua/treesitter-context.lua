@@ -26,17 +26,45 @@ local config = {}
 
 -- Tells us at which node type to stop when highlighting a multi-line
 -- node. If not specified, the highlighting stops after the first line.
-local last_types = {
-  [word_pattern('function')] = {
-    c = 'function_declarator',
-    cpp = 'function_declarator',
-    lua = 'parameters',
-    python = 'parameters',
-    rust = 'parameters',
-    javascript = 'formal_parameters',
-    typescript = 'formal_parameters',
-  },
-}
+local last_nodes
+local QUERY_FIELD_NAME = 1
+local QUERY_NODE_TYPE = 2
+do
+  local function f(name)
+      return {
+          name = name,
+          kind = QUERY_FIELD_NAME,
+      }
+  end
+
+  local function t(name)
+      return {
+          name = name,
+          kind = QUERY_NODE_TYPE,
+      }
+  end
+
+  last_nodes = {
+    [word_pattern('function')] = {
+      c = { f'declarator' },
+      cpp = { f'declarator' },
+      lua = { f'parameters' },
+      teal = { f'signature' },
+      python = { f'return_type', f'parameters' },
+      rust = { f'return_type', f'parameters' },
+      javascript =  { f'parameters' },
+      typescript = { f'return_type', f'parameters' },
+    },
+    [word_pattern('method')] = {
+      lua = { f'parameters' },
+      javascript =  { f'parameters' },
+      typescript = { f'return_type', f'parameters' },
+    },
+    [word_pattern('class')] = {
+      cpp = { t'base_class_clause', f'name' }
+    }
+  }
+end
 
 -- Tells us which leading child node type to skip when highlighting a
 -- multi-line node.
@@ -147,17 +175,18 @@ local function get_type_pattern(node, type_patterns)
   end
 end
 
-local function find_node(node, type)
-  local children = ts_utils.get_named_children(node)
-  for _, child in ipairs(children) do
-    if child:type() == type then
-      return child
+local function find_node(node, query)
+  if query.kind == QUERY_FIELD_NAME then
+    local fields = node:field(query.name)
+    if fields and fields[1] then
+      return fields[1]
     end
-  end
-  for _, child in ipairs(children) do
-    local deep_child = find_node(child, type)
-    if deep_child ~= nil then
-      return deep_child
+  elseif query.kind == QUERY_NODE_TYPE then
+    local children = ts_utils.get_named_children(node)
+    for _, c in ipairs(children) do
+      if c:type() == query.name then
+        return c
+      end
     end
   end
 end
@@ -187,12 +216,19 @@ local function get_text_for_node(node)
   end
   start_col = 0
 
-  local last_type = (last_types[type] or {})[filetype]
+  local queries = (last_nodes[type] or {})[filetype]
 
   local last_position
 
-  if last_type then
-    local child = find_node(node, last_type)
+  if queries then
+    local child
+    for _, q in ipairs(queries) do
+      local n = find_node(node, q)
+      if n then
+        child = n
+        break
+      end
+    end
 
     if child then
       last_position = {child:end_()}
