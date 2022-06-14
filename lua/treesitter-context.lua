@@ -99,6 +99,9 @@ local DEFAULT_TYPE_PATTERNS = {
   rust = {
     'impl_item',
   },
+  scala = {
+    'object_definition',
+  },
   vhdl = {
     'process_statement',
     'architecture_body',
