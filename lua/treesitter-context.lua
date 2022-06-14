@@ -14,7 +14,7 @@ local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
   multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
-  truncate_side = "outer", -- "inner" or "outer", which context lines to truncate if `max_lines` is exceeded.
+  truncate_side = 'outer', -- Which context lines to truncate if `max_lines` is exceeded. Choices: 'inner', 'outer'
   zindex = 20,
   mode = 'cursor', -- Choices: 'cursor', 'topline'
   separator = nil,
@@ -400,13 +400,13 @@ local function get_parent_matches(max_lines)
     end
   end
 
-  if config.truncate_side == "inner" then
+  if config.truncate_side == 'inner' then
     return vim.list_slice(
       parent_matches,
       1,
       math.min(#parent_matches, max_lines)
     )
-  elseif config.truncate_side == "outer" then
+  else -- default to 'outer'
     return vim.list_slice(
       parent_matches,
       math.max(1, #parent_matches - max_lines + 1),
