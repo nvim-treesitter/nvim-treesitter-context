@@ -38,18 +38,63 @@ behavior is to update its content on `CursorMoved`.
 
 ## Configuration
 
-(Default values are shown below)
-
 ```lua
-require'treesitter-context'.setup{
+local ts_context = require'treesitter-context'
+local CATEGORY = ts_context.CATEGORY
+local f = ts_context.field_name_query
+local t = ts_context.node_type_query
+
+ts_context.setup{
     enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
     max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
-    trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
-    patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
-        -- For all filetypes
-        -- Note that setting an entry here replaces all other patterns for this entry.
-        -- By setting the 'default' entry below, you can control which nodes you want to
-        -- appear in the context window.
+    trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'.
+    mode = 'cursor',  -- Line used to calculate context. Choices: 'cursor', 'topline'
+    separator = nil, -- Bottom border of the context popup.
+    categories = {
+        -- Categories that should be shown.
+        default = {
+            CATEGORY.CLASS,
+            CATEGORY.INTERFACE,
+            CATEGORY.STRUCT,
+            CATEGORY.ENUM,
+            CATEGORY.FUNCTION,
+            CATEGORY.METHOD,
+            -- CATEGORY.FOR, -- These won't appear in the context.
+            -- CATEGORY.WHILE,
+            -- CATEGORY.IF,
+            -- CATEGORY.SWITCH,
+            -- CATEGORY.CASE,
+            CATEGORY.SECTION,
+        },
+        rust = {
+            -- Override for specific filetypes.
+            -- Note that when setting language specific categories, the default
+            -- categories are ignored
+        },
+    },
+    queries = {
+        -- Filetype specific queries for treesitter nodes
+        -- If queries for a language are missing, *open a PR* so everyone can benefit.
+        cpp = {
+            ['class_specifier'] = { -- The entry key should be the exact node type
+                -- The category that this context belongs to (see https://github.com/nvim-treesitter/nvim-treesitter-context/blob/master/lua/treesitter-context.lua#L24).
+                category = CATEGORY.CLASS,
+                -- The last child node that should show up in the context popup,
+                -- in reverse order. So the `base_class_clause` node should appear
+                -- after the `name` node.
+                -- There are node type queries here `t'base_class_clause'`, and
+                -- field name queries like `f'name'`
+                last = { t'base_class_clause', f'name' },
+                -- Child nodes that should be skipped when displaying the context.
+                skip = { t'<some unwanted child node>' },
+            },
+        },
+        ...
+    }
+    fallback_patterns = {
+        -- Fallback patterns for filetypes that have no exact queries.
+        -- Match patterns for TS nodes. These get wrapped to match at word
+        -- boundaries.
         default = {
             'class',
             'function',
@@ -60,24 +105,25 @@ require'treesitter-context'.setup{
             -- 'switch',
             -- 'case',
         },
-        -- Example for a specific filetype.
-        -- If a pattern is missing, *open a PR* so everyone can benefit.
-        --   rust = {
-        --       'impl_item',
-        --   },
+        rust = {
+            -- Additional patterns for specific filetypes
+            'impl_item',
+        },
     },
-    exact_patterns = {
-        -- Example for a specific filetype with Lua patterns
-        -- Treat patterns.rust as a Lua pattern (i.e "^impl_item$" will
-        -- exactly match "impl_item" only)
-        -- rust = true,
+    exclude_patterns = {
+        -- Exclude node types that match these patterns
+        default = {
+            -- Patterns that are always excluded
+        },
+        go = {
+            -- Additional patterns for specific filetypes
+        },
     },
 
     -- [!] The options below are exposed but shouldn't require your attention,
     --     you can safely ignore them.
 
     zindex = 20, -- The Z-index of the context window
-    mode = 'cursor',  -- Line used to calculate context. Choices: 'cursor', 'topline'
 }
 ```
 
