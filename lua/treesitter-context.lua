@@ -374,8 +374,7 @@ do
     php = {
       ['class_declaration'] = {
         category = CATEGORY.CLASS,
-        -- TODO: fix error when highighting
-        -- skip = { f'attributes' },
+        skip = { f'attributes' },
         last = { t'class_interface_clause', t'base_clause', f'name' },
       },
       ['interface_declaration'] = {
@@ -388,8 +387,7 @@ do
       },
       ['method_declaration'] = {
         category = CATEGORY.METHOD,
-        -- TODO: fix error when highighting
-        -- skip = { f'attributes' },
+        skip = { f'attributes' },
         last = { f'return_type', f'parameters' },
       },
       ['for_statement'] = {
@@ -565,6 +563,7 @@ local function get_text_for_node(node)
   local node_type = node:type()
   local query = (config.queries[filetype] or {})[node_type]
 
+  local lines = vim.split(vim.treesitter.query.get_node_text(node, 0), '\n')
   local start_row, start_col = node:start()
   local end_row, end_col     = node:end_()
 
@@ -580,18 +579,16 @@ local function get_text_for_node(node)
           break
         end
       end
+
       if not skip then
+        local orig_start_row = start_row
         start_row, start_col = child:start()
+
+        local first_index = start_row - orig_start_row + 1
+        lines = vim.list_slice(lines, first_index, #lines)
         break
       end
     end
-  end
-
-  local lines = vim.split(vim.treesitter.query.get_node_text(node, 0), '\n')
-  local orig_start_row = node:start()
-  if orig_start_row ~= start_row then
-      local diff = orig_start_row - start_col
-      lines = vim.list_slice(lines, diff, #lines)
   end
 
   if start_col ~= 0 then
@@ -628,7 +625,7 @@ local function get_text_for_node(node)
     end_col = #lines[1]
   end
 
-  local range = {start_row, start_col, end_row, end_col}
+  local range = { start_row, start_col, end_row, end_col }
 
   return lines, range
 end
@@ -886,8 +883,6 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
     local indents = context.indents
     local lines = context.lines
 
-    local start_row_abs = context.node:start()
-
     for capture, node in query:iter_captures(root, bufnr, start_row, context.node:end_()) do
       local node_start_row, node_start_col, node_end_row, node_end_col = node:range()
 
@@ -896,8 +891,8 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
         break
       end
 
-      if node_start_row >= start_row_abs then
-        local intended_start_row = node_start_row - start_row_abs
+      if node_start_row >= start_row then
+        local intended_start_row = node_start_row - start_row
 
         -- Add 1 for each space added between lines when
         -- we replace '\n' with ' '
