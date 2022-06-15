@@ -14,6 +14,7 @@ local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
   multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
+  trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
   zindex = 20,
   mode = 'cursor', -- Choices: 'cursor', 'topline'
   separator = nil,
@@ -364,7 +365,7 @@ local function get_parent_matches(max_lines)
 
   local lnum, col
   if config.mode == 'topline' then
-    lnum, col = vim.fn.line('w0'), 0
+    lnum, col = vim.fn.line('w0'), 999
   else -- default to 'cursor'
     lnum, col = unpack(api.nvim_win_get_cursor(0))
   end
@@ -375,7 +376,6 @@ local function get_parent_matches(max_lines)
   end
 
   local parent_matches = {}
-  local lines = 0
   local last_row = -1
   local topline = vim.fn.line('w0')
 
@@ -386,27 +386,36 @@ local function get_parent_matches(max_lines)
     node = node:parent()
   end
 
-  for _, parent in ipairs(parents) do
+  for i = #parents, 1, -1 do
+    local parent = parents[i]
     local row = parent:start()
 
     if is_valid(parent, vim.bo.filetype)
         and row >= 0
-        and row < (topline + #parent_matches - 1)
-        and row ~= last_row then
-      table.insert(parent_matches, 1, parent)
+        and row < (topline + #parent_matches - 1) then
 
-      if row ~= last_row then
-        lines = lines + 1
+      if row == last_row then
+        parent_matches[#parent_matches] = parent
+      else
+        table.insert(parent_matches, parent)
         last_row = row
-      end
-
-      if lines >= max_lines then
-        break
       end
     end
   end
 
-  return parent_matches
+  if config.trim_scope == 'inner' then
+    return vim.list_slice(
+      parent_matches,
+      1,
+      math.min(#parent_matches, max_lines)
+    )
+  else -- default to 'outer'
+    return vim.list_slice(
+      parent_matches,
+      math.max(1, #parent_matches - max_lines + 1),
+      #parent_matches
+    )
+  end
 end
 
 local function throttle_fn(fn)
