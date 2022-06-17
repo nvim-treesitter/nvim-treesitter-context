@@ -150,7 +150,7 @@ end
 
 local function find_last_node(node, query)
   if query.kind == QUERY.FIELD_NAME then
-    local fields = node:field(query.name)
+    local fields = node:field(query.text)
     if fields and fields[1] then
       return fields[#fields]
     end
@@ -158,7 +158,7 @@ local function find_last_node(node, query)
     local children = ts_utils.get_named_children(node)
     for i = #children, 1, -1 do
       local c = children[i]
-      if c:type() == query.name then
+      if c:type() == query.text then
         return c
       end
     end
@@ -178,10 +178,10 @@ local function get_text_for_node(node)
     for child, field in node:iter_children() do
       local skip = false
       for _, q in ipairs(query.skip) do
-        if q.kind == QUERY.FIELD_NAME and field == q.name then
+        if q.kind == QUERY.FIELD_NAME and field == q.text then
           skip = true
           break
-        elseif q.kind == QUERY.NODE_TYPE and child:type() == q.name then
+        elseif q.kind == QUERY.NODE_TYPE and child:type() == q.text then
           skip = true
           break
         end

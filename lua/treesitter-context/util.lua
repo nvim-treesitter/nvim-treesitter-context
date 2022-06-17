@@ -20,16 +20,16 @@ M.QUERY = {
   NODE_TYPE = 2,
 }
 
-function M.field_name_query(name)
+function M.field_name_query(text)
   return {
-    name = name,
+    text = text,
     kind = M.QUERY.FIELD_NAME,
   }
 end
 
-function M.node_type_query(name)
+function M.node_type_query(text)
   return {
-    name = name,
+    text = text,
     kind = M.QUERY.NODE_TYPE,
   }
 end
