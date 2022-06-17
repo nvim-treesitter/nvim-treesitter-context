@@ -1,5 +1,4 @@
 local api = vim.api
-local ts_utils = require'nvim-treesitter.ts_utils'
 local highlighter = vim.treesitter.highlighter
 local parsers = require'nvim-treesitter.parsers'
 local util = require'treesitter-context.util'
@@ -148,42 +147,40 @@ local function is_valid(node, filetype)
   end
 end
 
-local function find_last_node(node, query)
-  if query.kind == QUERY.FIELD_NAME then
-    local fields = node:field(query.text)
-    if fields and fields[1] then
-      return fields[#fields]
-    end
-  elseif query.kind == QUERY.NODE_TYPE then
-    local children = ts_utils.get_named_children(node)
-    for i = #children, 1, -1 do
-      local c = children[i]
-      if c:type() == query.text then
-        return c
-      end
+local function find_first_node(node, query)
+  for c, f in node:iter_children() do
+    if query:matches(c, f) then
+      return c
     end
   end
+end
+
+local function find_last_node(node, query)
+  local last
+  for c, f in node:iter_children() do
+    if query:matches(c, f) then
+      last = c
+    end
+  end
+  return last
 end
 
 local function get_text_for_node(node)
   local filetype = vim.bo.filetype
   local node_type = node:type()
-  local query = (config.queries[filetype] or {})[node_type]
+  local queries = (config.queries[filetype] or {})[node_type]
 
   local lines = vim.split(vim.treesitter.query.get_node_text(node, 0), '\n')
   local start_row, start_col = node:start()
   local end_row, end_col     = node:end_()
 
-  if query and query.skip then
+  if queries and queries.skip then
     for child, field in node:iter_children() do
       local skip = false
-      for _, q in ipairs(query.skip) do
-        if q.kind == QUERY.FIELD_NAME and field == q.text then
+      for _, q in ipairs(queries.skip) do
+        if q:matches(child, field) then
           skip = true
-          break
-        elseif q.kind == QUERY.NODE_TYPE and child:type() == q.text then
-          skip = true
-          break
+          break;
         end
       end
 
@@ -203,30 +200,50 @@ local function get_text_for_node(node)
   end
   start_col = 0
 
-  local last_position
+  local found_end_pos
 
-  if query and query.last then
-    local child
-    for _, q in ipairs(query.last) do
+  if queries and queries.last then
+    local child, query
+    for _, q in ipairs(queries.last) do
       local n = find_last_node(node, q)
       if n then
-        child = n
+        child, query = n, q
         break
       end
     end
 
-    if child then
-      last_position = {child:end_()}
+    if child and query then
+      local row, col = child:end_()
+      end_row = row + (query.offsetrow or 0)
+      end_col = col + (query.offsetcol or 0)
+      found_end_pos = true
+    end
+  end
+  if queries and queries.next then
+    local child, query
+    for _, q in ipairs(queries.next) do
+      local n = find_first_node(node, q)
+      if n then
+        child, query = n, q
+        break
+      end
+    end
 
-      end_row = last_position[1]
-      end_col = last_position[2]
-      local last_index = end_row - start_row
-      lines = vim.list_slice(lines, 1, last_index + 1)
-      lines[#lines] = lines[#lines]:sub(1, end_col)
+    if child and query then
+      local row, col = child:start()
+      end_row = row + (query.offsetrow or 0)
+      end_col = col + (query.offsetcol or 0)
+      found_end_pos = true
     end
   end
 
-  if not last_position or #lines > config.multiline_threshold then
+  if found_end_pos then
+      local last_index = end_row - start_row
+      lines = vim.list_slice(lines, 1, last_index + 1)
+      lines[#lines] = lines[#lines]:sub(1, end_col)
+  end
+
+  if not found_end_pos or #lines > config.multiline_threshold then
     lines = vim.list_slice(lines, 1, 1)
     end_row = start_row
     end_col = #lines[1]

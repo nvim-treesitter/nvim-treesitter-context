@@ -1,38 +1,39 @@
 local util = require'treesitter-context.util'
 local CATEGORY = util.CATEGORY
-local f = util.field_name_query
+local q = util.build_query
+local t = util.node_type_query
 
 return {
   ['class_definition'] = {
     category = CATEGORY.CLASS,
-    last = { f'superclasses', f'name' },
+    last = { q{ t':' } },
   },
   ['function_definition' ] = {
     category = CATEGORY.FUNCTION,
-    last = { f'return_type', f'parameters' },
+    last = { q{ t':' } },
   },
   ['for_statement'] = {
     category = CATEGORY.FOR,
-    last = { f'right' },
+    last = { q{ t':' } },
   },
   ['while_statement'] = {
     category = CATEGORY.WHILE,
-    last = { f'condition' },
+    last = { q{ t':' } },
   },
   ['if_statement'] = {
     category = CATEGORY.IF,
-    last = { f'condition' },
+    last = { q{ t':' } },
   },
   ['with_statement'] = {
     category = CATEGORY.IF,
-    last = { f'with_clause' },
+    last = { q{ t':' } },
   },
   ['match_statement'] = {
     category = CATEGORY.SWITCH,
-    last = { f'subject' },
+    last = { q{ t':' } },
   },
   ['case_clause'] = {
     category = CATEGORY.CASE,
-    last = { f'pattern' },
+    last = { q{ t':' } },
   },
 }

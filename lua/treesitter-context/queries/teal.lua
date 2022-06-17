@@ -1,34 +1,36 @@
 local util = require'treesitter-context.util'
 local CATEGORY = util.CATEGORY
+local q = util.build_query
 local f = util.field_name_query
+local t = util.node_type_query
 
 return {
   ['record_declaration' ] = {
     category = CATEGORY.CLASS,
-    last = { f'name' },
+    last = { q{ f'name' } },
   },
   ['enum_declaration' ] = {
     category = CATEGORY.ENUM,
-    last = { f'name' },
+    last = { q{ f'name' } },
   },
   ['function_statement' ] = {
     category = CATEGORY.FUNCTION,
-    last = { f'signature' },
+    last = { q{ f'return_type' },  q{ f'signature' } },
   },
   ['numeric_for_statement'] = {
     category = CATEGORY.FOR,
-    last = { f'step', f'target' },
+    last = { q{ t'do' } },
   },
   ['generic_for_statement'] = {
     category = CATEGORY.FOR,
-    last = { f'iterator' },
+    last = { q{ t'do' } },
   },
   ['while_statement'] = {
     category = CATEGORY.WHILE,
-    last = { f'condition' },
+    last = { q{ t'do' } },
   },
   ['if_statement'] = {
     category = CATEGORY.IF,
-    last = { f'condition' },
+    last = { q{ t'then' } },
   },
 }
