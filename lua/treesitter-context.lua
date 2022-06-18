@@ -363,45 +363,61 @@ local function get_parent_matches(max_lines)
     return
   end
 
+  local root_node = get_root_node()
   local lnum, col
   if config.mode == 'topline' then
-    lnum, col = vim.fn.line('w0'), 999
+    lnum, col = vim.fn.line('w0'), 0
   else -- default to 'cursor'
     lnum, col = unpack(api.nvim_win_get_cursor(0))
   end
 
-  local node = get_root_node():named_descendant_for_range(lnum-1, col, lnum-1, col)
-  if not node then
-    return
-  end
-
+  local last_matches
   local parent_matches = {}
-  local last_row = -1
-  local topline = vim.fn.line('w0')
+  local line_offset = 0
 
-  -- save nodes in a table to iterate from top to bottom
-  local parents = {}
-  while node ~= nil do
-    parents[#parents+1] = node
-    node = node:parent()
-  end
+  repeat
+    local offset_lnum = lnum + line_offset - 1
+    local node = root_node:named_descendant_for_range(offset_lnum, col, offset_lnum, col)
+    if not node then
+      return
+    end
 
-  for i = #parents, 1, -1 do
-    local parent = parents[i]
-    local row = parent:start()
+    last_matches = parent_matches
+    parent_matches = {}
+    local last_row = -1
+    local topline = vim.fn.line('w0')
 
-    if is_valid(parent, vim.bo.filetype)
-        and row >= 0
-        and row < (topline + #parent_matches - 1) then
+    -- save nodes in a table to iterate from top to bottom
+    local parents = {}
+    while node ~= nil do
+      parents[#parents+1] = node
+      node = node:parent()
+    end
 
-      if row == last_row then
-        parent_matches[#parent_matches] = parent
-      else
-        table.insert(parent_matches, parent)
-        last_row = row
+    for i = #parents, 1, -1 do
+      local parent = parents[i]
+      local row = parent:start()
+
+      local height = math.min(max_lines, #parent_matches)
+      if is_valid(parent, vim.bo.filetype)
+          and row >= 0
+          and row < (topline + height - 1) then
+
+        if row == last_row then
+          parent_matches[#parent_matches] = parent
+        else
+          table.insert(parent_matches, parent)
+          last_row = row
+
+          local new_height = math.min(max_lines, #parent_matches)
+          if config.mode == 'topline' and line_offset < new_height then
+            line_offset = line_offset + 1
+            break
+          end
+        end
       end
     end
-  end
+  until config.mode ~= 'topline' or #last_matches >= #parent_matches
 
   if config.trim_scope == 'inner' then
     return vim.list_slice(
