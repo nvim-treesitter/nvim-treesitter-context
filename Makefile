@@ -24,10 +24,18 @@ nvim-treesitter/parser/lua.so: nvim-treesitter $(NEOVIM)
 			   -c "TSInstallSync lua" \
 			   -c "q"
 
+nvim-treesitter/parser/rust.so: nvim-treesitter $(NEOVIM)
+	VIMRUNTIME=$(NEOVIM)/runtime $(NEOVIM)/build/bin/nvim \
+			   --headless \
+			   --clean \
+			   --cmd 'set rtp+=./nvim-treesitter' \
+			   -c "TSInstallSync rust" \
+			   -c "q"
+
 export VIMRUNTIME=$(PWD)/$(NEOVIM)/runtime
 
 .PHONY: test
-test: $(NEOVIM) nvim-treesitter nvim-treesitter/parser/lua.so
+test: $(NEOVIM) nvim-treesitter nvim-treesitter/parser/lua.so nvim-treesitter/parser/rust.so
 	$(NEOVIM)/.deps/usr/bin/busted \
 		-v \
 		--lazy \
