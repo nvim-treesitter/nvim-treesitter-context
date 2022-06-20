@@ -127,7 +127,7 @@ describe('ts_context', function()
 
     feed'<C-e>'
     screen:expect{grid=[[
-      {2:    }{1:fn}{2: }{3:bar}{2:(}{7:&}{8:self}{2:)             }|
+      {2:    }{1:fn}{2: }{3:bar}{2:(}{7:&}{8:self}{2:) {           }|
       {2:        }{1:if}{2: condition {        }|
                                     |
                                     |
