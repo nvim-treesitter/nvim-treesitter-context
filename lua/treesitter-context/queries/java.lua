@@ -7,14 +7,17 @@ local t = util.node_type_query
 return {
   ['class_declaration'] = {
     category = CATEGORY.CLASS,
+    skip = { q{ t'modifiers' } },
     next = { q{ f'body', offsetcol = 1 } },
   },
   ['enum_declaration'] = {
     category = CATEGORY.ENUM,
+    skip = { q{ t'modifiers' } },
     next = { q{ f'body', offsetcol = 1 } },
   },
   ['interface_declaration'] = {
     category = CATEGORY.INTERFACE,
+    skip = { q{ t'modifiers' } },
     next = { q{ f'body', offsetcol = 1 } },
   },
   ['constructor_declaration'] = {
@@ -23,6 +26,7 @@ return {
   },
   ['method_declaration'] = {
     category = CATEGORY.METHOD,
+    skip = { q{ t'modifiers' } },
     next = { q{ f'body', offsetcol = 1 } },
   },
   ['for_statement'] = {
