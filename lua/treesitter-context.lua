@@ -357,6 +357,7 @@ local function get_parent_matches(max_lines)
     return
   end
 
+  local filetype = vim.bo.filetype
   local root_node = get_root_node()
   local lnum, col
   if config.mode == 'topline' then
@@ -391,6 +392,26 @@ local function get_parent_matches(max_lines)
     for i = #parents, 1, -1 do
       local parent = parents[i]
       local row = parent:start()
+
+      local node_type = parent:type()
+      local queries = (config.queries[filetype] or {})[node_type]
+
+      if queries and queries.skip then
+        for child, field in parent:iter_children() do
+          local skip = false
+          for _, q in ipairs(queries.skip) do
+            if q:matches(child, field) then
+              skip = true
+              break;
+            end
+          end
+
+          if not skip then
+            row = child:start()
+            break
+          end
+        end
+      end
 
       local height = math.min(max_lines, #parent_matches)
       if is_valid(parent, vim.bo.filetype)
