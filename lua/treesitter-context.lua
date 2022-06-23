@@ -1,7 +1,7 @@
 local api = vim.api
 local highlighter = vim.treesitter.highlighter
-local parsers = require'nvim-treesitter.parsers'
-local util = require'treesitter-context.util'
+local parsers = require('nvim-treesitter.parsers')
+local util = require('treesitter-context.util')
 local CATEGORY = util.CATEGORY
 local QUERY = util.QUERY
 
@@ -45,10 +45,10 @@ local DEFAULT_CATEGORIES = {
   },
 }
 
-local DEFAULT_QUERIES = require'treesitter-context.queries'
+local DEFAULT_QUERIES = require('treesitter-context.queries')
 
 local DEFAULT_FALLBACK_PATTERNS = {
-   -- These catch most generic groups, eg "function_declaration" or "function_block"
+  -- These catch most generic groups, eg "function_declaration" or "function_block"
   default = {
     'class',
     'interface',
@@ -115,7 +115,7 @@ local function matches_pattern(node, patterns, filetype)
 
   local filetype_patterns = patterns[filetype]
   if not filetype_patterns then
-      return false
+    return false
   end
 
   for _, rgx in ipairs(filetype_patterns or {}) do
@@ -172,7 +172,7 @@ local function get_text_for_node(node)
 
   local lines = vim.split(vim.treesitter.query.get_node_text(node, 0), '\n')
   local start_row, start_col = node:start()
-  local end_row, end_col     = node:end_()
+  local end_row, end_col = node:end_()
 
   if queries and queries.skip then
     for child, field in node:iter_children() do
@@ -180,7 +180,7 @@ local function get_text_for_node(node)
       for _, q in ipairs(queries.skip) do
         if q:matches(child, field) then
           skip = true
-          break;
+          break
         end
       end
 
@@ -238,9 +238,9 @@ local function get_text_for_node(node)
   end
 
   if found_end_pos then
-      local last_index = end_row - start_row
-      lines = vim.list_slice(lines, 1, last_index + 1)
-      lines[#lines] = lines[#lines]:sub(1, end_col)
+    local last_index = end_row - start_row
+    lines = vim.list_slice(lines, 1, last_index + 1)
+    lines[#lines] = lines[#lines]:sub(1, end_col)
   end
 
   if not found_end_pos or #lines > config.multiline_threshold then
@@ -328,10 +328,10 @@ local function display_window(bufnr, winid, width, height, col, ty, hl)
       style = 'minimal',
       noautocmd = true,
       zindex = config.zindex,
-      border = sep and {'', '', '', '', sep, sep, sep, ''} or nil,
+      border = sep and { '', '', '', '', sep, sep, sep, '' } or nil,
     })
     api.nvim_win_set_var(winid, ty, true)
-    vim.wo[winid].winhl = 'NormalFloat:'..hl
+    vim.wo[winid].winhl = 'NormalFloat:' .. hl
     vim.wo[winid].foldenable = false
   else
     api.nvim_win_set_config(winid, {
@@ -385,7 +385,7 @@ local function get_parent_matches(max_lines)
     -- save nodes in a table to iterate from top to bottom
     local parents = {}
     while node ~= nil do
-      parents[#parents+1] = node
+      parents[#parents + 1] = node
       node = node:parent()
     end
 
@@ -402,7 +402,7 @@ local function get_parent_matches(max_lines)
           for _, q in ipairs(queries.skip) do
             if q:matches(child, field) then
               skip = true
-              break;
+              break
             end
           end
 
@@ -414,10 +414,7 @@ local function get_parent_matches(max_lines)
       end
 
       local height = math.min(max_lines, #parent_matches)
-      if is_valid(parent, vim.bo.filetype)
-          and row >= 0
-          and row < (topline + height - 1) then
-
+      if is_valid(parent, vim.bo.filetype) and row >= 0 and row < (topline + height - 1) then
         if row == last_row then
           parent_matches[#parent_matches] = parent
         else
@@ -435,17 +432,9 @@ local function get_parent_matches(max_lines)
   until config.mode ~= 'topline' or #last_matches >= #parent_matches
 
   if config.trim_scope == 'inner' then
-    return vim.list_slice(
-      parent_matches,
-      1,
-      math.min(#parent_matches, max_lines)
-    )
+    return vim.list_slice(parent_matches, 1, math.min(#parent_matches, max_lines))
   else -- default to 'outer'
-    return vim.list_slice(
-      parent_matches,
-      math.max(1, #parent_matches - max_lines + 1),
-      #parent_matches
-    )
+    return vim.list_slice(parent_matches, math.max(1, #parent_matches - max_lines + 1), #parent_matches)
   end
 end
 
@@ -461,7 +450,6 @@ local function throttle_fn(fn)
     end
   end
 end
-
 
 local function close()
   previous_nodes = nil
@@ -529,8 +517,7 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
     for capture, node in query:iter_captures(root, bufnr, start_row, context.node:end_()) do
       local node_start_row, node_start_col, node_end_row, node_end_col = node:range()
 
-      if node_end_row > end_row or
-        (node_end_row == end_row and node_end_col > end_col) then
+      if node_end_row > end_row or (node_end_row == end_row and node_end_col > end_col) then
         break
       end
 
@@ -551,7 +538,7 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
         api.nvim_buf_set_extmark(ctx_bufnr, ns, row, node_start_col + offset, {
           end_line = row,
           end_col = node_end_col + offset,
-          hl_group = buf_query.hl_cache[capture]
+          hl_group = buf_query.hl_cache[capture],
         })
       end
     end
@@ -559,7 +546,7 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
 end
 
 local function build_lno_str(lnum, width)
-  return string.format('%'..width..'d', lnum)
+  return string.format('%' .. width .. 'd', lnum)
 end
 
 local function get_relative_line_num(ctx_node_line_num)
@@ -579,25 +566,36 @@ local function get_relative_line_num(ctx_node_line_num)
   return cursor_line_num - ctx_node_line_num - num_folded_lines
 end
 
-
 local function open(ctx_nodes)
   local bufnr = api.nvim_get_current_buf()
 
   local gutter_width = get_gutter_width()
-  local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
+  local win_width = math.max(1, api.nvim_win_get_width(0) - gutter_width)
   local win_height = math.max(1, #ctx_nodes)
 
   local gbufnr, ctx_bufnr = get_bufs()
 
   if vim.wo.number or vim.wo.relativenumber then
     gutter_winid = display_window(
-      gbufnr, gutter_winid, gutter_width, win_height, 0,
-      'treesitter_context_line_number', 'TreesitterContextLineNumber')
+      gbufnr,
+      gutter_winid,
+      gutter_width,
+      win_height,
+      0,
+      'treesitter_context_line_number',
+      'TreesitterContextLineNumber'
+    )
   end
 
   context_winid = display_window(
-    ctx_bufnr, context_winid, win_width, win_height, gutter_width,
-    'treesitter_context', 'TreesitterContext')
+    ctx_bufnr,
+    context_winid,
+    win_width,
+    win_height,
+    gutter_width,
+    'treesitter_context',
+    'TreesitterContext'
+  )
 
   -- Set text
 
@@ -609,7 +607,7 @@ local function open(ctx_nodes)
     local lines, range = get_text_for_node(node)
     local text = merge_lines(lines)
 
-    contexts[#contexts+1] = {
+    contexts[#contexts + 1] = {
       node = node,
       lines = lines,
       range = range,
@@ -625,7 +623,7 @@ local function open(ctx_nodes)
     else
       line_num = ctx_line_num
     end
-    table.insert(lno_text, build_lno_str(line_num, gutter_width-1))
+    table.insert(lno_text, build_lno_str(line_num, gutter_width - 1))
   end
 
   set_lines(gbufnr, lno_text)
@@ -633,7 +631,6 @@ local function open(ctx_nodes)
     -- Context didn't change, can return here
     return
   end
-
 
   highlight_contexts(bufnr, ctx_bufnr, contexts)
 end
@@ -706,8 +703,8 @@ function M.enable()
 
   autocmd('WinLeave', close)
 
-  autocmd('User', {close , pattern = 'SessionSavePre'  })
-  autocmd('User', {update, pattern = 'SessionSavePost' })
+  autocmd('User', { close, pattern = 'SessionSavePre' })
+  autocmd('User', { update, pattern = 'SessionSavePost' })
 
   update()
   enabled = true
@@ -735,10 +732,10 @@ function M.setup(options)
   did_setup = true
 
   local userOptions = options or {}
-  config                   = vim.tbl_deep_extend('force', defaultConfig, userOptions or {})
-  config.categories        = vim.tbl_deep_extend('force', DEFAULT_CATEGORIES, userOptions.categories or {})
-  config.queries           = vim.tbl_deep_extend('force', DEFAULT_QUERIES, userOptions.queries or {})
-  config.exclude_patterns  = vim.tbl_deep_extend('force', DEFAULT_EXCLUDE_PATTERNS, userOptions.exclude_patterns or {})
+  config = vim.tbl_deep_extend('force', defaultConfig, userOptions or {})
+  config.categories = vim.tbl_deep_extend('force', DEFAULT_CATEGORIES, userOptions.categories or {})
+  config.queries = vim.tbl_deep_extend('force', DEFAULT_QUERIES, userOptions.queries or {})
+  config.exclude_patterns = vim.tbl_deep_extend('force', DEFAULT_EXCLUDE_PATTERNS, userOptions.exclude_patterns or {})
   config.fallback_patterns = vim.tbl_deep_extend('force', DEFAULT_FALLBACK_PATTERNS, userOptions.fallback_patterns or {})
 
   for filetype, patterns in pairs(config.fallback_patterns) do
@@ -752,12 +749,12 @@ function M.setup(options)
   end
 end
 
-command('TSContextEnable' , M.enable , {})
+command('TSContextEnable', M.enable, {})
 command('TSContextDisable', M.disable, {})
-command('TSContextToggle' , M.toggle , {})
+command('TSContextToggle', M.toggle, {})
 
-api.nvim_set_hl(0, 'TreesitterContext'          , {link = 'NormalFloat', default = true})
-api.nvim_set_hl(0, 'TreesitterContextLineNumber', {link = 'LineNr'     , default = true})
+api.nvim_set_hl(0, 'TreesitterContext', { link = 'NormalFloat', default = true })
+api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
 
 -- Setup with default options if user didn't call setup()
 autocmd_for_group('treesitter_context')('VimEnter', function()
