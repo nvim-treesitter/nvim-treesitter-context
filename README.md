@@ -41,8 +41,6 @@ behavior is to update its content on `CursorMoved`.
 ```lua
 local ts_context = require'treesitter-context'
 local CATEGORY = ts_context.CATEGORY
-local f = ts_context.field_name_query
-local t = ts_context.node_type_query
 
 ts_context.setup{
     enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
@@ -76,17 +74,32 @@ ts_context.setup{
         -- Filetype specific queries for treesitter nodes
         -- If queries for a language are missing, *open a PR* so everyone can benefit.
         cpp = {
-            ['class_specifier'] = { -- The entry key should be the exact node type
-                -- The category that this context belongs to (see https://github.com/nvim-treesitter/nvim-treesitter-context/blob/master/lua/treesitter-context.lua#L24).
-                category = CATEGORY.CLASS,
+            -- Queries correspond to the following EmmyLua annotations:
+
+            ---@class ContextQuery
+            ---@field category number
+            ---@field skip NodeQuery[]|nil
+            ---@field last NodeQuery[]|nil
+            ---@field next NodeQuery[]|nil
+
+            ---@class NodeQuery
+            ---@field field string|nil
+            ---@field type string|nil
+            ---@field offsetrow number|nil
+            ---@field offsetcol number|nil
+            ['if_statement'] = { -- The entry key should be the exact node type
+                -- The category that this context belongs to (see https://github.com/nvim-treesitter/nvim-treesitter-context/blob/master/lua/treesitter-context/util.lua#L3).
+                category = CATEGORY.IF,
                 -- The last child node that should show up in the context popup,
-                -- in reverse order. So the `base_class_clause` node should appear
-                -- after the `name` node.
-                -- There are node type queries here `t'base_class_clause'`, and
-                -- field name queries like `f'name'`
-                last = { t'base_class_clause', f'name' },
+                -- in reverse order. So the first node query should appear last
+                -- in code.
+                last = { { field = 'condition' } },
+                -- The next child node that delimits what should show up in the context popup.
+                -- This node query has to match both the field and type.
+                -- Optionally can be offset to include braces or similar.
+                next = { { field = 'consequence', type = 'compound_statement', offsetcol = 1 } },
                 -- Child nodes that should be skipped when displaying the context.
-                skip = { t'<some unwanted child node>' },
+                skip = { { type = '<some unwanted child node>' } },
             },
         },
         ...
