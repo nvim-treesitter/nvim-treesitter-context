@@ -3,16 +3,12 @@ local highlighter = vim.treesitter.highlighter
 local parsers = require('nvim-treesitter.parsers')
 local util = require('treesitter-context.util')
 local CATEGORY = util.CATEGORY
-local QUERY = util.QUERY
 
 local augroup = api.nvim_create_augroup
 local command = api.nvim_create_user_command
 
 local M = {
-    CATEGORY = CATEGORY,
-    QUERY = QUERY,
-    field_name_query = util.field_name_query,
-    node_type_query = util.node_type_query,
+  CATEGORY = CATEGORY,
 }
 
 local defaultConfig = {
@@ -96,6 +92,17 @@ local function get_root_node()
   return tree:root()
 end
 
+local function query_matches(query, node, field)
+  if query.field and query.field ~= field then
+    return false
+  end
+  if query.type and query.type ~= node:type() then
+    return false
+  end
+
+  return true
+end
+
 local function category_is_enabled(category, filetype)
   local filetype_categories = config.categories[filetype]
   if filetype_categories then
@@ -149,7 +156,7 @@ end
 
 local function find_first_node(node, query)
   for c, f in node:iter_children() do
-    if query:matches(c, f) then
+    if query_matches(query, c, f) then
       return c
     end
   end
@@ -158,7 +165,7 @@ end
 local function find_last_node(node, query)
   local last
   for c, f in node:iter_children() do
-    if query:matches(c, f) then
+    if query_matches(query, c, f) then
       last = c
     end
   end
@@ -178,7 +185,7 @@ local function get_text_for_node(node)
     for child, field in node:iter_children() do
       local skip = false
       for _, q in ipairs(queries.skip) do
-        if q:matches(child, field) then
+        if query_matches(q, child, field) then
           skip = true
           break
         end
@@ -400,7 +407,7 @@ local function get_parent_matches(max_lines)
         for child, field in parent:iter_children() do
           local skip = false
           for _, q in ipairs(queries.skip) do
-            if q:matches(child, field) then
+            if query_matches(q, child, field) then
               skip = true
               break
             end

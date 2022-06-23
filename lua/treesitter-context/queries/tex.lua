@@ -1,27 +1,25 @@
 local util = require('treesitter-context.util')
 local CATEGORY = util.CATEGORY
-local q = util.build_query
-local f = util.field_name_query
 
 return {
   ['part'] = {
     category = CATEGORY.SECTION,
-    last = { q { f('text') } },
+    last = { { field = 'text' } },
   },
   ['chapter'] = {
     category = CATEGORY.SECTION,
-    last = { q { f('text') } },
+    last = { { field = 'text' } },
   },
   ['section'] = {
     category = CATEGORY.SECTION,
-    last = { q { f('text') } },
+    last = { { field = 'text' } },
   },
   ['subsection'] = {
     category = CATEGORY.SECTION,
-    last = { q { f('text') } },
+    last = { { field = 'text' } },
   },
   ['subsubsection'] = {
     category = CATEGORY.SECTION,
-    last = { q { f('text') } },
+    last = { { field = 'text' } },
   },
 }
