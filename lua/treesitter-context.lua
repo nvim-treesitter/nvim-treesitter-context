@@ -13,12 +13,12 @@ end
 local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
+  line_numbers = false,
   multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
   trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
   zindex = 20,
   mode = 'cursor', -- Choices: 'cursor', 'topline'
   separator = nil,
-
 }
 
 local config = {}
@@ -213,7 +213,10 @@ local function get_text_for_node(node)
   local start_row, start_col = node:start()
   local end_row, end_col     = node:end_()
 
-  local lines = vim.split(vim.treesitter.query.get_node_text(node, 0), '\n')
+  local node_text = vim.treesitter.query.get_node_text(node, 0)
+  if node_text == nil then return {}, {} end
+
+  local lines = vim.split(node_text, '\n')
 
   if start_col ~= 0 then
     lines[1] = api.nvim_buf_get_lines(0, start_row, start_row + 1, false)[1]
@@ -576,7 +579,7 @@ local function open(ctx_nodes)
 
   local gbufnr, ctx_bufnr = get_bufs()
 
-  if vim.wo.number or vim.wo.relativenumber then
+  if config.line_numbers == true and (vim.wo.number or vim.wo.relativenumber) then
     gutter_winid = display_window(
       gbufnr, gutter_winid, gutter_width, win_height, 0,
       'treesitter_context_line_number', 'TreesitterContextLineNumber')
