@@ -99,6 +99,8 @@ local DEFAULT_TYPE_PATTERNS = {
   },
   rust = {
     'impl_item',
+    'struct',
+    'enum',
   },
   scala = {
     'object_definition',
