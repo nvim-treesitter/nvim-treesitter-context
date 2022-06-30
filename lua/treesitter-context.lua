@@ -13,7 +13,7 @@ end
 local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
-  line_numbers = false,
+  line_numbers = true,
   multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
   trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
   zindex = 20,
@@ -579,7 +579,7 @@ local function open(ctx_nodes)
 
   local gbufnr, ctx_bufnr = get_bufs()
 
-  if config.line_numbers == true and (vim.wo.number or vim.wo.relativenumber) then
+  if config.line_numbers and (vim.wo.number or vim.wo.relativenumber) then
     gutter_winid = display_window(
       gbufnr, gutter_winid, gutter_width, win_height, 0,
       'treesitter_context_line_number', 'TreesitterContextLineNumber')
