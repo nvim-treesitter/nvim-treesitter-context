@@ -110,6 +110,9 @@ local DEFAULT_TYPE_PATTERNS = {
     'architecture_body',
     'entity_declaration',
   },
+  markdown = {
+    'section',
+  },
   exact_patterns = {},
 }
 
