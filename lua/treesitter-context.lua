@@ -219,7 +219,7 @@ local function get_text_for_node(node)
   local end_row, end_col     = node:end_()
 
   local node_text = vim.treesitter.query.get_node_text(node, 0)
-  if node_text == nil then return {}, {} end
+  if node_text == nil then return nil, nil end
 
   local lines = vim.split(node_text, '\n')
 
@@ -602,6 +602,7 @@ local function open(ctx_nodes)
 
   for _, node in ipairs(ctx_nodes) do
     local lines, range = get_text_for_node(node)
+    if lines == nil or range == nil or range[1] == nil then return end
     local text = merge_lines(lines)
 
     contexts[#contexts+1] = {
