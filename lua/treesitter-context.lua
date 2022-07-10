@@ -746,9 +746,10 @@ function M.setup(options)
   end
 end
 
+-- Get the window & buffer IDs for this context
 -- `winid` is not relevant at the moment, but it might be required if
--- we support more than 1 context window instance
--- @param winid number The window id to the the context refs for
+-- we support more than 1 context window instance eventually
+-- @param winid number The window id the context refs are for
 -- @returns table
 function M.get_context(winid)
   return {
@@ -761,7 +762,7 @@ end
 
 -- Map a context window position to the corresponding buffer position
 -- Same note as above for `winid`
--- @param winid number The window id to the the context refs for
+-- @param winid number The window id the context refs are for
 -- @param row number Zero-indexed row number
 -- @param col number Zero-indexed col number
 -- @returns table or nil
