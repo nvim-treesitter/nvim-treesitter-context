@@ -133,6 +133,7 @@ local gutter_winid, context_winid
 local gutter_bufnr, context_bufnr -- Don't access directly, use get_bufs()
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local previous_nodes
+local current_contexts
 
 local function get_root_node()
   local tree = parsers.get_parser():parse()[1]
@@ -266,22 +267,14 @@ end
 
 -- Merge lines, removing the indentation after 1st line
 local function merge_lines(lines)
-  local text = { lines[1] }
+  local parts = { lines[1] }
+  local offsets = { { length = #lines[1], indent = 0 } }
   for i = 2, #lines do
-    text[i] = lines[i]:gsub(INDENT_PATTERN, '')
+    local text = lines[i]:gsub(INDENT_PATTERN, '')
+    table.insert(parts, text)
+    table.insert(offsets, { length = #text, indent = #lines[i] - #text })
   end
-  return table.concat(text, ' ')
-end
-
--- Get indentation for lines except first
-local function get_indents(lines)
-  local indents = vim.tbl_map(function(line)
-    local indent = line:match(INDENT_PATTERN)
-    return indent and #indent or 0
-  end, lines)
-  -- Dont skip first line indentation
-  indents[1] = 0
-  return indents
+  return table.concat(parts, ' '), offsets
 end
 
 local function get_gutter_width()
@@ -516,7 +509,7 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
 
   for i, context in ipairs(contexts) do
     local start_row, _, end_row, end_col = unpack(context.range)
-    local indents = context.indents
+    local offsets = context.offsets
     local lines = context.lines
 
     local start_row_abs = context.node:start()
@@ -537,10 +530,10 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
         local offset = intended_start_row
         -- Add the length of each preceding lines
         for j = 1, intended_start_row do
-          offset = offset + #lines[j] - indents[j]
+          offset = offset + #lines[j] - offsets[j].indent
         end
         -- Remove the indentation negative offset for current line
-        offset = offset - indents[intended_start_row + 1]
+        offset = offset - offsets[intended_start_row + 1].indent
 
         local row = i - 1
         api.nvim_buf_set_extmark(ctx_bufnr, ns, row, node_start_col + offset, {
@@ -603,13 +596,13 @@ local function open(ctx_nodes)
   for _, node in ipairs(ctx_nodes) do
     local lines, range = get_text_for_node(node)
     if lines == nil or range == nil or range[1] == nil then return end
-    local text = merge_lines(lines)
+    local text, offsets = merge_lines(lines)
 
     contexts[#contexts+1] = {
       node = node,
       lines = lines,
       range = range,
-      indents = get_indents(lines),
+      offsets = offsets,
     }
 
     table.insert(context_text, text)
@@ -632,6 +625,8 @@ local function open(ctx_nodes)
 
 
   highlight_contexts(bufnr, ctx_bufnr, contexts)
+
+  current_contexts = contexts
 end
 
 local function calc_max_lines(config_max)
@@ -749,6 +744,51 @@ function M.setup(options)
   else
     M.disable()
   end
+end
+
+-- `winid` is not relevant at the moment, but it might be required if
+-- we support more than 1 context window instance
+-- @param winid number The window id to the the context refs for
+-- @returns table
+function M.get_context(winid)
+  return {
+    context_winid = context_winid,
+    context_bufnr = context_bufnr,
+    gutter_winid = gutter_winid,
+    gutter_bufnr = gutter_bufnr,
+  }
+end
+
+-- Map a context window position to the corresponding buffer position
+-- Same note as above for `winid`
+-- @param winid number The window id to the the context refs for
+-- @param row number Zero-indexed row number
+-- @param col number Zero-indexed col number
+-- @returns table or nil
+function M.context_position_to_buffer_position(windid, row, col)
+  local context = current_contexts[row + 1]
+  if context == nil then return nil end
+  local buffer_row = unpack(context.range)
+  local buffer_col = col
+  for _, offset in ipairs(context.offsets) do
+    local end_col = offset.length
+    if buffer_col < end_col then
+      buffer_col = buffer_col + offset.indent
+      break
+    end
+    buffer_row = buffer_row + 1
+    buffer_col = buffer_col - (offset.indent + offset.length + 1)
+  end
+
+  -- If the target position in the context is the space that we join lines
+  -- with, buffer_col would be -1 here.
+  buffer_col = math.max(buffer_col, 0)
+
+  return {buffer_row, buffer_col}
+end
+
+function M.get()
+  return current_contexts
 end
 
 command('TSContextEnable' , M.enable , {})
