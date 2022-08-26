@@ -642,6 +642,11 @@ local function calc_max_lines(config_max)
   local wintop = vim.fn.line('w0')
   local cursor = vim.fn.line('.')
   local max_from_cursor = cursor - wintop
+
+  if config.separator and max_from_cursor > 0 then
+    max_from_cursor = max_from_cursor - 1 -- separator takes 1 line
+  end
+
   if max_lines ~= -1 then
     max_lines = math.min(max_lines, max_from_cursor)
   else
