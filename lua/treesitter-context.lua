@@ -107,6 +107,9 @@ local DEFAULT_TYPE_PATTERNS = {
     'struct',
     'enum',
   },
+  terraform = {
+    'block',
+  },
   scala = {
     'object_definition',
   },
