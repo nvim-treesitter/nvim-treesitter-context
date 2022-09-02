@@ -59,7 +59,7 @@ require'treesitter-context'.setup{
             'if',
             'switch',
             'case',
-          },
+        },
         -- Patterns for specific filetypes
         -- If a pattern is missing, *open a PR* so everyone can benefit.
         tex = {
