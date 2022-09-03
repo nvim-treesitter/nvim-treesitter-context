@@ -113,6 +113,15 @@ local DEFAULT_TYPE_PATTERNS = {
   markdown = {
     'section',
   },
+  elixir = {
+    'anonymous_function',
+    'arguments',
+    'block',
+    'do_block',
+    'list',
+    'map',
+    'tuple',
+  },
   exact_patterns = {},
 }
 
