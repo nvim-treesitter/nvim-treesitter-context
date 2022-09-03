@@ -121,6 +121,7 @@ local DEFAULT_TYPE_PATTERNS = {
     'list',
     'map',
     'tuple',
+    'quoted_content',
   },
   exact_patterns = {},
 }
