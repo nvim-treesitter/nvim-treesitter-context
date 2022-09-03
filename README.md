@@ -84,6 +84,16 @@ require'treesitter-context'.setup{
         markdown = {
             'section',
         },
+        elixir = {
+            'anonymous_function',
+            'arguments',
+            'block',
+            'do_block',
+            'list',
+            'map',
+            'tuple',
+            'quoted_content',
+        },
     },
     exact_patterns = {
         -- Example for a specific filetype with Lua patterns
