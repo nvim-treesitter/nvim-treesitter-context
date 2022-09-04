@@ -123,6 +123,12 @@ local DEFAULT_TYPE_PATTERNS = {
     'tuple',
     'quoted_content',
   },
+  json = {
+    'pair',
+  },
+  yaml = {
+    'block_mapping_pair',
+  },
   exact_patterns = {},
 }
 

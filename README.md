@@ -94,6 +94,12 @@ require'treesitter-context'.setup{
             'tuple',
             'quoted_content',
         },
+        json = {
+            'pair',
+        },
+        yaml = {
+            'block_mapping_pair',
+        },
     },
     exact_patterns = {
         -- Example for a specific filetype with Lua patterns
