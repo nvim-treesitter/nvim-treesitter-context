@@ -526,6 +526,12 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
     return
   end
 
+  -- Only set when necessary to avoid OptionSet events
+  local current_tabstop = vim.bo.tabstop
+  if current_tabstop ~= vim.bo[ctx_bufnr].tabstop then
+    vim.bo[ctx_bufnr].tabstop = current_tabstop
+  end
+
   local buf_query = buf_highlighter:get_query(parsers.ft_to_lang(vim.bo.filetype))
 
   local query = buf_query:query()
