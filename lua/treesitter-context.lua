@@ -90,6 +90,7 @@ local DEFAULT_TYPE_PATTERNS = {
     'if',
     'switch',
     'case',
+    'interface',
   },
   tex = {
     'chapter',
