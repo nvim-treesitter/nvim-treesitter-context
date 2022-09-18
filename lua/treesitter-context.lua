@@ -98,6 +98,9 @@ local DEFAULT_TYPE_PATTERNS = {
     'subsection',
     'subsubsection',
   },
+  haskell = {
+    'adt'
+  },
   rust = {
     'impl_item',
     'struct',
