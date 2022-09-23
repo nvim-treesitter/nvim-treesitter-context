@@ -104,6 +104,8 @@ local DEFAULT_TYPE_PATTERNS = {
   },
   terraform = {
     'block',
+    'object_elem',
+    'attribute',
   },
   scala = {
     'object_definition',
