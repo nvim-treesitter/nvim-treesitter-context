@@ -101,6 +101,9 @@ require'treesitter-context'.setup{
         yaml = {
             'block_mapping_pair',
         },
+        python = {
+            'def',
+        },
     },
     exact_patterns = {
         -- Example for a specific filetype with Lua patterns

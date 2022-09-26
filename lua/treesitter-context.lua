@@ -139,6 +139,9 @@ local DEFAULT_TYPE_PATTERNS = {
   yaml = {
     'block_mapping_pair',
   },
+  python = {
+    'def',
+  },
   exact_patterns = {},
 }
 
