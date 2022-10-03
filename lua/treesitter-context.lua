@@ -621,6 +621,15 @@ local function get_relative_line_num(ctx_node_line_num)
   return cursor_line_num - ctx_node_line_num - num_folded_lines
 end
 
+local function side_scroll_contexts()
+  local current_win_view = vim.api.nvim_win_call(context_winid, function ()
+    return vim.fn.winsaveview()
+  end)
+  current_win_view["leftcol"] = vim.fn.winsaveview()["leftcol"]
+  vim.api.nvim_win_call(context_winid, function ()
+    return vim.fn.winrestview(current_win_view)
+  end)
+end
 
 local function open(ctx_nodes)
   local bufnr = api.nvim_get_current_buf()
@@ -671,6 +680,7 @@ local function open(ctx_nodes)
     table.insert(lno_text, build_lno_str(line_num, gutter_width-1))
   end
 
+  side_scroll_contexts()
   set_lines(gbufnr, lno_text)
   if not set_lines(ctx_bufnr, context_text) then
     -- Context didn't change, can return here
