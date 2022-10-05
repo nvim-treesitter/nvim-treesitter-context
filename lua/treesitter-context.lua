@@ -63,7 +63,8 @@ do
       typescript = { f'return_type', f'parameters' },
     },
     [word_pattern('class')] = {
-      cpp = { t'base_class_clause', f'name' }
+      cpp = { t'base_class_clause', f'name' },
+      python = { f'superclasses' },
     }
   }
 end
