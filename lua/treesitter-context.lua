@@ -156,8 +156,6 @@ local INDENT_PATTERN = '^%s+'
 
 local did_setup = false
 local enabled = false
-local gutter_winid, context_winid
-local gutter_bufnr, context_bufnr -- Don't access directly, use get_bufs()
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local previous_nodes
 
@@ -329,27 +327,35 @@ do
 end
 
 local function get_bufs()
+  local context_bufnr = vim.b.ts_context_bufnr
+  local gutter_bufnr = vim.b.ts_gutter_bufnr
+
   if not context_bufnr or not api.nvim_buf_is_valid(context_bufnr) then
     context_bufnr = api.nvim_create_buf(false, true)
+    vim.b.ts_context_bufnr = context_bufnr
   end
 
   if not gutter_bufnr or not api.nvim_buf_is_valid(gutter_bufnr) then
     gutter_bufnr = api.nvim_create_buf(false, true)
+    vim.b.ts_gutter_bufnr = gutter_bufnr
   end
 
   return gutter_bufnr, context_bufnr
 end
 
 local function delete_bufs()
+  local context_bufnr = vim.b.ts_context_bufnr
+  local gutter_bufnr = vim.b.ts_gutter_bufnr
+
   if context_bufnr and api.nvim_buf_is_valid(context_bufnr) then
     api.nvim_buf_delete(context_bufnr, { force = true })
   end
-  context_bufnr = nil
+  vim.b.context_bufnr = nil
 
   if gutter_bufnr and api.nvim_buf_is_valid(gutter_bufnr) then
     api.nvim_buf_delete(gutter_bufnr, { force = true })
   end
-  gutter_bufnr = nil
+  vim.b.gutter_bufnr = nil
 end
 
 local function display_window(bufnr, winid, width, height, col, ty, hl)
@@ -491,15 +497,17 @@ local function close()
     return
   end
 
+  local context_winid = vim.b.ts_context_winid
   if context_winid ~= nil and api.nvim_win_is_valid(context_winid) then
     api.nvim_win_close(context_winid, true)
   end
-  context_winid = nil
+  vim.b.ts_context_winid = nil
 
+  local gutter_winid = vim.b.ts_context_gutter_winid
   if gutter_winid and api.nvim_win_is_valid(gutter_winid) then
     api.nvim_win_close(gutter_winid, true)
   end
-  gutter_winid = nil
+  vim.b.ts_context_gutter_winid = nil
 end
 
 local function set_lines(bufnr, lines)
@@ -619,13 +627,13 @@ local function open(ctx_nodes)
   local gbufnr, ctx_bufnr = get_bufs()
 
   if config.line_numbers and (vim.wo.number or vim.wo.relativenumber) then
-    gutter_winid = display_window(
-      gbufnr, gutter_winid, gutter_width, win_height, 0,
+    vim.b.ts_context_gutter_winid = display_window(
+      gbufnr, vim.b.ts_context_gutter_winid, gutter_width, win_height, 0,
       'treesitter_context_line_number', 'TreesitterContextLineNumber')
   end
 
-  context_winid = display_window(
-    ctx_bufnr, context_winid, win_width, win_height, gutter_width,
+  vim.b.ts_context_winid = display_window(
+    ctx_bufnr, vim.b.ts_context_winid, win_width, win_height, gutter_width,
     'treesitter_context', 'TreesitterContext')
 
   -- Set text
