@@ -625,7 +625,7 @@ local function side_scroll_contexts()
   local current_win_view = vim.api.nvim_win_call(context_winid, function ()
     return vim.fn.winsaveview()
   end)
-  current_win_view["leftcol"] = vim.fn.winsaveview()["leftcol"]
+  current_win_view["leftcol"] = vim.fn.col('.') - vim.fn.wincol() + get_gutter_width()
   vim.api.nvim_win_call(context_winid, function ()
     return vim.fn.winrestview(current_win_view)
   end)
