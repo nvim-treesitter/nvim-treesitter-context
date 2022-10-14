@@ -479,19 +479,16 @@ local function throttle_fn(fn)
       local start = vim.loop.hrtime()
       fn()
       local elapsed_ms = math.floor((vim.loop.hrtime() - start) / 1e6)
-      -- If this took < 5ms, we don't need a cooldown period. This prevents the context floats from flickering
-      if elapsed_ms > 5 then
+      -- If this took < 2ms, we don't need a cooldown period. This prevents the context floats from flickering
+      if elapsed_ms > 2 then
         cooling_down = true
-        -- Cool down for twice as long as we blocked the UI for.
-        -- This should mitigate some of the stuttering during scrolling.
-        local cooldown_period = 2 * elapsed_ms
         vim.defer_fn(function()
           cooling_down = false
           if recalc_after_cooldown then
             recalc_after_cooldown = false
             wrapped()
           end
-        end, cooldown_period)
+        end, 20)
       end
     end
   end
