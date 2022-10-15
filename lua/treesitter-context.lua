@@ -625,13 +625,12 @@ local function horizontal_scroll_contexts()
   if context_winid == nil then
     return
   end
-  local current_win_view = vim.api.nvim_win_call(context_winid, function ()
-    return vim.fn.winsaveview()
-  end)
-  if vim.fn.winsaveview()["leftcol"] ~= current_win_view["leftcol"] then
-    current_win_view["leftcol"] = vim.fn.winsaveview()["leftcol"]
+  local active_win_view = vim.fn.winsaveview()
+  local context_win_view = vim.api.nvim_win_call(context_winid, function () return vim.fn.winsaveview() end)
+  if active_win_view["leftcol"] ~= context_win_view["leftcol"] then
+    context_win_view["leftcol"] = active_win_view["leftcol"]
     vim.api.nvim_win_call(context_winid, function ()
-      return vim.fn.winrestview(current_win_view)
+      return vim.fn.winrestview(context_win_view)
     end)
   end
 end
