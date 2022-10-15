@@ -315,21 +315,6 @@ local function get_gutter_width()
   return vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].textoff
 end
 
-local horizontal_window_scroll_changed
-do
-  local leftcol
-  local active_winid
-  horizontal_window_scroll_changed = function()
-    local newcol = vim.fn.col('.') - vim.fn.wincol() + get_gutter_width()
-    local new_winid = vim.api.nvim_get_current_win()
-    if newcol ~= leftcol or new_winid ~= active_winid then
-      leftcol = newcol
-      active_winid = new_winid
-      return true
-    end
-    return false
-  end
-end
 local cursor_moved_vertical
 do
   local line
@@ -752,6 +737,7 @@ local update = throttle_fn(function()
     end
 
     open(context)
+    horizontal_scroll_contexts()
   else
     close()
   end
@@ -778,12 +764,7 @@ end
 function M.enable()
   local autocmd = autocmd_for_group('treesitter_context_update')
 
-  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, function ()
-    update()
-    if horizontal_window_scroll_changed() then
-      horizontal_scroll_contexts()
-    end
-  end)
+  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
 
   autocmd('CursorMoved', function()
     if cursor_moved_vertical() then
