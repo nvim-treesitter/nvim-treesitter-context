@@ -315,13 +315,16 @@ local function get_gutter_width()
   return vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].textoff
 end
 
-local window_scrolled_horizontal
+local horizontal_window_scroll_changed
 do
   local leftcol
-  window_scrolled_horizontal = function()
+  local active_winid
+  horizontal_window_scroll_changed = function()
     local newcol = vim.fn.col('.') - vim.fn.wincol() + get_gutter_width()
-    if newcol ~= leftcol then
+    local new_winid = vim.api.nvim_get_current_win()
+    if newcol ~= leftcol or new_winid ~= active_winid then
       leftcol = newcol
+      active_winid = new_winid
       return true
     end
     return false
@@ -640,10 +643,12 @@ local function horizontal_scroll_contexts()
   local current_win_view = vim.api.nvim_win_call(context_winid, function ()
     return vim.fn.winsaveview()
   end)
-  current_win_view["leftcol"] = vim.fn.col('.') - vim.fn.wincol() + get_gutter_width()
-  vim.api.nvim_win_call(context_winid, function ()
-    return vim.fn.winrestview(current_win_view)
-  end)
+  if vim.fn.winsaveview()["leftcol"] ~= current_win_view["leftcol"] then
+    current_win_view["leftcol"] = vim.fn.winsaveview()["leftcol"]
+    vim.api.nvim_win_call(context_winid, function ()
+      return vim.fn.winrestview(current_win_view)
+    end)
+  end
 end
 
 local function open(ctx_nodes)
@@ -775,7 +780,7 @@ function M.enable()
 
   autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, function ()
     update()
-    if window_scrolled_horizontal() then
+    if horizontal_window_scroll_changed() then
       horizontal_scroll_contexts()
     end
   end)
@@ -783,7 +788,6 @@ function M.enable()
   autocmd('CursorMoved', function()
     if cursor_moved_vertical() then
       update()
-    else
     end
   end)
 
