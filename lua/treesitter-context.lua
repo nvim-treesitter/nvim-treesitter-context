@@ -621,6 +621,19 @@ local function get_relative_line_num(ctx_node_line_num)
   return cursor_line_num - ctx_node_line_num - num_folded_lines
 end
 
+local function horizontal_scroll_contexts()
+  if context_winid == nil then
+    return
+  end
+  local active_win_view = vim.fn.winsaveview()
+  local context_win_view = api.nvim_win_call(context_winid, vim.fn.winsaveview)
+  if active_win_view.leftcol ~= context_win_view.leftcol then
+    context_win_view.leftcol = active_win_view.leftcol
+    api.nvim_win_call(context_winid, function()
+      return vim.fn.winrestview({leftcol = context_win_view.leftcol})
+    end)
+  end
+end
 
 local function open(ctx_nodes)
   local bufnr = api.nvim_get_current_buf()
@@ -723,6 +736,7 @@ local update = throttle_fn(function()
     end
 
     open(context)
+    horizontal_scroll_contexts()
   else
     close()
   end
