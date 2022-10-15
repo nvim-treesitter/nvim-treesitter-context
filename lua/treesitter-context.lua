@@ -315,6 +315,18 @@ local function get_gutter_width()
   return vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].textoff
 end
 
+local window_scrolled_horizontal
+do
+  local leftcol
+  window_scrolled_horizontal = function()
+    local newcol = vim.fn.col('.') - vim.fn.wincol() + get_gutter_width()
+    if newcol ~= leftcol then
+      leftcol = newcol
+      return true
+    end
+    return false
+  end
+end
 local cursor_moved_vertical
 do
   local line
@@ -621,7 +633,10 @@ local function get_relative_line_num(ctx_node_line_num)
   return cursor_line_num - ctx_node_line_num - num_folded_lines
 end
 
-local function side_scroll_contexts()
+local function horizontal_scroll_contexts()
+  if context_winid == nil then
+    return
+  end
   local current_win_view = vim.api.nvim_win_call(context_winid, function ()
     return vim.fn.winsaveview()
   end)
@@ -680,7 +695,6 @@ local function open(ctx_nodes)
     table.insert(lno_text, build_lno_str(line_num, gutter_width-1))
   end
 
-  side_scroll_contexts()
   set_lines(gbufnr, lno_text)
   if not set_lines(ctx_bufnr, context_text) then
     -- Context didn't change, can return here
@@ -759,11 +773,17 @@ end
 function M.enable()
   local autocmd = autocmd_for_group('treesitter_context_update')
 
-  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
+  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, function ()
+    update()
+    if window_scrolled_horizontal() then
+      horizontal_scroll_contexts()
+    end
+  end)
 
   autocmd('CursorMoved', function()
     if cursor_moved_vertical() then
       update()
+    else
     end
   end)
 
