@@ -721,6 +721,12 @@ local update = throttle_fn(function()
     return
   end
 
+  -- condition (pre-hook) check
+  local buf = vim.api.nvim_get_current_buf()
+  if config.condition ~= nil and type(config.condition) == "function" and config.condition(buf) == true then
+    return
+  end
+
   local context = get_parent_matches(calc_max_lines(config.max_lines))
 
   if context and #context ~= 0 then

@@ -117,6 +117,20 @@ require'treesitter-context'.setup{
     -- Separator between context and content. Should be a single character string, like '-'.
     -- When separator is set, the context will only show up when there are at least 2 lines above cursorline.
     separator = nil,
+    -- A pre-hook that allow to disable treesitter-context based on buffer options
+    -- Here is a example where treesitter-context is disable for json and python files
+    -- Other custom logic can be assigned here related to buffer
+    -- If condition is true then treesitter-context will disable
+    condition = function(buf)
+      local ft = vim.fn.getbufvar(buf, "&filetype")
+      local disable_for = { "json", "python" }
+
+      if vim.tbl_contains(disable_for, ft) then
+        return true
+      end
+
+      return false
+    end,
 }
 ```
 
