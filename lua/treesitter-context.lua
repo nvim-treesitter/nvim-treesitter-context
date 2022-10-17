@@ -232,17 +232,6 @@ local function get_text_for_node(node)
   local type = get_type_pattern(node, config.patterns.default) or node:type()
   local filetype = vim.bo.filetype
 
-  local skip_leading_type = (skip_leading_types[type] or {})[filetype]
-  if skip_leading_type then
-    local children = ts_utils.get_named_children(node)
-    for _, child in ipairs(children) do
-      if child:type() ~= skip_leading_type then
-        node = child
-        break
-      end
-    end
-  end
-
   local start_row, start_col = node:start()
   local end_row, end_col     = node:end_()
 
@@ -637,6 +626,24 @@ local function horizontal_scroll_contexts()
   end
 end
 
+local function normalize_node(node)
+  local type = get_type_pattern(node, config.patterns.default) or node:type()
+  local filetype = vim.bo.filetype
+
+  local skip_leading_type = (skip_leading_types[type] or {})[filetype]
+  if skip_leading_type then
+    local children = ts_utils.get_named_children(node)
+    for _, child in ipairs(children) do
+      if child:type() ~= skip_leading_type then
+        node = child
+        break
+      end
+    end
+  end
+
+  return node
+end
+
 local function open(ctx_nodes)
   local bufnr = api.nvim_get_current_buf()
 
@@ -663,6 +670,8 @@ local function open(ctx_nodes)
   local contexts = {}
 
   for _, node in ipairs(ctx_nodes) do
+    node = normalize_node(node)
+
     local lines, range = get_text_for_node(node)
     if lines == nil or range == nil or range[1] == nil then return end
     local text = merge_lines(lines)
