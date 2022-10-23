@@ -692,6 +692,9 @@ local function open(ctx_nodes)
 
 
   highlight_contexts(bufnr, ctx_bufnr, contexts)
+
+  api.nvim_buf_set_extmark(ctx_bufnr, ns, #lno_text-1, 0, {end_line=#lno_text, hl_group='TreesitterContextBottom', hl_eol=true})
+  api.nvim_buf_set_extmark(gbufnr, ns, #context_text-1, 0, {end_line=#context_text, hl_group='TreesitterContextBottom', hl_eol=true})
 end
 
 local function calc_max_lines(config_max)
@@ -826,8 +829,9 @@ command('TSContextEnable' , M.enable , {})
 command('TSContextDisable', M.disable, {})
 command('TSContextToggle' , M.toggle , {})
 
-api.nvim_set_hl(0, 'TreesitterContext'          , {link = 'NormalFloat', default = true})
-api.nvim_set_hl(0, 'TreesitterContextLineNumber', {link = 'LineNr'     , default = true})
+api.nvim_set_hl(0, 'TreesitterContext',           {link = 'NormalFloat', default = true})
+api.nvim_set_hl(0, 'TreesitterContextLineNumber', {link = 'LineNr',      default = true})
+api.nvim_set_hl(0, 'TreesitterContextBottom',     {link = 'NONE',        default = true})
 
 -- Setup with default options if user didn't call setup()
 autocmd_for_group('treesitter_context')('VimEnter', function()
