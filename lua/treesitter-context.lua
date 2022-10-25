@@ -531,6 +531,7 @@ local function set_lines(bufnr, lines)
 
   if redraw then
     api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    api.nvim_buf_set_option(bufnr, 'modified', false)
   end
 
   return redraw
