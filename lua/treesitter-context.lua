@@ -93,6 +93,8 @@ local DEFAULT_TYPE_PATTERNS = {
     'switch',
     'case',
     'interface',
+    'struct',
+    'enum',
   },
   tex = {
     'chapter',
@@ -105,8 +107,7 @@ local DEFAULT_TYPE_PATTERNS = {
   },
   rust = {
     'impl_item',
-    'struct',
-    'enum',
+ 
   },
   terraform = {
     'block',
