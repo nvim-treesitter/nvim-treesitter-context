@@ -25,7 +25,6 @@ use 'nvim-treesitter/nvim-treesitter'
 use 'nvim-treesitter/nvim-treesitter-context'
 ```
 
-
 ## Screenshot
 
 ![theme](./static/demo.gif)
@@ -98,6 +97,9 @@ require'treesitter-context'.setup{
         json = {
             'pair',
         },
+        typescript = {
+            'export_statement',
+        },
         yaml = {
             'block_mapping_pair',
         },
@@ -135,6 +137,7 @@ context line numbers if `line_numbers` is set. Per default it links to `LineNr`.
 Use the highlight group `TreesitterContextBottom` to change the highlight of the
 last line of the context window. By default it links to `NONE`.
 However, you can use this to create a border by applying an underline highlight, e.g:
+
 ```vim
 hi TreesitterContextBottom gui=underline guisp=Grey
 ```
