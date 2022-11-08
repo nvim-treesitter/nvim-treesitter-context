@@ -137,6 +137,9 @@ local DEFAULT_TYPE_PATTERNS = {
   json = {
     'pair',
   },
+  typescript = {
+    'export_statement',
+  },
   yaml = {
     'block_mapping_pair',
   },
