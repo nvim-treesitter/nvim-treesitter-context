@@ -477,7 +477,7 @@ local function throttle_fn(fn)
       recalc_after_cooldown = true
     else
       local start = vim.loop.hrtime()
-      fn()
+      vim.schedule(fn)
       local elapsed_ms = math.floor((vim.loop.hrtime() - start) / 1e6)
       -- If this took < 2ms, we don't need a cooldown period. This prevents the context floats from flickering
       if elapsed_ms > 2 then
