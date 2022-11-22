@@ -1,0 +1,67 @@
+name: Bug report
+description: Report a problem with nvim-treesitter-context
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Before reporting make sure that both nvim-treesitter-context is
+        updated to the latest version.
+  - type: textarea
+    attributes:
+      label: "Description"
+      description: "A comprehensive description of the problem you are reporting."
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: "Neovim version"
+      description: |
+        Output of `nvim --version`
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Expected behavior"
+      description: "A description of the behavior you expected:"
+  - type: textarea
+    attributes:
+      label: "Actual behavior"
+      description: "Observed behavior (may optionally include images, or videos)."
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+       label: "Minimal config"
+       description: >
+         Minimal(!) configuration necessary to reproduce the issue. Save this as
+         `minimal.lua`. If necessary, add plugins and config options from your
+         `init.lua` at the indicated lines.
+       render: Lua
+       value: |
+         local plugins = {
+           ts         = 'https://github.com/nvim-treesitter/nvim-treesitter',
+           ts_context = 'https://github.com/nvim-treesitter/nvim-treesitter-context',
+           -- ADD ADDITIONAL PLUGINS THAT ARE _NECESSARY_ TO REPRODUCE THE ISSUE
+         }
+
+         for name, url in pairs(plugins) do
+           local install_path = '/tmp/nvim/site/'..name
+           if vim.fn.isdirectory(install_path) == 0 then
+             vim.fn.system { 'git', 'clone', '--depth=1', url, install_path }
+           end
+           vim.o.runtimepath = install_path..','..vim.o.runtimepath
+         end
+
+         -- ADD INIT.LUA SETTINGS THAT IS _NECESSARY_ FOR REPRODUCING THE ISSUE
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: "Steps to reproduce"
+      description: "Steps to reproduce using the minimal config provided."
+      value: |
+        1. `nvim --clean -u minimal.lua`
+        2. ...
+    validations:
+      required: true
