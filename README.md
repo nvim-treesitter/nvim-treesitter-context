@@ -59,6 +59,9 @@ require'treesitter-context'.setup{
             'if',
             'switch',
             'case',
+            'interface',
+            'struct',
+            'enum',
         },
         -- Patterns for specific filetypes
         -- If a pattern is missing, *open a PR* so everyone can benefit.
@@ -68,10 +71,17 @@ require'treesitter-context'.setup{
             'subsection',
             'subsubsection',
         },
+        haskell = {
+            'adt'
+        },
         rust = {
             'impl_item',
-            'struct',
-            'enum',
+
+        },
+        terraform = {
+            'block',
+            'object_elem',
+            'attribute',
         },
         scala = {
             'object_definition',
