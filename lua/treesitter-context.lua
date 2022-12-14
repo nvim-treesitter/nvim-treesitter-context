@@ -748,7 +748,7 @@ local update = throttle_fn(function()
     previous_nodes = context
 
     if api.nvim_win_get_height(0) < config.min_window_height then
-      M.close()
+      close()
       return
     end
 
