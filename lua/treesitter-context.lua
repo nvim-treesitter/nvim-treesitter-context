@@ -96,39 +96,6 @@ local DEFAULT_TYPE_PATTERNS = {
     'struct',
     'enum',
   },
-  tex = {
-    'chapter',
-    'section',
-    'subsection',
-    'subsubsection',
-  },
-  haskell = {
-    'adt'
-  },
-  rust = {
-    'impl_item',
- 
-  },
-  terraform = {
-    'block',
-    'object_elem',
-    'attribute',
-  },
-  scala = {
-    'object_definition',
-  },
-  verilog = {
-    'always_construct',
-    'statement_or_null',
-  },
-  vhdl = {
-    'process_statement',
-    'architecture_body',
-    'entity_declaration',
-  },
-  markdown = {
-    'section',
-  },
   elixir = {
     'anonymous_function',
     'arguments',
@@ -139,11 +106,43 @@ local DEFAULT_TYPE_PATTERNS = {
     'tuple',
     'quoted_content',
   },
+  haskell = {
+    'adt'
+  },
   json = {
     'pair',
   },
+  markdown = {
+    'section',
+  },
+  rust = {
+    'impl_item',
+  },
+  scala = {
+    'object_definition',
+  },
+  terraform = {
+    'block',
+    'object_elem',
+    'attribute',
+  },
+  tex = {
+    'chapter',
+    'section',
+    'subsection',
+    'subsubsection',
+  },
   typescript = {
     'export_statement',
+  },
+  verilog = {
+    'always_construct',
+    'statement_or_null',
+  },
+  vhdl = {
+    'process_statement',
+    'architecture_body',
+    'entity_declaration',
   },
   yaml = {
     'block_mapping_pair',
