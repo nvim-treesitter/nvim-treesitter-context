@@ -117,6 +117,10 @@ local DEFAULT_TYPE_PATTERNS = {
   scala = {
     'object_definition',
   },
+  verilog = {
+    'always_construct',
+    'statement_or_null',
+  },
   vhdl = {
     'process_statement',
     'architecture_body',
