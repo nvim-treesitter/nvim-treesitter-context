@@ -69,97 +69,6 @@ do
   }
 end
 
--- Tells us which leading child node type to skip when highlighting a
--- multi-line node.
-local skip_leading_types = {
-  [word_pattern('class')] = {
-    php = 'attribute_list',
-  },
-  [word_pattern('method')] = {
-    php = 'attribute_list',
-  },
-}
-
--- There are language-specific
-local DEFAULT_TYPE_PATTERNS = {
-  -- These catch most generic groups, eg "function_declaration" or "function_block"
-  default = {
-    'class',
-    'function',
-    'method',
-    'for',
-    'while',
-    'if',
-    'switch',
-    'case',
-    'interface',
-    'struct',
-    'enum',
-  },
-  elixir = {
-    'anonymous_function',
-    'arguments',
-    'block',
-    'do_block',
-    'list',
-    'map',
-    'tuple',
-    'quoted_content',
-  },
-  haskell = {
-    'adt'
-  },
-  json = {
-    'pair',
-  },
-  markdown = {
-    'section',
-  },
-  python = {
-    'with_statement',
-  },
-  rust = {
-    'impl_item',
-  },
-  scala = {
-    'object_definition',
-  },
-  terraform = {
-    'block',
-    'object_elem',
-    'attribute',
-  },
-  tex = {
-    'chapter',
-    'section',
-    'subsection',
-    'subsubsection',
-  },
-  typescript = {
-    'export_statement',
-  },
-  verilog = {
-    'always_construct',
-    'statement_or_null',
-  },
-  vhdl = {
-    'process_statement',
-    'architecture_body',
-    'entity_declaration',
-  },
-  yaml = {
-    'block_mapping_pair',
-  },
-  exact_patterns = {},
-}
-
-local DEFAULT_TYPE_EXCLUDE_PATTERNS = {
-  default = {},
-  teal = {
-    'function_body',
-  },
-}
-
 local INDENT_PATTERN = '^%s+'
 
 -- Script variables
@@ -176,49 +85,28 @@ local function get_root_node()
   return tree:root()
 end
 
-local function is_excluded(node, filetype)
-  local node_type = node:type()
-  for _, rgx in ipairs(config.exclude_patterns.default) do
-    if node_type:find(rgx) then
-      return true
+--- @return boolean
+local function compare_ranges(node1, node2)
+  local range1 = {node1:range()}
+  local range2 = {node2:range()}
+  for i = 1, 4 do
+    if range1[i] ~= range2[i] then
+      return false
     end
   end
-  local filetype_patterns = config.exclude_patterns[filetype]
-  for _, rgx in ipairs(filetype_patterns or {}) do
-    if node_type:find(rgx) then
-      return true
-    end
-  end
-  return false
+  return true
 end
 
-local function is_valid(node, filetype)
-  if is_excluded(node, filetype) then
-    return false
+local function is_valid(node, query)
+  local bufnr = api.nvim_get_current_buf()
+  for id, node0 in query:iter_captures(node, bufnr, 0, -1) do
+    local name = query.captures[id] -- name of the capture in the query
+    if name == 'context' then
+      return compare_ranges(node, node0)
+    end
   end
 
-  local node_type = node:type()
-  for _, rgx in ipairs(config.patterns.default) do
-    if node_type:find(rgx) then
-      return true
-    end
-  end
-  local filetype_patterns = config.patterns[filetype]
-  for _, rgx in ipairs(filetype_patterns or {}) do
-    if node_type:find(rgx) then
-      return true
-    end
-  end
   return false
-end
-
-local function get_type_pattern(node, type_patterns)
-  local node_type = node:type()
-  for _, rgx in ipairs(type_patterns) do
-    if node_type:find(rgx) then
-      return rgx
-    end
-  end
 end
 
 local function find_node(node, query)
@@ -238,15 +126,12 @@ local function find_node(node, query)
 end
 
 local function get_text_for_node(node)
-  local type = get_type_pattern(node, config.patterns.default) or node:type()
-  local filetype = vim.bo.filetype
-
-  local start_row, start_col = node:start()
-  local end_row, end_col     = node:end_()
-
   local node_text = vim.treesitter.query.get_node_text(node, 0)
-  if node_text == nil then return nil, nil end
+  if node_text == nil then
+    return nil, nil
+  end
 
+  local start_row, start_col, end_row, end_col = node:range()
   local lines = vim.split(node_text, '\n')
 
   if start_col ~= 0 then
@@ -254,7 +139,7 @@ local function get_text_for_node(node)
   end
   start_col = 0
 
-  local queries = (last_nodes[type] or {})[filetype]
+  local queries = (last_nodes[node:type()] or {})[vim.bo.filetype]
 
   local last_position
 
@@ -406,6 +291,13 @@ local function get_parent_matches(max_lines)
     lnum, col = unpack(api.nvim_win_get_cursor(0))
   end
 
+  local lang = parsers.ft_to_lang(vim.bo.filetype)
+  local query = vim.treesitter.query.get_query(lang, 'context')
+
+  if not query then
+    return
+  end
+
   local last_matches
   local parent_matches = {}
   local line_offset = 0
@@ -434,7 +326,7 @@ local function get_parent_matches(max_lines)
       local row = parent:start()
 
       local height = math.min(max_lines, #parent_matches)
-      if is_valid(parent, vim.bo.filetype)
+      if is_valid(parent, query)
           and row >= 0
           and row < (topline + height - 1) then
 
@@ -634,24 +526,6 @@ local function horizontal_scroll_contexts()
   end
 end
 
-local function normalize_node(node)
-  local type = get_type_pattern(node, config.patterns.default) or node:type()
-  local filetype = vim.bo.filetype
-
-  local skip_leading_type = (skip_leading_types[type] or {})[filetype]
-  if skip_leading_type then
-    local children = ts_utils.get_named_children(node)
-    for _, child in ipairs(children) do
-      if child:type() ~= skip_leading_type then
-        node = child
-        break
-      end
-    end
-  end
-
-  return node
-end
-
 local function open(ctx_nodes)
   local bufnr = api.nvim_get_current_buf()
 
@@ -678,8 +552,6 @@ local function open(ctx_nodes)
   local contexts = {}
 
   for _, node in ipairs(ctx_nodes) do
-    node = normalize_node(node)
-
     local lines, range = get_text_for_node(node)
     if lines == nil or range == nil or range[1] == nil then
       return
@@ -826,17 +698,7 @@ function M.setup(options)
 
   local userOptions = options or {}
 
-  config                  = vim.tbl_deep_extend('force', {}, defaultConfig, userOptions)
-  config.patterns         = vim.tbl_deep_extend('force', {}, DEFAULT_TYPE_PATTERNS, userOptions.patterns or {})
-  config.exclude_patterns = vim.tbl_deep_extend('force', {}, DEFAULT_TYPE_EXCLUDE_PATTERNS, userOptions.exclude_patterns or {})
-  config.exact_patterns   = vim.tbl_deep_extend('force', {}, userOptions.exact_patterns or {})
-
-  for filetype, patterns in pairs(config.patterns) do
-    -- Map with word_pattern only if users don't need exact pattern matching
-    if not config.exact_patterns[filetype] then
-      config.patterns[filetype] = vim.tbl_map(word_pattern, patterns)
-    end
-  end
+  config = vim.tbl_deep_extend('force', {}, defaultConfig, userOptions)
 
   if config.enable then
     M.enable()
