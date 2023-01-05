@@ -97,6 +97,7 @@ local function compare_ranges(node1, node2)
   return true
 end
 
+--- @return boolean
 local function is_valid(node, query)
   local bufnr = api.nvim_get_current_buf()
   for id, node0 in query:iter_captures(node, bufnr, 0, -1) do
@@ -176,6 +177,8 @@ local function get_text_for_node(node)
 end
 
 -- Merge lines, removing the indentation after 1st line
+--- @param lines string[]
+--- @return string
 local function merge_lines(lines)
   local text = { lines[1] }
   for i = 2, #lines do
@@ -236,6 +239,14 @@ local function delete_bufs()
   gutter_bufnr = nil
 end
 
+--- @param bufnr integer
+--- @param winid integer
+--- @param width integer
+--- @param height integer
+--- @param col integer
+--- @param ty string
+--- @param hl string
+--- @return integer
 local function display_window(bufnr, winid, width, height, col, ty, hl)
   if not winid or not api.nvim_win_is_valid(winid) then
     local sep = config.separator
@@ -274,6 +285,7 @@ local M = {
   config = config,
 }
 
+--- @param max_lines integer
 local function get_parent_matches(max_lines)
   if max_lines == 0 then
     return
@@ -361,6 +373,9 @@ local function get_parent_matches(max_lines)
   end
 end
 
+--- @generic F: function
+--- @param fn F
+--- @return F
 local function throttle_fn(fn)
   local recalc_after_cooldown = false
   local cooling_down = false
@@ -405,6 +420,9 @@ local function close()
   gutter_winid = nil
 end
 
+--- @param bufnr integer
+--- @param lines string[]
+--- @return boolean
 local function set_lines(bufnr, lines)
   local clines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local redraw = false
@@ -427,6 +445,8 @@ local function set_lines(bufnr, lines)
   return redraw
 end
 
+--- @param bufnr integer
+--- @param ctx_bufnr integer
 local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   api.nvim_buf_clear_namespace(ctx_bufnr, ns, 0, -1)
 
@@ -491,10 +511,15 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   end
 end
 
+--- @param lnum integer
+--- @param width integer
+--- @return string
 local function build_lno_str(lnum, width)
   return string.format('%'..width..'d', lnum)
 end
 
+--- @param ctx_node_line_num integer
+--- @return integer
 local function get_relative_line_num(ctx_node_line_num)
   local cursor_line_num = vim.fn.line('.')
   local num_folded_lines = 0
@@ -589,6 +614,8 @@ local function open(ctx_nodes)
   api.nvim_buf_set_extmark(gbufnr, ns, #context_text-1, 0, {end_line=#context_text, hl_group='TreesitterContextBottom', hl_eol=true})
 end
 
+--- @param config_max integer
+--- @return integer
 local function calc_max_lines(config_max)
   local max_lines = config_max
   max_lines = max_lines == 0 and -1 or max_lines
@@ -637,6 +664,8 @@ local update = throttle_fn(function()
   end
 end)
 
+--- @param group string
+--- @return function
 local function autocmd_for_group(group)
   local gid = augroup(group, {})
   return function(event, opts)
