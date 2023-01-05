@@ -1,14 +1,9 @@
 local api = vim.api
-local ts_utils = require'nvim-treesitter.ts_utils'
 local highlighter = vim.treesitter.highlighter
 local parsers = require'nvim-treesitter.parsers'
 
 local augroup = api.nvim_create_augroup
 local command = api.nvim_create_user_command
-
-local function word_pattern(p)
-  return '%f[%w]' .. p .. '%f[^%w]'
-end
 
 local defaultConfig = {
   enable = true,
@@ -25,49 +20,6 @@ local defaultConfig = {
 local config = {}
 
 -- Constants
-
--- Tells us at which node type to stop when highlighting a multi-line
--- node. If not specified, the highlighting stops after the first line.
-local last_nodes
-local QUERY_FIELD_NAME = 1
-local QUERY_NODE_TYPE = 2
-do
-  local function f(name)
-      return {
-          name = name,
-          kind = QUERY_FIELD_NAME,
-      }
-  end
-
-  local function t(name)
-      return {
-          name = name,
-          kind = QUERY_NODE_TYPE,
-      }
-  end
-
-  last_nodes = {
-    [word_pattern('function')] = {
-      c = { f'declarator' },
-      cpp = { f'declarator' },
-      lua = { f'parameters' },
-      teal = { f'signature' },
-      python = { f'return_type', f'parameters' },
-      rust = { f'return_type', f'parameters' },
-      javascript =  { f'parameters' },
-      typescript = { f'return_type', f'parameters' },
-    },
-    [word_pattern('method')] = {
-      lua = { f'parameters' },
-      javascript =  { f'parameters' },
-      typescript = { f'return_type', f'parameters' },
-    },
-    [word_pattern('class')] = {
-      cpp = { t'base_class_clause', f'name' },
-      python = { f'superclasses' },
-    }
-  }
-end
 
 local INDENT_PATTERN = '^%s+'
 
@@ -110,22 +62,6 @@ local function is_valid(node, query)
   return false
 end
 
-local function find_node(node, query)
-  if query.kind == QUERY_FIELD_NAME then
-    local fields = node:field(query.name)
-    if fields and fields[1] then
-      return fields[1]
-    end
-  elseif query.kind == QUERY_NODE_TYPE then
-    local children = ts_utils.get_named_children(node)
-    for _, c in ipairs(children) do
-      if c:type() == query.name then
-        return c
-      end
-    end
-  end
-end
-
 local function get_text_for_node(node)
   local node_text = vim.treesitter.query.get_node_text(node, 0)
   if node_text == nil then
@@ -140,32 +76,7 @@ local function get_text_for_node(node)
   end
   start_col = 0
 
-  local queries = (last_nodes[node:type()] or {})[vim.bo.filetype]
-
-  local last_position
-
-  if queries then
-    local child
-    for _, q in ipairs(queries) do
-      local n = find_node(node, q)
-      if n then
-        child = n
-        break
-      end
-    end
-
-    if child then
-      last_position = {child:end_()}
-
-      end_row = last_position[1]
-      end_col = last_position[2]
-      local last_index = end_row - start_row
-      lines = vim.list_slice(lines, 1, last_index + 1)
-      lines[#lines] = lines[#lines]:sub(1, end_col)
-    end
-  end
-
-  if not last_position or #lines > config.multiline_threshold then
+  if #lines > config.multiline_threshold then
     lines = vim.list_slice(lines, 1, 1)
     end_row = start_row
     end_col = #lines[1]
