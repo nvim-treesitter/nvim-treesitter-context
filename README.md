@@ -5,7 +5,7 @@ implemented with [nvim-treesitter](https://github.com/nvim-treesitter/nvim-trees
 
 ## Requirements
 
-Neovim >= v0.7.x
+Neovim >= v0.8.2
 
 Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
 
@@ -29,11 +29,166 @@ use 'nvim-treesitter/nvim-treesitter-context'
 
 ![theme](./static/demo.gif)
 
-### Notes
+## Supported languages
 
-This plugins uses the new neovim `WinScrolled` event when available to update its
-context window. Make sure to have a recent neovim build to get this behavior. The fallback
-behavior is to update its content on `CursorMoved`.
+  - [x] `bash`
+  - [x] `c`
+  - [x] `cpp`
+  - [x] `typescript`
+  - [x] `rust`
+  - [x] `json`
+  - [x] `lua`
+  - [x] `markdown`
+  - [x] `python`
+  - [x] `yaml`
+  - [x] `php`
+  - [x] `scala`
+  - [x] `teal`
+  - [x] `toml`
+  - [x] `vim`
+  - [ ] `ada`
+  - [ ] `agda`
+  - [ ] `arduino`
+  - [ ] `astro`
+  - [ ] `beancount`
+  - [ ] `bibtex`
+  - [ ] `bicep`
+  - [ ] `blueprint`
+  - [ ] `c_sharp`
+  - [ ] `capnp`
+  - [ ] `chatito`
+  - [ ] `clojure`
+  - [ ] `cmake`
+  - [ ] `commonlisp`
+  - [ ] `cooklang`
+  - [ ] `cpon`
+  - [ ] `css`
+  - [ ] `cuda`
+  - [ ] `d`
+  - [ ] `dart`
+  - [ ] `devicetree`
+  - [ ] `dhall`
+  - [ ] `dockerfile`
+  - [ ] `dot`
+  - [ ] `ebnf`
+  - [ ] `ecma`
+  - [ ] `eex`
+  - [ ] `elixir`
+  - [ ] `elm`
+  - [ ] `elsa`
+  - [ ] `elvish`
+  - [ ] `embedded_template`
+  - [ ] `erlang`
+  - [ ] `fennel`
+  - [ ] `fish`
+  - [ ] `foam`
+  - [ ] `fsh`
+  - [ ] `func`
+  - [ ] `fusion`
+  - [ ] `gdscript`
+  - [ ] `git_rebase`
+  - [ ] `gleam`
+  - [ ] `glimmer`
+  - [ ] `glsl`
+  - [ ] `go`
+  - [ ] `godot_resource`
+  - [ ] `gomod`
+  - [ ] `gosum`
+  - [ ] `gowork`
+  - [ ] `graphql`
+  - [ ] `hack`
+  - [ ] `haskell`
+  - [ ] `hcl`
+  - [ ] `heex`
+  - [ ] `hjson`
+  - [ ] `hlsl`
+  - [ ] `hocon`
+  - [ ] `html`
+  - [ ] `html_tags`
+  - [ ] `htmldjango`
+  - [ ] `http`
+  - [ ] `ini`
+  - [ ] `java`
+  - [ ] `javascript`
+  - [ ] `jq`
+  - [ ] `jsdoc`
+  - [ ] `json5`
+  - [ ] `jsonc`
+  - [ ] `jsonnet`
+  - [ ] `jsx`
+  - [ ] `julia`
+  - [ ] `kdl`
+  - [ ] `kotlin`
+  - [ ] `lalrpop`
+  - [ ] `latex`
+  - [ ] `ledger`
+  - [ ] `llvm`
+  - [ ] `m68k`
+  - [ ] `matlab`
+  - [ ] `menhir`
+  - [ ] `mermaid`
+  - [ ] `meson`
+  - [ ] `nickel`
+  - [ ] `nix`
+  - [ ] `ocaml`
+  - [ ] `ocaml_interface`
+  - [ ] `ocamllex`
+  - [ ] `pascal`
+  - [ ] `perl`
+  - [ ] `phpdoc`
+  - [ ] `pioasm`
+  - [ ] `po`
+  - [ ] `poe_filter`
+  - [ ] `prisma`
+  - [ ] `proto`
+  - [ ] `prql`
+  - [ ] `pug`
+  - [ ] `ql`
+  - [ ] `qmldir`
+  - [ ] `qmljs`
+  - [ ] `query`
+  - [ ] `r`
+  - [ ] `racket`
+  - [ ] `rasi`
+  - [ ] `rego`
+  - [ ] `rnoweb`
+  - [ ] `ron`
+  - [ ] `rst`
+  - [ ] `ruby`
+  - [ ] `scheme`
+  - [ ] `scss`
+  - [ ] `slint`
+  - [ ] `smali`
+  - [ ] `smithy`
+  - [ ] `solidity`
+  - [ ] `sparql`
+  - [ ] `sql`
+  - [ ] `starlark`
+  - [ ] `supercollider`
+  - [ ] `surface`
+  - [ ] `svelte`
+  - [ ] `swift`
+  - [ ] `sxhkdrc`
+  - [ ] `t32`
+  - [ ] `terraform`
+  - [ ] `thrift`
+  - [ ] `tiger`
+  - [ ] `tlaplus`
+  - [ ] `todotxt`
+  - [ ] `tsx`
+  - [ ] `turtle`
+  - [ ] `twig`
+  - [ ] `ungrammar`
+  - [ ] `v`
+  - [ ] `vala`
+  - [ ] `verilog`
+  - [ ] `vhs`
+  - [ ] `vue`
+  - [ ] `wgsl`
+  - [ ] `wgsl_bevy`
+  - [ ] `yang`
+  - [ ] `yuck`
+  - [ ] `zig`
 
 ## Configuration
 
@@ -41,94 +196,17 @@ behavior is to update its content on `CursorMoved`.
 
 ```lua
 require'treesitter-context'.setup{
-    enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
-    max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
-    trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
-    min_window_height = 0, -- Minimum editor window height to enable context. Values <= 0 mean no limit.
-    patterns = { -- Match patterns for TS nodes. These get wrapped to match at word boundaries.
-        -- For all filetypes
-        -- Note that setting an entry here replaces all other patterns for this entry.
-        -- By setting the 'default' entry below, you can control which nodes you want to
-        -- appear in the context window.
-        default = {
-            'class',
-            'function',
-            'method',
-            'for',
-            'while',
-            'if',
-            'switch',
-            'case',
-            'interface',
-            'struct',
-            'enum',
-        },
-        -- Patterns for specific filetypes
-        -- If a pattern is missing, *open a PR* so everyone can benefit.
-        tex = {
-            'chapter',
-            'section',
-            'subsection',
-            'subsubsection',
-        },
-        haskell = {
-            'adt'
-        },
-        rust = {
-            'impl_item',
-
-        },
-        terraform = {
-            'block',
-            'object_elem',
-            'attribute',
-        },
-        scala = {
-            'object_definition',
-        },
-        vhdl = {
-            'process_statement',
-            'architecture_body',
-            'entity_declaration',
-        },
-        markdown = {
-            'section',
-        },
-        elixir = {
-            'anonymous_function',
-            'arguments',
-            'block',
-            'do_block',
-            'list',
-            'map',
-            'tuple',
-            'quoted_content',
-        },
-        json = {
-            'pair',
-        },
-        typescript = {
-            'export_statement',
-        },
-        yaml = {
-            'block_mapping_pair',
-        },
-    },
-    exact_patterns = {
-        -- Example for a specific filetype with Lua patterns
-        -- Treat patterns.rust as a Lua pattern (i.e "^impl_item$" will
-        -- exactly match "impl_item" only)
-        -- rust = true,
-    },
-
-    -- [!] The options below are exposed but shouldn't require your attention,
-    --     you can safely ignore them.
-
-    zindex = 20, -- The Z-index of the context window
-    mode = 'cursor',  -- Line used to calculate context. Choices: 'cursor', 'topline'
-    -- Separator between context and content. Should be a single character string, like '-'.
-    -- When separator is set, the context will only show up when there are at least 2 lines above cursorline.
-    separator = nil,
+  enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
+  max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
+  min_window_height = 0, -- Minimum editor window height to enable context. Values <= 0 mean no limit.
+  line_numbers = true,
+  multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
+  trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
+  mode = 'cursor',  -- Line used to calculate context. Choices: 'cursor', 'topline'
+  -- Separator between context and content. Should be a single character string, like '-'.
+  -- When separator is set, the context will only show up when there are at least 2 lines above cursorline.
+  separator = nil,
+  zindex = 20, -- The Z-index of the context window
 }
 ```
 
@@ -151,3 +229,38 @@ However, you can use this to create a border by applying an underline highlight,
 ```vim
 hi TreesitterContextBottom gui=underline guisp=Grey
 ```
+
+## Adding support for other languages
+
+To add support for another language, simply add a `context.scm` file under
+`queries/[LANG]`.
+
+Queries specify the `@context` capture which specifies the first line of a node
+will be used for the context.
+
+Here is a basic example for C:
+
+```query
+(function_definition) @context
+(for_statement) @context
+(if_statement) @context
+(while_statement) @context
+(do_statement) @context
+```
+
+You can easily look at a node names of a tree using `InspectTree` in Nvim 0.9.
+
+Additionally an optional `@context.end` capture can also be specified. When
+provided, the text from the start of the `@context` capture to the start of
+`@context.end` capture (exclusive) will be used for the context and joined into
+a single line.
+
+Here's what that looks like for C:
+
+```query
+(if_statement consequence: (_ (_) @context.end)) @context
+```
+
+This query specifies that everything from the `if` keyword up-to the first
+statement (exclusive) should be used for the context. This is useful when an
+if-statement spans multiple lines.

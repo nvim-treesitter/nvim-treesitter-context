@@ -1,15 +1,25 @@
 local api = vim.api
-local ts_utils = require'nvim-treesitter.ts_utils'
 local highlighter = vim.treesitter.highlighter
+
 local parsers = require'nvim-treesitter.parsers'
 
 local augroup = api.nvim_create_augroup
 local command = api.nvim_create_user_command
 
-local function word_pattern(p)
-  return '%f[%w]' .. p .. '%f[^%w]'
-end
+---@diagnostic disable:invisible
 
+--- @class Config
+--- @field enable boolean
+--- @field max_lines integer
+--- @field min_window_height integer
+--- @field line_numbers boolean
+--- @field multiline_threshold integer
+--- @field trim_scope 'outer'|'inner'
+--- @field zindex integer
+--- @field mode 'cursor'|'topline'
+--- @field separator string?
+
+--- @type Config
 local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
@@ -22,143 +32,10 @@ local defaultConfig = {
   separator = nil,
 }
 
+--- @type Config
 local config = {}
 
 -- Constants
-
--- Tells us at which node type to stop when highlighting a multi-line
--- node. If not specified, the highlighting stops after the first line.
-local last_nodes
-local QUERY_FIELD_NAME = 1
-local QUERY_NODE_TYPE = 2
-do
-  local function f(name)
-      return {
-          name = name,
-          kind = QUERY_FIELD_NAME,
-      }
-  end
-
-  local function t(name)
-      return {
-          name = name,
-          kind = QUERY_NODE_TYPE,
-      }
-  end
-
-  last_nodes = {
-    [word_pattern('function')] = {
-      c = { f'declarator' },
-      cpp = { f'declarator' },
-      lua = { f'parameters' },
-      teal = { f'signature' },
-      python = { f'return_type', f'parameters' },
-      rust = { f'return_type', f'parameters' },
-      javascript =  { f'parameters' },
-      typescript = { f'return_type', f'parameters' },
-    },
-    [word_pattern('method')] = {
-      lua = { f'parameters' },
-      javascript =  { f'parameters' },
-      typescript = { f'return_type', f'parameters' },
-    },
-    [word_pattern('class')] = {
-      cpp = { t'base_class_clause', f'name' },
-      python = { f'superclasses' },
-    }
-  }
-end
-
--- Tells us which leading child node type to skip when highlighting a
--- multi-line node.
-local skip_leading_types = {
-  [word_pattern('class')] = {
-    php = 'attribute_list',
-  },
-  [word_pattern('method')] = {
-    php = 'attribute_list',
-  },
-}
-
--- There are language-specific
-local DEFAULT_TYPE_PATTERNS = {
-  -- These catch most generic groups, eg "function_declaration" or "function_block"
-  default = {
-    'class',
-    'function',
-    'method',
-    'for',
-    'while',
-    'if',
-    'switch',
-    'case',
-    'interface',
-    'struct',
-    'enum',
-  },
-  elixir = {
-    'anonymous_function',
-    'arguments',
-    'block',
-    'do_block',
-    'list',
-    'map',
-    'tuple',
-    'quoted_content',
-  },
-  haskell = {
-    'adt'
-  },
-  json = {
-    'pair',
-  },
-  markdown = {
-    'section',
-  },
-  python = {
-    'with_statement',
-  },
-  rust = {
-    'impl_item',
-  },
-  scala = {
-    'object_definition',
-  },
-  terraform = {
-    'block',
-    'object_elem',
-    'attribute',
-  },
-  tex = {
-    'chapter',
-    'section',
-    'subsection',
-    'subsubsection',
-  },
-  typescript = {
-    'export_statement',
-  },
-  verilog = {
-    'always_construct',
-    'statement_or_null',
-  },
-  vhdl = {
-    'process_statement',
-    'architecture_body',
-    'entity_declaration',
-  },
-  yaml = {
-    'block_mapping_pair',
-  },
-  exact_patterns = {},
-}
-
-local DEFAULT_TYPE_EXCLUDE_PATTERNS = {
-  default = {},
-  teal = {
-    'function_body',
-  },
-}
 
 local INDENT_PATTERN = '^%s+'
 
@@ -166,131 +43,107 @@ local INDENT_PATTERN = '^%s+'
 
 local did_setup = false
 local enabled = false
-local gutter_winid, context_winid
-local gutter_bufnr, context_bufnr -- Don't access directly, use get_bufs()
+
+-- Don't access directly, use get_bufs()
+--- @type integer?
+local gutter_winid
+
+--- @type integer?
+local context_winid
+
+--- @type integer?
+local gutter_bufnr
+
+--- @type integer?
+local context_bufnr
+
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
+
+--- @type TSNode[]?
 local previous_nodes
 
+--- @return TSNode
 local function get_root_node()
+  ---@diagnostic disable-next-line
   local tree = parsers.get_parser():parse()[1]
   return tree:root()
 end
 
-local function is_excluded(node, filetype)
-  local node_type = node:type()
-  for _, rgx in ipairs(config.exclude_patterns.default) do
-    if node_type:find(rgx) then
-      return true
-    end
-  end
-  local filetype_patterns = config.exclude_patterns[filetype]
-  for _, rgx in ipairs(filetype_patterns or {}) do
-    if node_type:find(rgx) then
-      return true
-    end
-  end
-  return false
-end
+--- @param node TSNode
+--- @param query Query
+--- @return Range4?
+local function is_valid(node, query)
+  local bufnr = api.nvim_get_current_buf()
+  local range --[[@type Range4]] = {node:range()}
+  range[3] = range[1]
+  range[4] = -1
 
-local function is_valid(node, filetype)
-  if is_excluded(node, filetype) then
-    return false
-  end
+  -- Try and iterate on the parent node as iter_matches won't match on the top
+  -- level node
+  local iter_node = node:parent() or node
 
-  local node_type = node:type()
-  for _, rgx in ipairs(config.patterns.default) do
-    if node_type:find(rgx) then
-      return true
-    end
-  end
-  local filetype_patterns = config.patterns[filetype]
-  for _, rgx in ipairs(filetype_patterns or {}) do
-    if node_type:find(rgx) then
-      return true
-    end
-  end
-  return false
-end
+  for _, match in query:iter_matches(iter_node, bufnr, 0, -1) do
+    local r = false
 
-local function get_type_pattern(node, type_patterns)
-  local node_type = node:type()
-  for _, rgx in ipairs(type_patterns) do
-    if node_type:find(rgx) then
-      return rgx
-    end
-  end
-end
+    for id, node0 in pairs(match --[[@as table<integer,TSNode>]]) do
+      local srow, scol, erow, ecol = node0:range()
 
-local function find_node(node, query)
-  if query.kind == QUERY_FIELD_NAME then
-    local fields = node:field(query.name)
-    if fields and fields[1] then
-      return fields[1]
-    end
-  elseif query.kind == QUERY_NODE_TYPE then
-    local children = ts_utils.get_named_children(node)
-    for _, c in ipairs(children) do
-      if c:type() == query.name then
-        return c
-      end
-    end
-  end
-end
-
-local function get_text_for_node(node)
-  local type = get_type_pattern(node, config.patterns.default) or node:type()
-  local filetype = vim.bo.filetype
-
-  local start_row, start_col = node:start()
-  local end_row, end_col     = node:end_()
-
-  local node_text = vim.treesitter.query.get_node_text(node, 0)
-  if node_text == nil then return nil, nil end
-
-  local lines = vim.split(node_text, '\n')
-
-  if start_col ~= 0 then
-    lines[1] = api.nvim_buf_get_lines(0, start_row, start_row + 1, false)[1]
-  end
-  start_col = 0
-
-  local queries = (last_nodes[type] or {})[filetype]
-
-  local last_position
-
-  if queries then
-    local child
-    for _, q in ipairs(queries) do
-      local n = find_node(node, q)
-      if n then
-        child = n
+      -- because iter_node != node we could match outside of node
+      if srow < range[1] then
         break
       end
+
+      local name = query.captures[id] -- name of the capture in the query
+      if not r and name == 'context' then
+        r = node == node0
+      elseif name == 'context.final' then
+        range[3] = erow
+        range[4] = ecol
+      elseif name == 'context.end' then
+        range[3] = srow
+        range[4] = scol
+      end
     end
 
-    if child then
-      last_position = {child:end_()}
-
-      end_row = last_position[1]
-      end_col = last_position[2]
-      local last_index = end_row - start_row
-      lines = vim.list_slice(lines, 1, last_index + 1)
-      lines[#lines] = lines[#lines]:sub(1, end_col)
+    if r then
+      return range
     end
   end
+end
 
-  if not last_position or #lines > config.multiline_threshold then
+--- @param range Range4
+--- @return string[]?, Range4?
+local function get_text_for_range(range)
+  if range[4] == 0 then
+    range[3] = range[3] - 1
+    range[4] = -1
+  end
+  local lines = api.nvim_buf_get_text(0, range[1], 0, range[3], range[4], {})
+  if lines == nil then
+    return nil, nil
+  end
+
+  local start_row = range[1]
+  local end_row = range[3]
+  local end_col = range[4]
+
+  lines = vim.list_slice(lines, 1, end_row - start_row+1)
+  lines[#lines] = lines[#lines]:sub(1, end_col)
+
+  if #lines > config.multiline_threshold then
     lines = vim.list_slice(lines, 1, 1)
     end_row = start_row
     end_col = #lines[1]
   end
 
-  local range = {start_row, start_col, end_row, end_col}
+  range = {start_row, 0, end_row, end_col}
 
   return lines, range
 end
 
 -- Merge lines, removing the indentation after 1st line
+--- @param lines string[]
+--- @return string
 local function merge_lines(lines)
   local text = { lines[1] }
   for i = 2, #lines do
@@ -300,8 +153,13 @@ local function merge_lines(lines)
 end
 
 -- Get indentation for lines except first
+--- @param lines string[]
+--- @return integer[]
 local function get_indents(lines)
+  --- @type integer[]
+  --- @diagnostic disable-next-line
   local indents = vim.tbl_map(function(line)
+    --- @type string?
     local indent = line:match(INDENT_PATTERN)
     return indent and #indent or 0
   end, lines)
@@ -310,13 +168,14 @@ local function get_indents(lines)
   return indents
 end
 
+--- @return integer
 local function get_gutter_width()
   return vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].textoff
 end
 
-local cursor_moved_vertical
+local cursor_moved_vertical --[[@type fun(): boolean]]
 do
-  local line
+  local line --[[@type integer]]
   cursor_moved_vertical = function()
     local newline = vim.api.nvim_win_get_cursor(0)[1]
     if newline ~= line then
@@ -327,6 +186,7 @@ do
   end
 end
 
+--- @return integer, integer
 local function get_bufs()
   if not context_bufnr or not api.nvim_buf_is_valid(context_bufnr) then
     context_bufnr = api.nvim_create_buf(false, true)
@@ -351,6 +211,14 @@ local function delete_bufs()
   gutter_bufnr = nil
 end
 
+--- @param bufnr integer
+--- @param winid integer?
+--- @param width integer
+--- @param height integer
+--- @param col integer
+--- @param ty string
+--- @param hl string
+--- @return integer
 local function display_window(bufnr, winid, width, height, col, ty, hl)
   if not winid or not api.nvim_win_is_valid(winid) then
     local sep = config.separator
@@ -389,6 +257,34 @@ local M = {
   config = config,
 }
 
+--- @param node TSNode?
+--- @return TSNode[]
+local function get_node_parents(node)
+  -- save nodes in a table to iterate from top to bottom
+  --- @type TSNode[]
+  local parents = {}
+  while node ~= nil do
+    parents[#parents+1] = node
+    node = node:parent()
+  end
+  return parents
+end
+
+--- @return integer, integer
+local function get_pos()
+  --- @type integer, integer
+  local lnum, col
+  if config.mode == 'topline' then
+    lnum, col = vim.fn.line('w0') --[[@as integer]], 0
+  else -- default to 'cursor'
+    lnum, col = unpack(api.nvim_win_get_cursor(0)) --[[@as integer]]
+  end
+
+  return lnum, col
+end
+
+--- @param max_lines integer
+--- @return Range4[]?
 local function get_parent_matches(max_lines)
   if max_lines == 0 then
     return
@@ -399,14 +295,31 @@ local function get_parent_matches(max_lines)
   end
 
   local root_node = get_root_node()
-  local lnum, col
-  if config.mode == 'topline' then
-    lnum, col = vim.fn.line('w0'), 0
-  else -- default to 'cursor'
-    lnum, col = unpack(api.nvim_win_get_cursor(0))
+
+  --- @type string
+  local lang = parsers.ft_to_lang(vim.bo.filetype)
+
+  local ok, query = pcall(vim.treesitter.query.get_query, lang, 'context')
+
+  if not ok then
+    vim.notify_once(
+      string.format('Unable to load context query for %s:\n%s', lang, query),
+      vim.log.levels.ERROR,
+      { title = 'nvim-treesitter-context' }
+    )
+    return
   end
 
+  if not query then
+    return
+  end
+
+  local lnum, col = get_pos()
+
+  --- @type Range4[]
   local last_matches
+
+  --- @type Range4[]
   local parent_matches = {}
   local line_offset = 0
 
@@ -423,25 +336,19 @@ local function get_parent_matches(max_lines)
     local topline = vim.fn.line('w0')
 
     -- save nodes in a table to iterate from top to bottom
-    local parents = {}
-    while node ~= nil do
-      parents[#parents+1] = node
-      node = node:parent()
-    end
+    local parents = get_node_parents(node)
 
     for i = #parents, 1, -1 do
       local parent = parents[i]
       local row = parent:start()
 
       local height = math.min(max_lines, #parent_matches)
-      if is_valid(parent, vim.bo.filetype)
-          and row >= 0
-          and row < (topline + height - 1) then
-
+      local range = is_valid(parent, query)
+      if range and row >= 0 and row < (topline + height - 1) then
         if row == last_row then
-          parent_matches[#parent_matches] = parent
+          parent_matches[#parent_matches] = range
         else
-          table.insert(parent_matches, parent)
+          parent_matches[#parent_matches+1] = range
           last_row = row
 
           local new_height = math.min(max_lines, #parent_matches)
@@ -469,6 +376,9 @@ local function get_parent_matches(max_lines)
   end
 end
 
+--- @generic F: function
+--- @param fn F
+--- @return F
 local function throttle_fn(fn)
   local recalc_after_cooldown = false
   local cooling_down = false
@@ -495,7 +405,6 @@ local function throttle_fn(fn)
   return wrapped
 end
 
-
 local function close()
   previous_nodes = nil
   -- Can't close other windows when the command-line window is open
@@ -514,6 +423,9 @@ local function close()
   gutter_winid = nil
 end
 
+--- @param bufnr integer
+--- @param lines string[]
+--- @return boolean
 local function set_lines(bufnr, lines)
   local clines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local redraw = false
@@ -536,10 +448,13 @@ local function set_lines(bufnr, lines)
   return redraw
 end
 
+--- @param bufnr integer
+--- @param ctx_bufnr integer
+--- @param contexts Context[]
 local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   api.nvim_buf_clear_namespace(ctx_bufnr, ns, 0, -1)
 
-  local buf_highlighter = highlighter.active[bufnr]
+  local buf_highlighter = highlighter.active[bufnr] --[[@as TSHighlighter]]
 
   if not buf_highlighter then
     -- Use standard highlighting when TS highlighting is not available
@@ -558,26 +473,26 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
 
   local buf_query = buf_highlighter:get_query(parsers.ft_to_lang(vim.bo.filetype))
 
-  local query = buf_query:query()
+  local query = assert(buf_query:query())
   local root = get_root_node()
 
   for i, context in ipairs(contexts) do
-    local start_row, _, end_row, end_col = unpack(context.range)
+    local start_row = context.range[1]
+    local end_row = context.range[3]
+    local end_col = context.range[4]
     local indents = context.indents
     local lines = context.lines
 
-    local start_row_abs = context.node:start()
-
-    for capture, node in query:iter_captures(root, bufnr, start_row, context.node:end_()) do
+    for capture, node in query:iter_captures(root, bufnr, start_row, end_row + 1) do
       local node_start_row, node_start_col, node_end_row, node_end_col = node:range()
 
       if node_end_row > end_row or
-        (node_end_row == end_row and node_end_col > end_col) then
+        (node_end_row == end_row and node_end_col > end_col and end_col ~= -1) then
         break
       end
 
-      if node_start_row >= start_row_abs then
-        local intended_start_row = node_start_row - start_row_abs
+      if node_start_row >= start_row then
+        local intended_start_row = node_start_row - start_row
 
         -- Add 1 for each space added between lines when
         -- we replace '\n' with ' '
@@ -600,10 +515,15 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   end
 end
 
+--- @param lnum integer
+--- @param width integer
+--- @return string
 local function build_lno_str(lnum, width)
   return string.format('%'..width..'d', lnum)
 end
 
+--- @param ctx_node_line_num integer
+--- @return integer
 local function get_relative_line_num(ctx_node_line_num)
   local cursor_line_num = vim.fn.line('.')
   local num_folded_lines = 0
@@ -635,30 +555,18 @@ local function horizontal_scroll_contexts()
   end
 end
 
-local function normalize_node(node)
-  local type = get_type_pattern(node, config.patterns.default) or node:type()
-  local filetype = vim.bo.filetype
+--- @class Context
+--- @field indents integer[]
+--- @field lines string[]
+--- @field range Range4
 
-  local skip_leading_type = (skip_leading_types[type] or {})[filetype]
-  if skip_leading_type then
-    local children = ts_utils.get_named_children(node)
-    for _, child in ipairs(children) do
-      if child:type() ~= skip_leading_type then
-        node = child
-        break
-      end
-    end
-  end
-
-  return node
-end
-
-local function open(ctx_nodes)
+--- @param ctx_ranges Range4[]
+local function open(ctx_ranges)
   local bufnr = api.nvim_get_current_buf()
 
   local gutter_width = get_gutter_width()
   local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
-  local win_height = math.max(1, #ctx_nodes)
+  local win_height = math.max(1, #ctx_ranges)
 
   local gbufnr, ctx_bufnr = get_bufs()
 
@@ -674,19 +582,18 @@ local function open(ctx_nodes)
 
   -- Set text
 
-  local context_text = {}
-  local lno_text = {}
-  local contexts = {}
+  local context_text --[[@type string[] ]] = {}
+  local lno_text --[[@type string[] ]] = {}
+  local contexts --[[@type Context[] ]] = {}
 
-  for _, node in ipairs(ctx_nodes) do
-    node = normalize_node(node)
-
-    local lines, range = get_text_for_node(node)
-    if lines == nil or range == nil or range[1] == nil then return end
+  for _, range0 in ipairs(ctx_ranges) do
+    local lines, range = get_text_for_range(range0)
+    if lines == nil or range == nil or range[1] == nil then
+      return
+    end
     local text = merge_lines(lines)
 
     contexts[#contexts+1] = {
-      node = node,
       lines = lines,
       range = range,
       indents = get_indents(lines),
@@ -694,7 +601,7 @@ local function open(ctx_nodes)
 
     table.insert(context_text, text)
 
-    local line_num
+    local line_num  --[[@type integer]]
     local ctx_line_num = range[1] + 1
     if vim.o.relativenumber then
       line_num = get_relative_line_num(ctx_line_num)
@@ -710,13 +617,14 @@ local function open(ctx_nodes)
     return
   end
 
-
   highlight_contexts(bufnr, ctx_bufnr, contexts)
 
   api.nvim_buf_set_extmark(ctx_bufnr, ns, #lno_text-1, 0, {end_line=#lno_text, hl_group='TreesitterContextBottom', hl_eol=true})
   api.nvim_buf_set_extmark(gbufnr, ns, #context_text-1, 0, {end_line=#context_text, hl_group='TreesitterContextBottom', hl_eol=true})
 end
 
+--- @param config_max integer
+--- @return integer
 local function calc_max_lines(config_max)
   local max_lines = config_max
   max_lines = max_lines == 0 and -1 or max_lines
@@ -765,9 +673,12 @@ local update = throttle_fn(function()
   end
 end)
 
+--- @param group string
+--- @return function
 local function autocmd_for_group(group)
   local gid = augroup(group, {})
   return function(event, opts)
+    ---@diagnostic disable:no-unknown
     if opts then
       if type(opts) == 'function' then
         opts = { callback = opts }
@@ -826,17 +737,7 @@ function M.setup(options)
 
   local userOptions = options or {}
 
-  config                  = vim.tbl_deep_extend('force', {}, defaultConfig, userOptions)
-  config.patterns         = vim.tbl_deep_extend('force', {}, DEFAULT_TYPE_PATTERNS, userOptions.patterns or {})
-  config.exclude_patterns = vim.tbl_deep_extend('force', {}, DEFAULT_TYPE_EXCLUDE_PATTERNS, userOptions.exclude_patterns or {})
-  config.exact_patterns   = vim.tbl_deep_extend('force', {}, userOptions.exact_patterns or {})
-
-  for filetype, patterns in pairs(config.patterns) do
-    -- Map with word_pattern only if users don't need exact pattern matching
-    if not config.exact_patterns[filetype] then
-      config.patterns[filetype] = vim.tbl_map(word_pattern, patterns)
-    end
-  end
+  config = vim.tbl_deep_extend('force', {}, defaultConfig, userOptions)
 
   if config.enable then
     M.enable()

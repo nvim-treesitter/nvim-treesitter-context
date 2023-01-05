@@ -16,26 +16,21 @@ $(NEOVIM):
 nvim-treesitter:
 	git clone --depth 1 https://github.com/nvim-treesitter/nvim-treesitter
 
-nvim-treesitter/parser/lua.so: nvim-treesitter $(NEOVIM)
+nvim-treesitter/parser/%.so: nvim-treesitter $(NEOVIM)
 	VIMRUNTIME=$(NEOVIM)/runtime $(NEOVIM)/build/bin/nvim \
 			   --headless \
 			   --clean \
 			   --cmd 'set rtp+=./nvim-treesitter' \
-			   -c "TSInstallSync lua" \
-			   -c "q"
-
-nvim-treesitter/parser/rust.so: nvim-treesitter $(NEOVIM)
-	VIMRUNTIME=$(NEOVIM)/runtime $(NEOVIM)/build/bin/nvim \
-			   --headless \
-			   --clean \
-			   --cmd 'set rtp+=./nvim-treesitter' \
-			   -c "TSInstallSync rust" \
+			   -c "TSInstallSync $*" \
 			   -c "q"
 
 export VIMRUNTIME=$(PWD)/$(NEOVIM)/runtime
 
 .PHONY: test
-test: $(NEOVIM) nvim-treesitter nvim-treesitter/parser/lua.so nvim-treesitter/parser/rust.so
+test: $(NEOVIM) nvim-treesitter \
+	nvim-treesitter/parser/lua.so \
+	nvim-treesitter/parser/rust.so \
+	nvim-treesitter/parser/typescript.so
 	$(NEOVIM)/.deps/usr/bin/busted \
 		-v \
 		--lazy \
