@@ -495,7 +495,6 @@ local function throttle_fn(fn)
   return wrapped
 end
 
-
 local function close()
   previous_nodes = nil
   -- Can't close other windows when the command-line window is open
@@ -682,7 +681,9 @@ local function open(ctx_nodes)
     node = normalize_node(node)
 
     local lines, range = get_text_for_node(node)
-    if lines == nil or range == nil or range[1] == nil then return end
+    if lines == nil or range == nil or range[1] == nil then
+      return
+    end
     local text = merge_lines(lines)
 
     contexts[#contexts+1] = {
@@ -709,7 +710,6 @@ local function open(ctx_nodes)
     -- Context didn't change, can return here
     return
   end
-
 
   highlight_contexts(bufnr, ctx_bufnr, contexts)
 
