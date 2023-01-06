@@ -115,6 +115,9 @@ local DEFAULT_TYPE_PATTERNS = {
   markdown = {
     'section',
   },
+  python = {
+    'with_statement',
+  },
   rust = {
     'impl_item',
   },
