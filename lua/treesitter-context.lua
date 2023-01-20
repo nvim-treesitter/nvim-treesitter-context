@@ -500,6 +500,7 @@ local function close()
   previous_nodes = nil
   -- Can't close other windows when the command-line window is open
   if vim.fn.getcmdwintype() ~= '' then
+    delete_bufs()
     return
   end
 
