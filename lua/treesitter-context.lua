@@ -118,6 +118,9 @@ local DEFAULT_TYPE_PATTERNS = {
   python = {
     'with_statement',
   },
+  ruby = {
+    'block',
+  },
   rust = {
     'impl_item',
   },
