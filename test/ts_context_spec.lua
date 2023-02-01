@@ -11,6 +11,7 @@ describe('ts_context', function()
   local screen
 
   setup(function()
+    clear()
     screen = Screen.new(30, 16)
     screen:set_default_attr_ids({
       [1] = {foreground = Screen.colors.Brown, background = Screen.colors.LightMagenta, bold = true};
@@ -98,7 +99,7 @@ describe('ts_context', function()
     feed'<C-e>'
     -- screen:snapshot_util()
     screen:expect{grid=[[
-      {1:impl}{2: Foo {                    }|
+      {1:impl}{2: Foo                      }|
           {4:fn} {5:bar}({7:&}{8:self}) {           |
               {4:if} condition {        |
                                     |
@@ -128,7 +129,7 @@ describe('ts_context', function()
     feed'<C-e>'
     screen:expect{grid=[[
       {2:    }{1:fn}{2: }{3:bar}{2:(}{7:&}{8:self}{2:)             }|
-      {2:        }{1:if}{2: condition {        }|
+      {2:        }{1:if}{2: condition          }|
                                     |
                                     |
                   {4:for} i {4:in} {9:0}..{9:100} { |
@@ -157,8 +158,8 @@ describe('ts_context', function()
 
     feed'3<C-e>'
     screen:expect{grid=[[
-      {2:        }{1:if}{2: condition {        }|
-      {2:            }{1:for}{2: i }{1:in}{2: }{7:0}{2:..}{7:100}{2: { }|
+      {2:        }{1:if}{2: condition          }|
+      {2:            }{1:for}{2: i }{1:in}{2: }{7:0}{2:..}{7:100}{2:   }|
                                     |
                                     |
                   }                 |

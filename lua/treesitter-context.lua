@@ -49,32 +49,54 @@ local function compare_ranges(node1, node2)
   return true
 end
 
---- @return boolean
+--- @return boolean, {[1]: integer, [2]: integer}?
 local function is_valid(node, query)
   local bufnr = api.nvim_get_current_buf()
-  for id, node0 in query:iter_captures(node, bufnr, 0, -1) do
-    local name = query.captures[id] -- name of the capture in the query
-    if name == 'context' then
-      return compare_ranges(node, node0)
+  for _, match in query:iter_matches(node, bufnr, 0, -1) do
+    local r = false
+    local ctx_end
+
+    for id, node0 in pairs(match) do
+      local name = query.captures[id] -- name of the capture in the query
+      if not r and name == 'context' then
+        r = compare_ranges(node, node0)
+      elseif name == 'context.final' then
+        local _, _, erow, ecol = node0:range()
+        ctx_end = {erow, ecol}
+      elseif name == 'context.end' then
+        local srow, scol = node0:range()
+        ctx_end = {srow, scol}
+      end
+    end
+
+    if r then
+      return true, ctx_end
     end
   end
 
   return false
 end
 
-local function get_text_for_node(node)
+local function get_text_for_node(node, range_end)
   local node_text = vim.treesitter.query.get_node_text(node, 0)
   if node_text == nil then
     return nil, nil
   end
 
   local start_row, start_col, end_row, end_col = node:range()
+  if range_end then
+    end_row, end_col = unpack(range_end)
+  end
+  assert(type(node_text) == 'string')
   local lines = vim.split(node_text, '\n')
 
   if start_col ~= 0 then
     lines[1] = api.nvim_buf_get_lines(0, start_row, start_row + 1, false)[1]
   end
   start_col = 0
+
+  lines = vim.list_slice(lines, 1, end_row - start_row+1)
+  lines[#lines] = lines[#lines]:sub(1, end_col)
 
   if #lines > config.multiline_threshold then
     lines = vim.list_slice(lines, 1, 1)
@@ -197,6 +219,7 @@ local M = {
 }
 
 --- @param max_lines integer
+--- @return {[1]: userdata, [2]: {[1]: integer, [2]: integer}}?
 local function get_parent_matches(max_lines)
   if max_lines == 0 then
     return
@@ -249,14 +272,12 @@ local function get_parent_matches(max_lines)
       local row = parent:start()
 
       local height = math.min(max_lines, #parent_matches)
-      if is_valid(parent, query)
-          and row >= 0
-          and row < (topline + height - 1) then
-
+      local v, ectx = is_valid(parent, query)
+      if v and row >= 0 and row < (topline + height - 1) then
         if row == last_row then
-          parent_matches[#parent_matches] = parent
+          parent_matches[#parent_matches] = {parent, ectx}
         else
-          table.insert(parent_matches, parent)
+          parent_matches[#parent_matches+1] = {parent, ectx}
           last_row = row
 
           local new_height = math.min(max_lines, #parent_matches)
@@ -487,8 +508,9 @@ local function open(ctx_nodes)
   local lno_text = {}
   local contexts = {}
 
-  for _, node in ipairs(ctx_nodes) do
-    local lines, range = get_text_for_node(node)
+  for _, ctx in ipairs(ctx_nodes) do
+    local node, range_end = unpack(ctx)
+    local lines, range = get_text_for_node(node, range_end)
     if lines == nil or range == nil or range[1] == nil then
       return
     end
