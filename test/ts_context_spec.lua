@@ -10,9 +10,10 @@ local feed     = helpers.feed
 describe('ts_context', function()
   local screen
 
-  setup(function()
+  before_each(function()
     clear()
     screen = Screen.new(30, 16)
+    screen:attach()
     screen:set_default_attr_ids({
       [1] = {foreground = Screen.colors.Brown, background = Screen.colors.LightMagenta, bold = true};
       [2] = {background = Screen.colors.LightMagenta};
@@ -20,12 +21,11 @@ describe('ts_context', function()
       [4] = {bold = true, foreground = Screen.colors.Brown};
       [5] = {foreground = Screen.colors.DarkCyan};
       [6] = {bold = true, foreground = Screen.colors.Blue};
+      [7] = {foreground = Screen.colors.SeaGreen, background = Screen.colors.LightMagenta, bold = true};
+      [8] = {foreground = Screen.colors.Blue};
+      [9] = {bold = true, foreground = Screen.colors.SeaGreen};
+      [10] = {foreground = Screen.colors.Fuchsia, background = Screen.colors.LightMagenta};
     })
-  end)
-
-  before_each(function()
-    clear()
-    screen:attach()
     cmd [[set runtimepath+=.,./nvim-treesitter]]
     cmd [[let $XDG_CACHE_HOME='scratch/cache']]
     cmd [[set packpath=]]
@@ -184,4 +184,82 @@ describe('ts_context', function()
       [7] = {background = Screen.colors.Plum1, foreground = Screen.colors.Magenta};
     }}
   end)
+
+  describe('language:', function()
+    before_each(function()
+      exec_lua[[require'treesitter-context'.setup{
+        mode = 'topline',
+      }]]
+    end)
+
+    it('c', function()
+      cmd('edit test/test.c')
+      feed'L'
+      feed'<C-e>'
+
+      -- Check the struct context
+      screen:expect{grid=[[
+        {7:struct}{2: Bert {                 }|
+            {8:// comment}                |
+            {9:int} *f2;                  |
+            {8:// comment}                |
+            {8:// comment}                |
+            {8:// comment}                |
+            {8:// comment}                |
+            {8:// comment}                |
+        };                            |
+                                      |
+        {9:typedef} {9:enum} {                |
+          E1,                         |
+          E2,                         |
+          ^E3                          |
+          {8:// comment}                  |
+                                      |
+      ]]}
+
+      feed'12<C-e>'
+
+      -- Check the enum context
+      screen:expect{grid=[[
+        {7:typedef}{2: }{7:enum}{2: {                }|
+          ^E3                          |
+          {8:// comment}                  |
+          {8:// comment}                  |
+          {8:// comment}                  |
+          {8:// comment}                  |
+          {8:// comment}                  |
+          {8:// comment}                  |
+        } Myenum;                     |
+                                      |
+        {9:int} main({9:int} arg1,            |
+                 {9:char} **arg2,         |
+                 {9:char} **arg3          |
+                 )                    |
+        {                             |
+                                      |
+      ]]}
+
+      cmd'set scrolloff=4'
+      feed'40<C-e>'
+      screen:expect{grid=[[
+        {7:int}{2: main(}{7:int}{2: arg1, }{7:char}{2: **arg2}|
+        {2:  }{1:if}{2: (arg1 == }{10:4}{2: && arg2 == arg}|
+        {2:    }{1:for}{2: (}{7:int}{2: i = }{10:0}{2:; i < arg1; }|
+        {2:      }{1:while}{2: (}{10:1}{2:) {             }|
+          ^      {8:// comment}            |
+                {8:// comment}            |
+                {8:// comment}            |
+              }                       |
+                                      |
+              {4:do} {                    |
+                {8:// comment}            |
+                {8:// comment}            |
+                {8:// comment}            |
+                {8:// comment}            |
+                {8:// comment}            |
+                                      |
+      ]]}
+    end)
+  end)
+
 end)
