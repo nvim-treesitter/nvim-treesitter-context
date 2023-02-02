@@ -37,63 +37,49 @@ local function get_root_node()
   return tree:root()
 end
 
---- @return boolean
-local function compare_ranges(node1, node2)
-  local range1 = {node1:range()}
-  local range2 = {node2:range()}
-  for i = 1, 4 do
-    if range1[i] ~= range2[i] then
-      return false
-    end
-  end
-  return true
-end
-
---- @return boolean, {[1]: integer, [2]: integer}?
+--- @return Range?
 local function is_valid(node, query)
   local bufnr = api.nvim_get_current_buf()
+  local range = {node:range()}
   for _, match in query:iter_matches(node, bufnr, 0, -1) do
     local r = false
-    local ctx_end
 
     for id, node0 in pairs(match) do
       local name = query.captures[id] -- name of the capture in the query
       if not r and name == 'context' then
-        r = compare_ranges(node, node0)
+        r = node == node0
       elseif name == 'context.final' then
         local _, _, erow, ecol = node0:range()
-        ctx_end = {erow, ecol}
+        range[3] = erow
+        range[4] = ecol
       elseif name == 'context.end' then
         local srow, scol = node0:range()
-        ctx_end = {srow, scol}
+        range[3] = srow
+        range[4] = scol
       end
     end
 
     if r then
-      return true, ctx_end
+      return range
     end
   end
-
-  return false
 end
 
-local function get_text_for_node(node, range_end)
-  local node_text = vim.treesitter.query.get_node_text(node, 0)
-  if node_text == nil then
+--- @class Range
+--- @field [1] integer
+--- @field [2] integer
+--- @field [3] integer
+--- @field [4] integer
+
+--- @param range Range
+--- @return string[]?, Range?
+local function get_text_for_range(range)
+  local lines = api.nvim_buf_get_text(0, range[1], 0, range[3], range[4], {})
+  if lines == nil then
     return nil, nil
   end
 
-  local start_row, start_col, end_row, end_col = node:range()
-  if range_end then
-    end_row, end_col = unpack(range_end)
-  end
-  assert(type(node_text) == 'string')
-  local lines = vim.split(node_text, '\n')
-
-  if start_col ~= 0 then
-    lines[1] = api.nvim_buf_get_lines(0, start_row, start_row + 1, false)[1]
-  end
-  start_col = 0
+  local start_row, _, end_row, end_col = unpack(range)
 
   lines = vim.list_slice(lines, 1, end_row - start_row+1)
   lines[#lines] = lines[#lines]:sub(1, end_col)
@@ -104,7 +90,7 @@ local function get_text_for_node(node, range_end)
     end_col = #lines[1]
   end
 
-  local range = {start_row, start_col, end_row, end_col}
+  range = {start_row, 0, end_row, end_col}
 
   return lines, range
 end
@@ -148,6 +134,7 @@ do
   end
 end
 
+--- @return integer, integer
 local function get_bufs()
   if not context_bufnr or not api.nvim_buf_is_valid(context_bufnr) then
     context_bufnr = api.nvim_create_buf(false, true)
@@ -231,7 +218,7 @@ local function get_node_parents(node)
 end
 
 --- @param max_lines integer
---- @return {[1]: userdata, [2]: {[1]: integer, [2]: integer}}?
+--- @return Range[]?
 local function get_parent_matches(max_lines)
   if max_lines == 0 then
     return
@@ -257,6 +244,8 @@ local function get_parent_matches(max_lines)
   end
 
   local last_matches
+
+  --- @type Range[]
   local parent_matches = {}
   local line_offset = 0
 
@@ -280,12 +269,12 @@ local function get_parent_matches(max_lines)
       local row = parent:start()
 
       local height = math.min(max_lines, #parent_matches)
-      local v, ectx = is_valid(parent, query)
-      if v and row >= 0 and row < (topline + height - 1) then
+      local range = is_valid(parent, query)
+      if range and row >= 0 and row < (topline + height - 1) then
         if row == last_row then
-          parent_matches[#parent_matches] = {parent, ectx}
+          parent_matches[#parent_matches] = range
         else
-          parent_matches[#parent_matches+1] = {parent, ectx}
+          parent_matches[#parent_matches+1] = range
           last_row = row
 
           local new_height = math.min(max_lines, #parent_matches)
@@ -387,6 +376,7 @@ end
 
 --- @param bufnr integer
 --- @param ctx_bufnr integer
+--- @param contexts Context[]
 local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   api.nvim_buf_clear_namespace(ctx_bufnr, ns, 0, -1)
 
@@ -417,9 +407,9 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
     local indents = context.indents
     local lines = context.lines
 
-    local start_row_abs = context.node:start()
+    local start_row_abs = context.range[1]
 
-    for capture, node in query:iter_captures(root, bufnr, start_row, context.node:end_()) do
+    for capture, node in query:iter_captures(root, bufnr, start_row, context.range[3]) do
       local node_start_row, node_start_col, node_end_row, node_end_col = node:range()
 
       if node_end_row > end_row or
@@ -491,12 +481,18 @@ local function horizontal_scroll_contexts()
   end
 end
 
-local function open(ctx_nodes)
+--- @class Context
+--- @field indents integer[]
+--- @field lines string[]
+--- @field range Range
+
+--- @param ctx_ranges Range[]
+local function open(ctx_ranges)
   local bufnr = api.nvim_get_current_buf()
 
   local gutter_width = get_gutter_width()
   local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
-  local win_height = math.max(1, #ctx_nodes)
+  local win_height = math.max(1, #ctx_ranges)
 
   local gbufnr, ctx_bufnr = get_bufs()
 
@@ -514,18 +510,18 @@ local function open(ctx_nodes)
 
   local context_text = {}
   local lno_text = {}
+
+  --- @type Context[]
   local contexts = {}
 
-  for _, ctx in ipairs(ctx_nodes) do
-    local node, range_end = unpack(ctx)
-    local lines, range = get_text_for_node(node, range_end)
+  for _, range0 in ipairs(ctx_ranges) do
+    local lines, range = get_text_for_range(range0)
     if lines == nil or range == nil or range[1] == nil then
       return
     end
     local text = merge_lines(lines)
 
     contexts[#contexts+1] = {
-      node = node,
       lines = lines,
       range = range,
       indents = get_indents(lines),
