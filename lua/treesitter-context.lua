@@ -259,6 +259,19 @@ local function get_node_parents(node)
   return parents
 end
 
+--- @return integer, integer
+local function get_pos()
+  --- @type integer, integer
+  local lnum, col
+  if config.mode == 'topline' then
+    lnum, col = vim.fn.line('w0') --[[@as integer]], 0
+  else -- default to 'cursor'
+    lnum, col = unpack(api.nvim_win_get_cursor(0)) --[[@as integer]]
+  end
+
+  return lnum, col
+end
+
 --- @param max_lines integer
 --- @return Range[]?
 local function get_parent_matches(max_lines)
@@ -272,14 +285,6 @@ local function get_parent_matches(max_lines)
 
   local root_node = get_root_node()
 
-  --- @type integer, integer
-  local lnum, col
-  if config.mode == 'topline' then
-    lnum, col = vim.fn.line('w0') --[[@as integer]], 0
-  else -- default to 'cursor'
-    lnum, col = unpack(api.nvim_win_get_cursor(0)) --[[@as integer]]
-  end
-
   --- @type string
   local lang = parsers.ft_to_lang(vim.bo.filetype)
 
@@ -288,6 +293,8 @@ local function get_parent_matches(max_lines)
   if not query then
     return
   end
+
+  local lnum, col = get_pos()
 
   --- @type Range[]
   local last_matches
