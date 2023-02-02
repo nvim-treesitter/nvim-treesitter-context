@@ -3,7 +3,6 @@ local Screen = require('test.functional.ui.screen')
 
 local clear    = helpers.clear
 local exec_lua = helpers.exec_lua
-local eq       = helpers.eq
 local cmd      = helpers.command
 local feed     = helpers.feed
 
@@ -90,18 +89,17 @@ describe('ts_context', function()
     ]]}
   end)
 
-
   describe('language:', function()
     before_each(function()
       exec_lua[[require'treesitter-context'.setup{
         mode = 'topline',
       }]]
+      cmd'set scrolloff=5'
     end)
 
     it('rust', function()
       cmd('edit test/test.rs')
-      feed'L'
-      feed'20<C-e>5j'
+      feed'20<C-e>'
 
       screen:expect{grid=[[
         {1:impl}{2: Foo                      }|
@@ -122,14 +120,14 @@ describe('ts_context', function()
                                       |
       ]]}
 
-      feed'14<C-e>3j'
+      feed'14<C-e>'
       screen:expect{grid=[[
         {1:struct}{2: }{3:Foo}{2: {                  }|
                                       |
             email: {9:String},            |
-        ^                              |
-            sign_in_count: {9:u64},       |
                                       |
+            sign_in_count: {9:u64},       |
+        ^                              |
         }                             |
         {6:~                             }|
         {6:~                             }|
@@ -146,7 +144,6 @@ describe('ts_context', function()
 
     it('c', function()
       cmd('edit test/test.c')
-      feed'L'
       feed'<C-e>'
 
       -- Check the struct context
@@ -156,7 +153,7 @@ describe('ts_context', function()
             {9:int} *f2;                  |
             {8:// comment}                |
             {8:// comment}                |
-            {8:// comment}                |
+        ^    {8:// comment}                |
             {8:// comment}                |
             {8:// comment}                |
         };                            |
@@ -164,7 +161,7 @@ describe('ts_context', function()
         {9:typedef} {9:enum} {                |
           E1,                         |
           E2,                         |
-          ^E3                          |
+          E3                          |
           {8:// comment}                  |
                                       |
       ]]}
@@ -174,11 +171,11 @@ describe('ts_context', function()
       -- Check the enum context
       screen:expect{grid=[[
         {7:typedef}{2: }{7:enum}{2: {                }|
-          ^E3                          |
+          E3                          |
           {8:// comment}                  |
           {8:// comment}                  |
           {8:// comment}                  |
-          {8:// comment}                  |
+        ^  {8:// comment}                  |
           {8:// comment}                  |
           {8:// comment}                  |
         } Myenum;                     |
@@ -191,24 +188,23 @@ describe('ts_context', function()
                                       |
       ]]}
 
-      cmd'set scrolloff=4'
       feed'40<C-e>'
       screen:expect{grid=[[
         {7:int}{2: main(}{7:int}{2: arg1, }{7:char}{2: **arg2}|
         {2:  }{1:if}{2: (arg1 == }{10:4}{2: && arg2 == arg}|
         {2:    }{1:for}{2: (}{7:int}{2: i = }{10:0}{2:; i < arg1; }|
         {2:      }{1:while}{2: (}{10:1}{2:) {             }|
-          ^      {8:// comment}            |
-                {8:// comment}            |
-                {8:// comment}            |
               }                       |
-                                      |
+        ^                              |
               {4:do} {                    |
                 {8:// comment}            |
                 {8:// comment}            |
                 {8:// comment}            |
                 {8:// comment}            |
                 {8:// comment}            |
+                                      |
+              } {4:while} ({11:1});            |
+              {8:// comment}              |
                                       |
       ]]}
     end)
