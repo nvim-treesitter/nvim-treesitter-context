@@ -1,10 +1,25 @@
+---@diagnostic disable-next-line
 local api = vim.api
 local highlighter = vim.treesitter.highlighter
+
+---@diagnostic disable-next-line
 local parsers = require'nvim-treesitter.parsers'
 
 local augroup = api.nvim_create_augroup
 local command = api.nvim_create_user_command
 
+--- @class Config
+--- @field enable boolean
+--- @field max_lines integer
+--- @field min_window_height integer
+--- @field line_numbers boolean
+--- @field multiline_threshold integer
+--- @field trim_scope 'outer'|'inner'
+--- @field zindex integer
+--- @field mode 'cursor'|'topline'
+--- @field separator string?
+
+--- @type Config
 local defaultConfig = {
   enable = true,
   max_lines = 0, -- no limit
@@ -17,6 +32,7 @@ local defaultConfig = {
   separator = nil,
 }
 
+--- @type Config
 local config = {}
 
 -- Constants
@@ -27,24 +43,48 @@ local INDENT_PATTERN = '^%s+'
 
 local did_setup = false
 local enabled = false
-local gutter_winid, context_winid
-local gutter_bufnr, context_bufnr -- Don't access directly, use get_bufs()
+
+-- Don't access directly, use get_bufs()
+--- @type integer?
+local gutter_winid
+
+--- @type integer?
+local context_winid
+
+--- @type integer?
+local gutter_bufnr
+
+--- @type integer?
+local context_bufnr
+
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
+
+--- @type TSNode[]?
 local previous_nodes
 
+--- @return TSNode
 local function get_root_node()
+  ---@diagnostic disable-next-line
   local tree = parsers.get_parser():parse()[1]
   return tree:root()
 end
 
+--- @class TSNode
+--- @field parent fun(TSNode): TSNode?
+--- @field start fun(TSNode): integer, integer
+--- @field range fun(TSNode): integer, integer, integer, integer
+--- @field named_descendant_for_range fun(TSNode, integer, integer, integer, integer): TSNode
+
+--- @param node TSNode
+--- @param query Query
 --- @return Range?
 local function is_valid(node, query)
   local bufnr = api.nvim_get_current_buf()
-  local range = {node:range()}
-  for _, match in query:iter_matches(node, bufnr, 0, -1) do
+  local range --[[@type Range]] = {node:range()}
+  for _, match in query:iter_matches(node --[[@as userdata]], bufnr, 0, -1) do
     local r = false
 
-    for id, node0 in pairs(match) do
+    for id, node0 in pairs(match --[[@as table<integer,TSNode>]]) do
       local name = query.captures[id] -- name of the capture in the query
       if not r and name == 'context' then
         r = node == node0
@@ -65,11 +105,7 @@ local function is_valid(node, query)
   end
 end
 
---- @class Range
---- @field [1] integer
---- @field [2] integer
---- @field [3] integer
---- @field [4] integer
+--- @alias Range {[1]: integer, [2]: integer, [3]: integer, [4]: integer}
 
 --- @param range Range
 --- @return string[]?, Range?
@@ -79,7 +115,9 @@ local function get_text_for_range(range)
     return nil, nil
   end
 
-  local start_row, _, end_row, end_col = unpack(range)
+  local start_row = range[1]
+  local end_row = range[3]
+  local end_col = range[4]
 
   lines = vim.list_slice(lines, 1, end_row - start_row+1)
   lines[#lines] = lines[#lines]:sub(1, end_col)
@@ -107,6 +145,8 @@ local function merge_lines(lines)
 end
 
 -- Get indentation for lines except first
+--- @param lines string[]
+--- @return integer[]
 local function get_indents(lines)
   local indents = vim.tbl_map(function(line)
     local indent = line:match(INDENT_PATTERN)
@@ -117,13 +157,14 @@ local function get_indents(lines)
   return indents
 end
 
+--- @return integer
 local function get_gutter_width()
   return vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].textoff
 end
 
-local cursor_moved_vertical
+local cursor_moved_vertical --[[@type fun(): boolean]]
 do
-  local line
+  local line --[[@type integer]]
   cursor_moved_vertical = function()
     local newline = vim.api.nvim_win_get_cursor(0)[1]
     if newline ~= line then
@@ -160,7 +201,7 @@ local function delete_bufs()
 end
 
 --- @param bufnr integer
---- @param winid integer
+--- @param winid integer?
 --- @param width integer
 --- @param height integer
 --- @param col integer
@@ -205,10 +246,11 @@ local M = {
   config = config,
 }
 
---- @param node userdata
---- @return userdata[]
+--- @param node TSNode?
+--- @return TSNode[]
 local function get_node_parents(node)
   -- save nodes in a table to iterate from top to bottom
+  --- @type TSNode[]
   local parents = {}
   while node ~= nil do
     parents[#parents+1] = node
@@ -229,20 +271,25 @@ local function get_parent_matches(max_lines)
   end
 
   local root_node = get_root_node()
+
+  --- @type integer, integer
   local lnum, col
   if config.mode == 'topline' then
-    lnum, col = vim.fn.line('w0'), 0
+    lnum, col = vim.fn.line('w0') --[[@as integer]], 0
   else -- default to 'cursor'
-    lnum, col = unpack(api.nvim_win_get_cursor(0))
+    lnum, col = unpack(api.nvim_win_get_cursor(0)) --[[@as integer]]
   end
 
+  --- @type string
   local lang = parsers.ft_to_lang(vim.bo.filetype)
+
   local query = vim.treesitter.query.get_query(lang, 'context')
 
   if not query then
     return
   end
 
+  --- @type Range[]
   local last_matches
 
   --- @type Range[]
@@ -380,7 +427,7 @@ end
 local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   api.nvim_buf_clear_namespace(ctx_bufnr, ns, 0, -1)
 
-  local buf_highlighter = highlighter.active[bufnr]
+  local buf_highlighter = highlighter.active[bufnr] --[[@as TSHighlighter]]
 
   if not buf_highlighter then
     -- Use standard highlighting when TS highlighting is not available
@@ -410,7 +457,7 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
     local start_row_abs = context.range[1]
 
     for capture, node in query:iter_captures(root, bufnr, start_row, context.range[3]) do
-      local node_start_row, node_start_col, node_end_row, node_end_col = node:range()
+      local node_start_row, node_start_col, node_end_row, node_end_col = (node --[[@as TSNode]]):range()
 
       if node_end_row > end_row or
         (node_end_row == end_row and node_end_col > end_col) then
@@ -508,11 +555,9 @@ local function open(ctx_ranges)
 
   -- Set text
 
-  local context_text = {}
-  local lno_text = {}
-
-  --- @type Context[]
-  local contexts = {}
+  local context_text --[[@type string[] ]] = {}
+  local lno_text --[[@type string[] ]] = {}
+  local contexts --[[@type Context[] ]] = {}
 
   for _, range0 in ipairs(ctx_ranges) do
     local lines, range = get_text_for_range(range0)
@@ -529,7 +574,7 @@ local function open(ctx_ranges)
 
     table.insert(context_text, text)
 
-    local line_num
+    local line_num  --[[@type integer]]
     local ctx_line_num = range[1] + 1
     if vim.o.relativenumber then
       line_num = get_relative_line_num(ctx_line_num)
