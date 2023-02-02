@@ -148,7 +148,10 @@ end
 --- @param lines string[]
 --- @return integer[]
 local function get_indents(lines)
+  --- @type integer[]
+  --- @diagnostic disable-next-line
   local indents = vim.tbl_map(function(line)
+    --- @type string?
     local indent = line:match(INDENT_PATTERN)
     return indent and #indent or 0
   end, lines)
