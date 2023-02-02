@@ -1,16 +1,21 @@
 
 (for_expression
-  value: (_) @context.final
+  body: (_ (_) @context.end)
 ) @context
 
 (if_expression
-  condition: (_) @context.final
+  consequence: (_ (_) @context.end)
 ) @context
 
 (function_item
-  parameters: (_) @context.final
+  body: (_ (_) @context.end)
 ) @context
 
 (impl_item
   type: (_) @context.final
 ) @context
+
+(struct_item
+  body: (_ (_) @context.end)
+) @context
+
