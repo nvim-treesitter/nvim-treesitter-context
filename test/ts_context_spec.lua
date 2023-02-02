@@ -25,6 +25,7 @@ describe('ts_context', function()
       [9] = {bold = true, foreground = Screen.colors.SeaGreen};
       [10] = {foreground = Screen.colors.Fuchsia, background = Screen.colors.LightMagenta};
       [11] = {foreground = Screen.colors.Fuchsia};
+      [12] = {foreground = tonumber('0x6a0dad'), background = Screen.colors.LightMagenta};
     })
     cmd [[set runtimepath+=.,./nvim-treesitter]]
     cmd [[let $XDG_CACHE_HOME='scratch/cache']]
@@ -95,6 +96,7 @@ describe('ts_context', function()
         mode = 'topline',
       }]]
       cmd'set scrolloff=5'
+      cmd'set nowrap'
     end)
 
     it('rust', function()
@@ -208,6 +210,71 @@ describe('ts_context', function()
                                       |
       ]]}
     end)
+
+    it('typescript', function()
+      cmd('edit test/test.ts')
+      feed'<C-e>'
+
+      screen:expect{grid=[[
+        {1:interface}{2: }{3:User}{2: }{3:{}{2:              }|
+                                      |
+                                      |
+                                      |
+          {5:id}: {9:number}{4:;}                 |
+        ^                              |
+                                      |
+                                      |
+                                      |
+        {5:}}                             |
+                                      |
+        {4:class} UserAccount {5:{}           |
+          {5:name}: {9:string};               |
+          {5:id}: {9:number};                 |
+                                      |
+                                      |
+      ]]}
+
+      feed'21<C-e>'
+      screen:expect{grid=[[
+        {1:class}{2: UserAccount }{3:{}{2:           }|
+        {2:  }{3:constructor}{2:(}{12:name}{2::}{12: }{7:string}{1:,}{12: id}|
+        {2:    }{1:for}{2: (}{3:let}{2: i = }{10:0}{1:;}{2: i < }{10:3}{1:;}{2: i++}|
+                                      |
+                                      |
+        ^                              |
+            {5:}}                         |
+                                      |
+                                      |
+                                      |
+                                      |
+          {5:}}                           |
+        {5:}}                             |
+                                      |
+                                      |
+                                      |
+      ]]}
+
+      feed'16<C-e>'
+      screen:expect{grid=[[
+        {1:function}{2: }{3:wrapInArray}{2:(}{12:obj}{2::}{12: }{7:stri}|
+        {2:  }{1:if}{2: (}{3:typeof}{2: obj === }{10:"string"}{2:)}|
+                                      |
+                                      |
+                                      |
+        ^                              |
+          {5:}}                           |
+          {4:return} obj;                 |
+        {5:}}                             |
+        {6:~                             }|
+        {6:~                             }|
+        {6:~                             }|
+        {6:~                             }|
+        {6:~                             }|
+        {6:~                             }|
+                                      |
+      ]]}
+    end)
+
   end)
 
 end)
