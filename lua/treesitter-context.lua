@@ -218,6 +218,18 @@ local M = {
   config = config,
 }
 
+--- @param node userdata
+--- @return userdata[]
+local function get_node_parents(node)
+  -- save nodes in a table to iterate from top to bottom
+  local parents = {}
+  while node ~= nil do
+    parents[#parents+1] = node
+    node = node:parent()
+  end
+  return parents
+end
+
 --- @param max_lines integer
 --- @return {[1]: userdata, [2]: {[1]: integer, [2]: integer}}?
 local function get_parent_matches(max_lines)
@@ -261,11 +273,7 @@ local function get_parent_matches(max_lines)
     local topline = vim.fn.line('w0')
 
     -- save nodes in a table to iterate from top to bottom
-    local parents = {}
-    while node ~= nil do
-      parents[#parents+1] = node
-      node = node:parent()
-    end
+    local parents = get_node_parents(node)
 
     for i = #parents, 1, -1 do
       local parent = parents[i]
