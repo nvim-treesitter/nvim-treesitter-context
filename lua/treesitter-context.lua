@@ -79,6 +79,8 @@ end
 local function is_valid(node, query)
   local bufnr = api.nvim_get_current_buf()
   local range --[[@type Range]] = {node:range()}
+  range[3] = range[1]
+  range[4] = -1
   for _, match in query:iter_matches(node --[[@as userdata]], bufnr, 0, -1) do
     local r = false
 
@@ -466,18 +468,16 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
     local indents = context.indents
     local lines = context.lines
 
-    local start_row_abs = context.range[1]
-
-    for capture, node in query:iter_captures(root, bufnr, start_row, context.range[3]) do
-      local node_start_row, node_start_col, node_end_row, node_end_col = (node --[[@as TSNode]]):range()
+    for capture, node in query:iter_captures(root, bufnr, start_row, end_row + 1) do
+      local node_start_row, node_start_col, node_end_row, node_end_col = node:range()
 
       if node_end_row > end_row or
-        (node_end_row == end_row and node_end_col > end_col) then
+        (node_end_row == end_row and node_end_col > end_col and end_col ~= -1) then
         break
       end
 
-      if node_start_row >= start_row_abs then
-        local intended_start_row = node_start_row - start_row_abs
+      if node_start_row >= start_row then
+        local intended_start_row = node_start_row - start_row
 
         -- Add 1 for each space added between lines when
         -- we replace '\n' with ' '
