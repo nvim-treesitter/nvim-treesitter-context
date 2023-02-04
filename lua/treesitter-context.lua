@@ -81,7 +81,12 @@ local function is_valid(node, query)
   local range --[[@type Range]] = {node:range()}
   range[3] = range[1]
   range[4] = -1
-  for _, match in query:iter_matches(node --[[@as userdata]], bufnr, 0, -1) do
+
+  -- Try and iterate on the parent node as iter_matches won't match on the top
+  -- level node
+  local iter_node = node:parent() or node
+
+  for _, match in query:iter_matches(iter_node, bufnr, 0, -1) do
     local r = false
 
     for id, node0 in pairs(match --[[@as table<integer,TSNode>]]) do
