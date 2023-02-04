@@ -681,7 +681,6 @@ local function clone_extmarks_into(extmarks, bufnr, range, context_line_num)
   for _, n in pairs(api.nvim_get_namespaces()) do
     local found_extmarks = api.nvim_buf_get_extmarks(bufnr, n, { range[1], range[2] }, { range[3], range[4] },
       { details = true })
-    P(found_extmarks)
     for _, e in pairs(found_extmarks) do
       if extmarks[context_line_num] == nil then
         extmarks[context_line_num] = {}
