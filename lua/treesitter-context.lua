@@ -660,11 +660,30 @@ local function render_virtual_text(bufnr, extmarks)
   for line, marks in pairs(extmarks) do
     if line <= len then
       for _, mark in ipairs(marks) do
-        api.nvim_buf_set_extmark(bufnr, virt_text_ns, line, 0, mark.opts)
+        api.nvim_buf_set_extmark(bufnr, virt_text_ns, line, mark.col, mark.opts)
       end
     end
   end
   return false
+end
+
+---Clone all existing, namespaced extmarks present in the given range, and insert them into
+---extmark_info
+---@param extmark_info table from line number to list of extmarks on that line
+---@param bufnr integer buffer number we're searching for ext marks
+---@param range table<integer> { start_row, start_col, end_row, end_col }
+---@param context_line_num integer the line in the context that this should be associated with
+local function clone_ext_marks_into(extmark_info, bufnr, range, context_line_num)
+  for _, n in pairs(api.nvim_get_namespaces()) do
+    local extmarks = api.nvim_buf_get_extmarks(bufnr, n, { range[1], range[2] }, { range[3], range[4] },
+      { details = true })
+    for _, e in pairs(extmarks) do
+      if extmark_info[context_line_num] == nil then
+        extmark_info[context_line_num] = {}
+      end
+      table.insert(extmark_info[context_line_num], { col = e[3], opts = e[4] })
+    end
+  end
 end
 
 local function open(ctx_nodes)
@@ -717,18 +736,7 @@ local function open(ctx_nodes)
       line_num = ctx_line_num
     end
     table.insert(lno_text, build_lno_str(line_num, gutter_width-1))
-
-    -- clone extmarks
-    for _, n in pairs(api.nvim_get_namespaces()) do
-      local e = api.nvim_buf_get_extmarks(bufnr, n, { range[1], range[2] }, { range[3], range[4] }, { details = true })
-      if #e ~= 0 then
-        local virt_text_opts = e[1][4]
-        if extmarks[idx - 1] == nil then
-          extmarks[idx - 1] = {}
-        end
-        table.insert(extmarks[idx - 1], {namespace = n, opts = virt_text_opts})
-      end
-    end
+    clone_ext_marks_into(extmarks, bufnr, range, idx - 1)
   end
 
   set_lines(gbufnr, lno_text)
