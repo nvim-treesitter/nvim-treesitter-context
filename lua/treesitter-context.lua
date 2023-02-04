@@ -1,8 +1,6 @@
----@diagnostic disable-next-line
 local api = vim.api
 local highlighter = vim.treesitter.highlighter
 
----@diagnostic disable-next-line
 local parsers = require'nvim-treesitter.parsers'
 
 local augroup = api.nvim_create_augroup
@@ -110,6 +108,10 @@ end
 --- @param range Range
 --- @return string[]?, Range?
 local function get_text_for_range(range)
+  if range[4] == 0 then
+    range[3] = range[3] - 1
+    range[4] = -1
+  end
   local lines = api.nvim_buf_get_text(0, range[1], 0, range[3], range[4], {})
   if lines == nil then
     return nil, nil
