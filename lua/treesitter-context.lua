@@ -653,6 +653,20 @@ local function normalize_node(node)
   return node
 end
 
+local virt_text_ns = api.nvim_create_namespace("treesitter-context-virt-text")
+local function render_virtual_text(bufnr, extmarks)
+  local len = api.nvim_buf_line_count(bufnr)
+  api.nvim_buf_clear_namespace(bufnr, virt_text_ns, 0, -1)
+  for line, marks in pairs(extmarks) do
+    if line <= len then
+      for _, mark in ipairs(marks) do
+        api.nvim_buf_set_extmark(bufnr, virt_text_ns, line, 0, mark.opts)
+      end
+    end
+  end
+  return false
+end
+
 local function open(ctx_nodes)
   local bufnr = api.nvim_get_current_buf()
 
@@ -677,8 +691,9 @@ local function open(ctx_nodes)
   local context_text = {}
   local lno_text = {}
   local contexts = {}
+  local extmarks = {}
 
-  for _, node in ipairs(ctx_nodes) do
+  for idx, node in ipairs(ctx_nodes) do
     node = normalize_node(node)
 
     local lines, range = get_text_for_node(node)
@@ -702,14 +717,28 @@ local function open(ctx_nodes)
       line_num = ctx_line_num
     end
     table.insert(lno_text, build_lno_str(line_num, gutter_width-1))
+
+    -- clone extmarks
+    for _, n in pairs(api.nvim_get_namespaces()) do
+      local e = api.nvim_buf_get_extmarks(bufnr, n, { range[1], range[2] }, { range[3], range[4] }, { details = true })
+      if #e ~= 0 then
+        local virt_text_opts = e[1][4]
+        if extmarks[idx - 1] == nil then
+          extmarks[idx - 1] = {}
+        end
+        table.insert(extmarks[idx - 1], {namespace = n, opts = virt_text_opts})
+      end
+    end
   end
 
   set_lines(gbufnr, lno_text)
-  if not set_lines(ctx_bufnr, context_text) then
-    -- Context didn't change, can return here
+  local skip_highlights = not set_lines(ctx_bufnr, context_text)
+
+  render_virtual_text(ctx_bufnr, extmarks)
+
+  if skip_highlights then
     return
   end
-
 
   highlight_contexts(bufnr, ctx_bufnr, contexts)
 
