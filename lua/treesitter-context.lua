@@ -661,7 +661,6 @@ local virt_text_ns = api.nvim_create_namespace("nvim-treesitter-context-virt-tex
 local function render_virtual_text(cbufnr, extmarks, diagnostics)
   api.nvim_buf_clear_namespace(cbufnr, virt_text_ns, 0, -1)
   vim.diagnostic.reset(virt_text_ns, cbufnr)
-  vim.diagnostic.set(virt_text_ns, cbufnr, diagnostics, { signs = false })
 
   local len = api.nvim_buf_line_count(cbufnr)
   for line = 0, len do
@@ -669,6 +668,8 @@ local function render_virtual_text(cbufnr, extmarks, diagnostics)
       api.nvim_buf_set_extmark(cbufnr, virt_text_ns, line, m_info.col, m_info.opts)
     end
   end
+
+  vim.diagnostic.set(virt_text_ns, cbufnr, diagnostics, { signs = false })
 end
 
 ---Clone existing, namespaced, extmarks present in the given range, and insert them into extmarks
@@ -680,6 +681,7 @@ local function clone_extmarks_into(extmarks, bufnr, range, context_line_num)
   for _, n in pairs(api.nvim_get_namespaces()) do
     local found_extmarks = api.nvim_buf_get_extmarks(bufnr, n, { range[1], range[2] }, { range[3], range[4] },
       { details = true })
+    P(found_extmarks)
     for _, e in pairs(found_extmarks) do
       if extmarks[context_line_num] == nil then
         extmarks[context_line_num] = {}
