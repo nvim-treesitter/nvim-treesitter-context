@@ -690,6 +690,7 @@ local function clone_extmarks_into(extmarks, bufnr, range, context_line_num)
   end
 end
 
+-- http://lua-users.org/wiki/CopyTable
 function table.deepcopy(orig)
   local orig_type = type(orig)
   local copy
