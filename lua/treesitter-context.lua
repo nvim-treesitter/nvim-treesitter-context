@@ -660,7 +660,6 @@ local virt_text_ns = api.nvim_create_namespace("nvim-treesitter-context-virt-tex
 ---@param diagnostics table result of `clone_diagnostics_into()`
 local function render_virtual_text(cbufnr, extmarks, diagnostics)
   api.nvim_buf_clear_namespace(cbufnr, virt_text_ns, 0, -1)
-  vim.diagnostic.reset(virt_text_ns, cbufnr)
 
   local len = api.nvim_buf_line_count(cbufnr)
   for line = 0, len do
@@ -669,7 +668,9 @@ local function render_virtual_text(cbufnr, extmarks, diagnostics)
     end
   end
 
-  vim.diagnostic.set(virt_text_ns, cbufnr, diagnostics, { signs = false })
+  -- this is a hack b/c the diagnostic virtual text isn't accessible through nvim_buf_get_extmarks
+  vim.diagnostic.handlers.virtual_text.hide(virt_text_ns, cbufnr)
+  vim.diagnostic.handlers.virtual_text.show(virt_text_ns, cbufnr, diagnostics)
 end
 
 ---Clone existing, namespaced, extmarks present in the given range, and insert them into extmarks
@@ -690,22 +691,6 @@ local function clone_extmarks_into(extmarks, bufnr, range, context_line_num)
   end
 end
 
--- http://lua-users.org/wiki/CopyTable
-function table.deepcopy(orig)
-  local orig_type = type(orig)
-  local copy
-  if orig_type == 'table' then
-    copy = {}
-    for orig_key, orig_value in next, orig, nil do
-      copy[table.deepcopy(orig_key)] = table.deepcopy(orig_value)
-    end
-    setmetatable(copy, table.deepcopy(getmetatable(orig)))
-  else -- number, string, boolean, etc
-    copy = orig
-  end
-  return copy
-end
-
 ---Clone existing diagnostic info from the given line
 ---@param diagnostics table from line number to list of diagnostics on that line
 ---@param bufnr integer buffer to find diagnostics in
@@ -713,13 +698,13 @@ end
 ---@param context_line_num integer corresponding context buf line number
 local function clone_diagnostics_into(diagnostics, bufnr, line, context_line_num)
   for _, d in ipairs(vim.diagnostic.get(bufnr, { lnum = line })) do
-    local copy = table.deepcopy(d)
+    local copy = vim.deepcopy(d)
     copy.lnum = context_line_num
     table.insert(diagnostics, copy)
   end
 end
 
-local function open(ctx_nodes) 
+local function open(ctx_nodes)
   local bufnr = api.nvim_get_current_buf()
 
   local gutter_width = get_gutter_width()
