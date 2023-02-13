@@ -653,6 +653,57 @@ local function normalize_node(node)
   return node
 end
 
+local virt_text_ns = api.nvim_create_namespace("nvim-treesitter-context-virt-text")
+---Render virtual text in the context buffer, includes extmarks and diagnostics
+---@param cbufnr integer buf number of the context buffer
+---@param extmarks table result of `clone_extmarks_into()`
+---@param diagnostics table result of `clone_diagnostics_into()`
+local function render_virtual_text(cbufnr, extmarks, diagnostics)
+  api.nvim_buf_clear_namespace(cbufnr, virt_text_ns, 0, -1)
+
+  local len = api.nvim_buf_line_count(cbufnr)
+  for line = 0, len do
+    for _, m_info in ipairs(extmarks[line] or {}) do
+      api.nvim_buf_set_extmark(cbufnr, virt_text_ns, line, m_info.col, m_info.opts)
+    end
+  end
+
+  -- this is a hack b/c the diagnostic virtual text isn't accessible through nvim_buf_get_extmarks
+  vim.diagnostic.handlers.virtual_text.hide(virt_text_ns, cbufnr)
+  vim.diagnostic.handlers.virtual_text.show(virt_text_ns, cbufnr, diagnostics)
+end
+
+---Clone existing, namespaced, extmarks present in the given range, and insert them into extmarks
+---@param extmarks table from line number to list of extmarks on that line
+---@param bufnr integer buffer number we're searching for ext marks
+---@param range table<integer> { start_row, start_col, end_row, end_col }
+---@param context_line_num integer the line in the context that this should be associated with
+local function clone_extmarks_into(extmarks, bufnr, range, context_line_num)
+  for _, n in pairs(api.nvim_get_namespaces()) do
+    local found_extmarks = api.nvim_buf_get_extmarks(bufnr, n, { range[1], range[2] }, { range[3], range[4] },
+      { details = true })
+    for _, e in pairs(found_extmarks) do
+      if extmarks[context_line_num] == nil then
+        extmarks[context_line_num] = {}
+      end
+      table.insert(extmarks[context_line_num], { col = e[3], opts = e[4] })
+    end
+  end
+end
+
+---Clone existing diagnostic info from the given line
+---@param diagnostics table from line number to list of diagnostics on that line
+---@param bufnr integer buffer to find diagnostics in
+---@param line integer line to copy diagnostics from
+---@param context_line_num integer corresponding context buf line number
+local function clone_diagnostics_into(diagnostics, bufnr, line, context_line_num)
+  for _, d in ipairs(vim.diagnostic.get(bufnr, { lnum = line })) do
+    local copy = vim.deepcopy(d)
+    copy.lnum = context_line_num
+    table.insert(diagnostics, copy)
+  end
+end
+
 local function open(ctx_nodes)
   local bufnr = api.nvim_get_current_buf()
 
@@ -677,8 +728,10 @@ local function open(ctx_nodes)
   local context_text = {}
   local lno_text = {}
   local contexts = {}
+  local extmarks = {}
+  local diagnostics = {}
 
-  for _, node in ipairs(ctx_nodes) do
+  for idx, node in ipairs(ctx_nodes) do
     node = normalize_node(node)
 
     local lines, range = get_text_for_node(node)
@@ -702,14 +755,18 @@ local function open(ctx_nodes)
       line_num = ctx_line_num
     end
     table.insert(lno_text, build_lno_str(line_num, gutter_width-1))
+    clone_extmarks_into(extmarks, bufnr, range, idx - 1)
+    clone_diagnostics_into(diagnostics, bufnr, ctx_line_num - 1, idx - 1)
   end
 
   set_lines(gbufnr, lno_text)
-  if not set_lines(ctx_bufnr, context_text) then
-    -- Context didn't change, can return here
+  local skip_highlights = not set_lines(ctx_bufnr, context_text)
+
+  render_virtual_text(ctx_bufnr, extmarks, diagnostics)
+
+  if skip_highlights then
     return
   end
-
 
   highlight_contexts(bufnr, ctx_bufnr, contexts)
 
