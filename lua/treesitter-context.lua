@@ -74,9 +74,11 @@ end
 local skip_leading_types = {
   [word_pattern('class')] = {
     php = 'attribute_list',
+    java = "modifiers",
   },
   [word_pattern('method')] = {
     php = 'attribute_list',
+    java = "modifiers",
   },
 }
 
@@ -158,6 +160,9 @@ local DEFAULT_TYPE_EXCLUDE_PATTERNS = {
   teal = {
     'function_body',
   },
+  java = {
+    'class_body',
+  }
 }
 
 local INDENT_PATTERN = '^%s+'
@@ -568,7 +573,9 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
 
     local start_row_abs = context.node:start()
 
-    for capture, node in query:iter_captures(root, bufnr, start_row, context.node:end_()) do
+    local end_row_abs = context.node:end_()
+    end_row_abs = math.max(start_row + 1, end_row_abs)  -- make sure capture at least one line
+    for capture, node in query:iter_captures(root, bufnr, start_row, end_row_abs) do
       local node_start_row, node_start_col, node_end_row, node_end_col = node:range()
 
       if node_end_row > end_row or
