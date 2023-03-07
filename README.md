@@ -107,6 +107,9 @@ require'treesitter-context'.setup{
         json = {
             'pair',
         },
+        lua = {
+            'table_constructor',
+        },
         typescript = {
             'export_statement',
         },

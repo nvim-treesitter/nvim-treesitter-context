@@ -112,6 +112,9 @@ local DEFAULT_TYPE_PATTERNS = {
   json = {
     'pair',
   },
+  lua = {
+    'table_constructor',
+  },
   markdown = {
     'section',
   },
