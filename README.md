@@ -67,6 +67,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `smali`
   - [x] `swift`
   - [x] `teal`
+  - [x] `terraform`
   - [x] `toml`
   - [x] `tsx`
   - [x] `typescript`
@@ -176,7 +177,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `svelte`
   - [ ] `sxhkdrc`
   - [ ] `t32`
-  - [ ] `terraform`
   - [ ] `thrift`
   - [ ] `tiger`
   - [ ] `tlaplus`
