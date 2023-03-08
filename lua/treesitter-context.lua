@@ -93,6 +93,8 @@ local is_valid = cache.memoize(function(node, query)
   range[3] = range[1]
   range[4] = -1
 
+  local node_srow = range[1]
+
   -- Try and iterate on the parent node as iter_matches won't match on the top
   -- level node
   local iter_node = node:parent() or node
@@ -104,13 +106,16 @@ local is_valid = cache.memoize(function(node, query)
       local srow, scol, erow, ecol = node0:range()
 
       -- because iter_node != node we could match outside of node
-      if srow < range[1] then
+      if srow < node_srow then
         break
       end
 
       local name = query.captures[id] -- name of the capture in the query
       if not r and name == 'context' then
         r = node == node0
+      elseif name == 'context.start' then
+        range[1] = srow
+        range[2] = scol
       elseif name == 'context.final' then
         range[3] = erow
         range[4] = ecol
