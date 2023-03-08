@@ -36,6 +36,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `cpp`
   - [x] `typescript`
   - [x] `rust`
+  - [X] `go`
   - [X] `javascript`
   - [x] `json`
   - [x] `lua`
@@ -91,7 +92,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `gleam`
   - [ ] `glimmer`
   - [ ] `glsl`
-  - [ ] `go`
   - [ ] `godot_resource`
   - [ ] `gomod`
   - [ ] `gosum`
