@@ -154,7 +154,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `rnoweb`
   - [ ] `ron`
   - [ ] `rst`
-  - [ ] `ruby`
+  - [x] `ruby`
   - [ ] `scheme`
   - [ ] `scss`
   - [ ] `slint`
