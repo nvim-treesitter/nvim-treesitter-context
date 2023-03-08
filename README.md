@@ -36,6 +36,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `cpp`
   - [x] `typescript`
   - [x] `rust`
+  - [X] `javascript`
   - [x] `json`
   - [x] `lua`
   - [x] `markdown`
@@ -109,7 +110,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `http`
   - [ ] `ini`
   - [ ] `java`
-  - [ ] `javascript`
   - [ ] `jq`
   - [ ] `jsdoc`
   - [ ] `json5`
