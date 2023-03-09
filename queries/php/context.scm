@@ -3,6 +3,10 @@
   body: (_ (_) @context.end)
 ) @context
 
+(method_declaration
+  body: (_ (_) @context.end)
+) @context
+
 (while_statement
   body: (_ (_) @context.end)
 ) @context
