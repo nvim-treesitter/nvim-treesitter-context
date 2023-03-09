@@ -120,7 +120,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `kdl`
   - [ ] `kotlin`
   - [ ] `lalrpop`
-  - [ ] `latex`
+  - [x] `latex`
   - [ ] `ledger`
   - [ ] `llvm`
   - [ ] `m68k`
