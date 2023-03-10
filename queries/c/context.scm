@@ -1,4 +1,12 @@
 
+(preproc_if
+  (_) (_) @context.end
+) @context
+
+(preproc_ifdef
+  name: (identifier) (_) @context.end
+) @context
+
 (function_definition
   body: (_ (_) @context.end)
 ) @context
