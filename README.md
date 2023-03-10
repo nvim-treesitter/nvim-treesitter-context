@@ -47,6 +47,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `scala`
   - [x] `teal`
   - [x] `toml`
+  - [x] `tsx`
   - [x] `vim`
   - [ ] `ada`
   - [ ] `agda`
@@ -175,7 +176,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `tiger`
   - [ ] `tlaplus`
   - [ ] `todotxt`
-  - [ ] `tsx`
   - [ ] `turtle`
   - [ ] `twig`
   - [ ] `ungrammar`
