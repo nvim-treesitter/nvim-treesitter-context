@@ -1,10 +1,34 @@
 
+(if_expression
+  consequence: (_ (_) @context.end)
+) @context
+
+(else_clause
+  (block (_)) @context.end
+) @context
+
+(match_expression
+  body: (_ (_) @context.end)
+) @context
+
+(match_arm
+  (block (_) @context.end)
+) @context
+
 (for_expression
   body: (_ (_) @context.end)
 ) @context
 
-(if_expression
-  consequence: (_ (_) @context.end)
+(while_expression
+  body: (_ (_) @context.end)
+) @context
+
+(loop_expression
+  body: (_ (_) @context.end)
+) @context
+  
+(closure_expression
+  body: (_ (_) @context.end)
 ) @context
 
 (function_item
@@ -12,18 +36,21 @@
 ) @context
 
 (impl_item
-  type: (_) @context.final
+  body: (_ (_) @context.end)
+) @context
+
+(trait_item
+  body: (_ (_) @context.end)
 ) @context
 
 (struct_item
   body: (_ (_) @context.end)
 ) @context
 
-([
-  (mod_item)
-  (enum_item)
-  (closure_expression)
-  (expression_statement)
-  (loop_expression)
-  (match_expression)
-] @context)
+(enum_item
+  body: (_ (_) @context.end)
+) @context
+
+(mod_item
+  body: (_ (_) @context.end)
+) @context
