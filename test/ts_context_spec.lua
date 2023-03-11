@@ -104,7 +104,7 @@ describe('ts_context', function()
       feed'20<C-e>'
 
       screen:expect{grid=[[
-        {1:impl}{2: Foo                      }|
+        {1:impl}{2: Foo {                    }|
         {2:    }{1:fn}{2: }{3:bar}{2:(}{7:&}{10:self}{2:) {           }|
         {2:        }{1:if}{2: condition {        }|
         {2:            }{1:for}{2: i }{1:in}{2: }{10:0}{2:..}{10:100}{2: { }|
