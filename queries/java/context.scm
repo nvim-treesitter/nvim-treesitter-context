@@ -18,6 +18,4 @@
   body: (_) @context.end
 ) @context
 
-([
-  (expression_statement)
-] @context)
+(expression_statement) @context
