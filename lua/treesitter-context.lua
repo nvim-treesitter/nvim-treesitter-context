@@ -1,6 +1,7 @@
 local api = vim.api
 local highlighter = vim.treesitter.highlighter
 
+local cache = require'treesitter-context.cache'
 local parsers = require'nvim-treesitter.parsers'
 
 local augroup = api.nvim_create_augroup
@@ -69,10 +70,22 @@ local function get_root_node()
   return tree:root()
 end
 
+---@param node TSNode
+---@return string
+local function hash_node(node)
+  return table.concat({
+    node:id(),
+    node:symbol(),
+    node:child_count(),
+    node:type(),
+    node:range()
+  }, ',')
+end
+
 --- @param node TSNode
 --- @param query Query
 --- @return Range4?
-local function is_valid(node, query)
+local is_valid = cache.memoize(function(node, query)
   local bufnr = api.nvim_get_current_buf()
   local range --[[@type Range4]] = {node:range()}
   range[3] = range[1]
@@ -109,7 +122,7 @@ local function is_valid(node, query)
       return range
     end
   end
-end
+end, hash_node)
 
 --- @param range Range4
 --- @return string[]?, Range4?
@@ -294,8 +307,6 @@ local function get_parent_matches(max_lines)
     return
   end
 
-  local root_node = get_root_node()
-
   --- @type string
   local lang = parsers.ft_to_lang(vim.bo.filetype)
 
@@ -314,6 +325,7 @@ local function get_parent_matches(max_lines)
     return
   end
 
+  local root_node = get_root_node()
   local lnum, col = get_pos()
 
   --- @type Range4[]
