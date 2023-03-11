@@ -11,6 +11,8 @@
   (for_statement)
   (function_declaration)
   (interface_declaration)
+  (jsx_element)
+  (jsx_self_closing_element)
   (lexical_declaration)
   (method_definition)
   (object)
