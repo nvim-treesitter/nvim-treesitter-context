@@ -1,56 +1,56 @@
 
 (if_expression
   consequence: (_ (_) @context.end)
-) @context
+) @context.if
 
 (else_clause
   (block (_)) @context.end
-) @context
+) @context.if
 
 (match_expression
   body: (_ (_) @context.end)
-) @context
+) @context.switch
 
 (match_arm
   (block (_) @context.end)
-) @context
+) @context.switch
 
 (for_expression
   body: (_ (_) @context.end)
-) @context
+) @context.loop
 
 (while_expression
   body: (_ (_) @context.end)
-) @context
+) @context.loop
 
 (loop_expression
   body: (_ (_) @context.end)
-) @context
+) @context.loop
   
 (closure_expression
   body: (_ (_) @context.end)
-) @context
+) @context.lambda
 
 (function_item
   body: (_ (_) @context.end)
-) @context
+) @context.function
 
 (impl_item
   body: (_ (_) @context.end)
-) @context
+) @context.class
 
 (trait_item
   body: (_ (_) @context.end)
-) @context
+) @context.interface
 
 (struct_item
   body: (_ (_) @context.end)
-) @context
+) @context.struct
 
 (enum_item
   body: (_ (_) @context.end)
-) @context
+) @context.enum
 
 (mod_item
   body: (_ (_) @context.end)
-) @context
+) @context.module

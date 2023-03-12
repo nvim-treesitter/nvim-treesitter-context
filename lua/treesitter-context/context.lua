@@ -99,6 +99,11 @@ local context_range = cache.memoize(function(node, query)
       elseif name == 'context.end' then
         range[3] = srow
         range[4] = scol
+      elseif not r then
+        local category = name:match('^context%.(.*)$') 
+        if config.categories[category] then
+            r = node == node0
+        end
       end
     end
 

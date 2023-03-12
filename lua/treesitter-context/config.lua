@@ -52,6 +52,18 @@ local default_config = {
   trim_scope = 'outer',
   zindex = 20,
   mode = 'cursor',
+  categories = {
+    ['if'] = true,
+    ['switch'] = true,
+    ['loop'] = true,
+    ['lambda'] = true,
+    ['function'] = true,
+    ['class'] = true,
+    ['interface'] = true,
+    ['struct'] = true,
+    ['enum'] = true,
+    ['module'] = true,
+  },
 }
 
 local config = vim.deepcopy(default_config)
