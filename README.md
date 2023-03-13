@@ -34,21 +34,26 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `bash`
   - [x] `c`
   - [x] `cpp`
-  - [x] `typescript`
-  - [x] `rust`
-  - [X] `go`
-  - [X] `javascript`
+  - [x] `elixir`
+  - [x] `go`
+  - [x] `java`
+  - [x] `javascript`
   - [x] `json`
+  - [x] `latex`
   - [x] `lua`
   - [x] `markdown`
-  - [x] `python`
-  - [x] `yaml`
   - [x] `php`
+  - [x] `python`
+  - [x] `ruby`
+  - [x] `rust`
   - [x] `scala`
   - [x] `teal`
   - [x] `toml`
   - [x] `tsx`
+  - [x] `typescript`
+  - [x] `verilog`
   - [x] `vim`
+  - [x] `yaml`
   - [ ] `ada`
   - [ ] `agda`
   - [ ] `arduino`
@@ -76,7 +81,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `ebnf`
   - [ ] `ecma`
   - [ ] `eex`
-  - [ ] `elixir`
   - [ ] `elm`
   - [ ] `elsa`
   - [ ] `elvish`
@@ -110,7 +114,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `htmldjango`
   - [ ] `http`
   - [ ] `ini`
-  - [ ] `java`
   - [ ] `jq`
   - [ ] `jsdoc`
   - [ ] `json5`
@@ -121,7 +124,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `kdl`
   - [ ] `kotlin`
   - [ ] `lalrpop`
-  - [x] `latex`
   - [ ] `ledger`
   - [ ] `llvm`
   - [ ] `m68k`
@@ -155,7 +157,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `rnoweb`
   - [ ] `ron`
   - [ ] `rst`
-  - [x] `ruby`
   - [ ] `scheme`
   - [ ] `scss`
   - [ ] `slint`
@@ -181,7 +182,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `ungrammar`
   - [ ] `v`
   - [ ] `vala`
-  - [x] `verilog`
   - [ ] `vhs`
   - [ ] `vue`
   - [ ] `wgsl`
