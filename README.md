@@ -181,7 +181,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `ungrammar`
   - [ ] `v`
   - [ ] `vala`
-  - [ ] `verilog`
+  - [x] `verilog`
   - [ ] `vhs`
   - [ ] `vue`
   - [ ] `wgsl`
