@@ -31,9 +31,7 @@
   (compound_statement (_) @context.end)
 ) @context
 
-(switch_statement
-  condition: _
-) @context
+(switch_statement) @context
 
 (case_statement
   value: _
