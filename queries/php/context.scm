@@ -33,6 +33,4 @@
 
 (switch_statement) @context
 
-(case_statement
-  value: _
-) @context
+(case_statement) @context
