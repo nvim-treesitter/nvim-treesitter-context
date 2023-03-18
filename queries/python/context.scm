@@ -43,5 +43,4 @@
   (finally_clause)
   (else_clause)
   (pair)
-  (expression_statement)
 ] @context)
