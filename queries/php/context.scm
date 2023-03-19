@@ -30,3 +30,7 @@
 (for_statement
   (compound_statement (_) @context.end)
 ) @context
+
+(switch_statement) @context
+
+(case_statement) @context
