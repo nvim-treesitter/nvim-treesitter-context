@@ -44,6 +44,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `markdown`
   - [x] `php`
   - [x] `python`
+  - [x] `r`
   - [x] `ruby`
   - [x] `rust`
   - [x] `scala`
@@ -150,7 +151,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `qmldir`
   - [ ] `qmljs`
   - [ ] `query`
-  - [ ] `r`
   - [ ] `racket`
   - [ ] `rasi`
   - [ ] `rego`
