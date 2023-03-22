@@ -34,6 +34,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `bash`
   - [x] `c`
   - [x] `cpp`
+  - [x] `dart`
   - [x] `elixir`
   - [x] `go`
   - [x] `java`
@@ -74,7 +75,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `css`
   - [ ] `cuda`
   - [ ] `d`
-  - [ ] `dart`
   - [ ] `devicetree`
   - [ ] `dhall`
   - [ ] `dockerfile`
