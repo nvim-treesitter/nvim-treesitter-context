@@ -1,4 +1,5 @@
 ([
   (class_definition)
-  (method_signature)
+  (try_statement)
+  (if_statement)
 ] @context)
