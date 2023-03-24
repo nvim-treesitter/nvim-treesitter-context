@@ -4,6 +4,8 @@ local highlighter = vim.treesitter.highlighter
 local cache = require'treesitter-context.cache'
 local parsers = require'nvim-treesitter.parsers'
 
+local get_query = vim.treesitter.query.get or vim.treesitter.query.get_query
+
 local augroup = api.nvim_create_augroup
 local command = api.nvim_create_user_command
 
@@ -310,7 +312,7 @@ local function get_parent_matches(max_lines)
   --- @type string
   local lang = parsers.ft_to_lang(vim.bo.filetype)
 
-  local ok, query = pcall(vim.treesitter.query.get_query, lang, 'context')
+  local ok, query = pcall(get_query, lang, 'context')
 
   if not ok then
     vim.notify_once(
