@@ -35,7 +35,22 @@ class UserAccount {
 }
 
 
-function wrapInArray(obj: string | string[]) {
+function wrapInArray(
+  obj: string | string[]):
+    string[] {
+  if (typeof obj === "string") {
+    return [obj];
+
+
+
+
+  }
+  return obj;
+}
+
+function wrapInArray2(
+  obj: string | string[]):
+    any {
   if (typeof obj === "string") {
     return [obj];
 
