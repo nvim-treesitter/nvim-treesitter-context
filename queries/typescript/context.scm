@@ -3,13 +3,11 @@
 ) @context
 
 ([
-  (arrow_function)
   (call_expression)
   (class_declaration)
   (else_clause)
   (expression_statement)
   (for_statement)
-  (function_declaration)
   (interface_declaration)
   (lexical_declaration)
   (method_definition)
@@ -17,3 +15,15 @@
   (pair)
   (while_statement)
 ] @context)
+
+(arrow_function
+  body: (_ (_) @context.end)
+) @context
+
+(function_declaration
+  body: (_ (_) @context.end)
+) @context
+
+(generator_function_declaration
+  body: (_ (_) @context.end)
+) @context

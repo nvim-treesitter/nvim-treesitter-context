@@ -48,6 +48,19 @@ function wrapInArray(obj: string | string[]) {
   return obj;
 }
 
+function* wrapInArray2(
+  obj: string | string[]):
+    string[] {
+  if (typeof obj === "string") {
+    return [obj];
+
+
+
+
+  }
+  return obj;
+}
+
 
 function MyComponent() {
   return (
