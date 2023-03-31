@@ -1,21 +1,21 @@
 (if_statement
   consequence: (_) @context.end
-) @context
+) @context.if
 
 (method_declaration
   body: (_) @context.end
-) @context
+) @context.function
 
 (for_statement
   body: (_) @context.end
-) @context
+) @context.loop
 
 (enhanced_for_statement
   body: (_) @context.end
-) @context
+) @context.loop
 
 (class_declaration
   body: (_) @context.end
-) @context
+) @context.class
 
 (expression_statement) @context

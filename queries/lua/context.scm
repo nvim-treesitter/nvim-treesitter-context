@@ -1,18 +1,18 @@
 (for_statement
   body: (_) @context.end
-) @context
+) @context.loop
 
 (while_statement
   body: (_) @context.end
-) @context
+) @context.loop
 
 (do_statement
   body: (_) @context.end
-) @context
+) @context.block
 
 (function_definition
   body: (_) @context.end
-) @context
+) @context.function
 
 (table_constructor
   (_) @context.end
@@ -20,12 +20,12 @@
 
 (function_declaration
   parameters: (_) @context.final
-) @context
+) @context.function
 
 (if_statement
   consequence: (_) @context.end
-) @context
+) @context.if
 
 (repeat_statement
   body: (_) @context.end
-) @context
+) @context.loop

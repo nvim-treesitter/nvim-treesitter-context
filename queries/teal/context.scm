@@ -1,28 +1,30 @@
 
-(while_statement) @context
+(while_statement
+  (while_body (_) @context.end)
+) @context.loop
 
 (generic_for_statement
   body: (_ (_) @context.end)
-) @context
+) @context.loop
 
 (function_statement
   body: (_) @context.end
-) @context
+) @context.function
 
 (anon_function
   body: (_) @context.end
-) @context
+) @context.function
 
 (if_statement
   condition: (_)
   (_) @context.end
-) @context
+) @context.if
 
 (elseif_block
   condition: (_)
   (_) @context.end
-) @context
+) @context.if
 
 (record_declaration
   record_body: (_) @context.end
-) @context
+) @context.struct

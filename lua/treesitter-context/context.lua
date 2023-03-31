@@ -101,8 +101,22 @@ local context_range = cache.memoize(function(node, query)
         range[4] = scol
       elseif not r then
         local category = name:match('^context%.(.*)$') 
-        if config.categories[category] then
+        local ft_categories = config.categories[vim.bo.filetype]
+        local ft_category = ft_categories and ft_categories[category]
+        if ft_category then
+          r = node == node0
+        elseif ft_category == nil then
+          local def_category = config.categories.default[category]
+          if def_category then
             r = node == node0
+          elseif def_category == nil then
+            local lang = parsers.ft_to_lang(vim.bo.filetype)
+            vim.notify_once(
+              string.format('Unknown category \'%s\' in %s query', category, lang),
+              vim.log.levels.ERROR,
+              { title = 'nvim-treesitter-context' }
+            )
+          end
         end
       end
     end
