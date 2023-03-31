@@ -7,15 +7,17 @@ To add support for another language, simply add a `context.scm` file under
 
 Queries specify the `@context` capture which specifies the first line of a node
 will be used for the context.
+Optionally a category can be specified by appending it to the capture with a
+dot like so `@context.<category>`.
 
 Here is a basic example for C:
 
 ```query
 (function_definition) @context
 (for_statement) @context
-(if_statement) @context
-(while_statement) @context
-(do_statement) @context
+(if_statement) @context.if
+(while_statement) @context.loop
+(do_statement) @context.loop
 ```
 
 You can look at a node names of a tree using `:InspectTree`.

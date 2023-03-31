@@ -208,6 +208,22 @@ require'treesitter-context'.setup{
   separator = nil,
   zindex = 20, -- The Z-index of the context window
   on_attach = nil, -- (fun(buf: integer): boolean) return false to disable attaching
+  categories = {
+    default = { -- Enable/disable contexts based language agnostic categories
+      ['if'] = true,
+      ['switch'] = true,
+      ['case'] = true,
+      ['loop'] = true,
+      ['block'] = true,
+      ['lambda'] = true,
+      ['function'] = true,
+      ['class'] = true,
+      ['interface'] = true,
+      ['struct'] = true,
+      ['enum'] = true,
+      ['module'] = true,
+    },
+  },
 }
 ```
 
