@@ -530,10 +530,25 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   end
 end
 
+--- @param win integer
 --- @param lnum integer
+--- @param relnum integer?
 --- @param width integer
 --- @return string
-local function build_lno_str(lnum, width)
+local function build_lno_str(win, lnum, relnum, width)
+  local has_col, statuscol = pcall(api.nvim_get_option_value, 'statuscolumn', {win = win, scope = "local"})
+  if has_col and statuscol and statuscol ~= ""  then
+    local ok, data = pcall(api.nvim_eval_statusline, statuscol, {
+      winid = win,
+      use_statuscol_lnum = lnum,
+    })
+    if ok then
+      return data.str
+    end
+  end
+  if relnum then
+    lnum = relnum
+  end
   return string.format('%'..width..'d', lnum)
 end
 
@@ -578,6 +593,7 @@ end
 --- @param ctx_ranges Range4[]
 local function open(ctx_ranges)
   local bufnr = api.nvim_get_current_buf()
+  local win = api.nvim_get_current_win()
 
   local gutter_width = get_gutter_width()
   local win_width  = math.max(1, api.nvim_win_get_width(0) - gutter_width)
@@ -616,14 +632,12 @@ local function open(ctx_ranges)
 
     table.insert(context_text, text)
 
-    local line_num  --[[@type integer]]
     local ctx_line_num = range[1] + 1
-    if vim.o.relativenumber then
-      line_num = get_relative_line_num(ctx_line_num)
-    else
-      line_num = ctx_line_num
+    local relnum
+    if vim.wo[win].relativenumber then
+      relnum = get_relative_line_num(ctx_line_num)
     end
-    table.insert(lno_text, build_lno_str(line_num, gutter_width-1))
+    table.insert(lno_text, build_lno_str(win, ctx_line_num, relnum, gutter_width-1))
   end
 
   set_lines(gbufnr, lno_text)
