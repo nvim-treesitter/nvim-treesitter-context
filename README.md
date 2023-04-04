@@ -33,6 +33,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
 
   - [x] `bash`
   - [x] `c`
+  - [x] `c_sharp`
   - [x] `cpp`
   - [x] `dart`
   - [x] `elixir`
@@ -64,7 +65,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `bibtex`
   - [ ] `bicep`
   - [ ] `blueprint`
-  - [ ] `c_sharp`
   - [ ] `capnp`
   - [ ] `chatito`
   - [ ] `clojure`
