@@ -134,8 +134,8 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `meson`
   - [ ] `nickel`
   - [ ] `nix`
-  - [ ] `ocaml`
-  - [ ] `ocaml_interface`
+  - [x] `ocaml`
+  - [x] `ocaml_interface`
   - [ ] `ocamllex`
   - [ ] `pascal`
   - [ ] `perl`
