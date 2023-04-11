@@ -534,22 +534,39 @@ end
 --- @param lnum integer
 --- @param relnum integer?
 --- @param width integer
---- @return string
+--- @return string, table?
 local function build_lno_str(win, lnum, relnum, width)
   local has_col, statuscol = pcall(api.nvim_get_option_value, 'statuscolumn', {win = win, scope = "local"})
   if has_col and statuscol and statuscol ~= ""  then
     local ok, data = pcall(api.nvim_eval_statusline, statuscol, {
       winid = win,
       use_statuscol_lnum = lnum,
+      highlights = true,
     })
     if ok then
-      return data.str
+      return data.str, data.highlights
     end
   end
   if relnum then
     lnum = relnum
   end
   return string.format('%'..width..'d', lnum)
+end
+
+--- @param buf integer
+--- @param text string[]
+--- @param highlights table[]
+local function highlight_lno_str(buf, text, highlights)
+  for line, linehl in ipairs(highlights) do
+    for hlidx, hl in ipairs(linehl) do
+      local col = hl.start
+      local endcol = (hlidx < #linehl - 1) and linehl[hlidx + 1].start or #text[line]
+      if col ~= endcol then
+        api.nvim_buf_set_extmark(buf, ns, line - 1, col, {end_col = endcol, hl_group=hl.group})
+      end
+    end
+  end
+  api.nvim_buf_set_extmark(buf, ns, #text-1, 0, {end_line=#text, hl_group='TreesitterContextBottom', hl_eol=true})
 end
 
 --- @param ctx_node_line_num integer
@@ -615,6 +632,7 @@ local function open(ctx_ranges)
 
   local context_text --[[@type string[] ]] = {}
   local lno_text --[[@type string[] ]] = {}
+  local lno_highlights --[[@type table[] ]] = {}
   local contexts --[[@type Context[] ]] = {}
 
   for _, range0 in ipairs(ctx_ranges) do
@@ -637,10 +655,14 @@ local function open(ctx_ranges)
     if vim.wo[win].relativenumber then
       relnum = get_relative_line_num(ctx_line_num)
     end
-    table.insert(lno_text, build_lno_str(win, ctx_line_num, relnum, gutter_width-1))
+    local txt, hl = build_lno_str(win, ctx_line_num, relnum, gutter_width-1)
+    table.insert(lno_text, txt)
+    table.insert(lno_highlights, hl)
   end
 
   set_lines(gbufnr, lno_text)
+  highlight_lno_str(gbufnr, lno_text, lno_highlights)
+
   if not set_lines(ctx_bufnr, context_text) then
     -- Context didn't change, can return here
     return
@@ -649,7 +671,6 @@ local function open(ctx_ranges)
   highlight_contexts(bufnr, ctx_bufnr, contexts)
 
   api.nvim_buf_set_extmark(ctx_bufnr, ns, #lno_text-1, 0, {end_line=#lno_text, hl_group='TreesitterContextBottom', hl_eol=true})
-  api.nvim_buf_set_extmark(gbufnr, ns, #context_text-1, 0, {end_line=#context_text, hl_group='TreesitterContextBottom', hl_eol=true})
 end
 
 --- @param config_max integer
