@@ -560,7 +560,7 @@ local function highlight_lno_str(buf, text, highlights)
   for line, linehl in ipairs(highlights) do
     for hlidx, hl in ipairs(linehl) do
       local col = hl.start
-      local endcol = (hlidx < #linehl - 1) and linehl[hlidx + 1].start or #text[line]
+      local endcol = hlidx < #linehl and linehl[hlidx + 1].start or #text[line]
       if col ~= endcol then
         api.nvim_buf_set_extmark(buf, ns, line - 1, col, {end_col = endcol, hl_group=hl.group})
       end
