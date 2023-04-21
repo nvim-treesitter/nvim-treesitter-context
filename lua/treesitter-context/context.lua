@@ -68,6 +68,31 @@ local function hash_node(node)
   }, ',')
 end
 
+--- @param category string?
+--- @return boolean
+local function is_category_enabled(category)
+  local ft_categories = config.categories[vim.bo.filetype]
+  local ft_category = ft_categories and ft_categories[category]
+  if ft_category then
+    return true
+  elseif ft_category == nil then
+    -- ft specific category is not set, so check the default categories
+    local def_category = config.categories.default[category]
+    if def_category then
+      return true
+    elseif def_category == nil then
+      local lang = parsers.ft_to_lang(vim.bo.filetype)
+      vim.notify_once(
+        string.format('Unknown category \'%s\' in %s query', category, lang),
+        vim.log.levels.ERROR,
+        { title = 'nvim-treesitter-context' }
+      )
+    end
+  end
+
+  return false
+end
+
 --- Run the context query on a node and return the range if it is a valid
 --- context node.
 --- @param node TSNode
@@ -88,9 +113,7 @@ local context_range = cache.memoize(function(node, query)
       local srow, scol, erow, ecol = node0:range()
 
       local name = query.captures[id] -- name of the capture in the query
-      if not r and name == 'context' then
-        r = node == node0
-      elseif name == 'context.start' then
+      if name == 'context.start' then
         range[1] = srow
         range[2] = scol
       elseif name == 'context.final' then
@@ -99,24 +122,12 @@ local context_range = cache.memoize(function(node, query)
       elseif name == 'context.end' then
         range[3] = srow
         range[4] = scol
-      elseif not r then
-        local category = name:match('^context%.(.*)$') 
-        local ft_categories = config.categories[vim.bo.filetype]
-        local ft_category = ft_categories and ft_categories[category]
-        if ft_category then
-          r = node == node0
-        elseif ft_category == nil then
-          local def_category = config.categories.default[category]
-          if def_category then
-            r = node == node0
-          elseif def_category == nil then
-            local lang = parsers.ft_to_lang(vim.bo.filetype)
-            vim.notify_once(
-              string.format('Unknown category \'%s\' in %s query', category, lang),
-              vim.log.levels.ERROR,
-              { title = 'nvim-treesitter-context' }
-            )
-          end
+      elseif not r and node == node0 then
+        if name == 'context' then
+          r = true
+        else
+          local category = name:match('^context%.(.*)$') 
+          r = is_category_enabled(category)
         end
       end
     end
