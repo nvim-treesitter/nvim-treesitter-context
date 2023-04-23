@@ -72,7 +72,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `commonlisp`
   - [ ] `cooklang`
   - [ ] `cpon`
-  - [ ] `css`
+  - [x] `css`
   - [ ] `cuda`
   - [ ] `d`
   - [ ] `devicetree`
@@ -158,7 +158,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `ron`
   - [ ] `rst`
   - [ ] `scheme`
-  - [ ] `scss`
+  - [x] `scss`
   - [ ] `slint`
   - [ ] `smali`
   - [ ] `smithy`
