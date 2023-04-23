@@ -188,7 +188,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `wgsl_bevy`
   - [ ] `yang`
   - [ ] `yuck`
-  - [ ] `zig`
+  - [x] `zig`
 
 ## Configuration
 
