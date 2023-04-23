@@ -1,8 +1,76 @@
+$sizes: 40px, 50px, 80px;
+
 .foo-container {
   .foo-item {
+    color: red;
+
+
+
+
+
   }
   .foo-image {
+    width: 100%;
+    height: 100%;
+
+
+
+
+
+
   }
+}
+
+@each $size in $sizes {
+  .foo-#{$size} {
+
+
+
+
+    width: $size;
+
+
+
+
+
+    height: $size;
+  }
+}
+
+@for $i from 1 through 3 {
+
+
+
+
+  .foo-#{$i} {
+
+
+
+    width: $i * 10px;
+
+
+
+
+
+  }
+
+
+
+
+}
+
+@while $i < 10 {
+
+
+
+
+
+
+
+
+
+
+
 }
 
 @keyframes FooKeyframes {
@@ -68,3 +136,98 @@
 
 
 }
+
+@mixin FooMixin($a, $b) {
+
+  @if $a > $b {
+    color: red;
+
+
+
+
+
+
+
+
+
+  } @else if $a < $b {
+    color: blue;
+
+
+
+
+
+
+
+  } @else {
+
+
+
+
+    color: green;
+
+
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+@function add($a, $b) {
+
+
+
+
+
+
+
+  @return $a + $b;
+
+
+
+
+
+
+}
+
+@at-root {
+
+
+
+
+
+  color: red;
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

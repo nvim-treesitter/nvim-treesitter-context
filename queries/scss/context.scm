@@ -1,7 +1,13 @@
+; inherits: css
+
 ([
-  (rule_set)
-  (keyframes_statement)
-  (keyframe_block)
-  (media_statement)
+  (mixin_statement)
+  (function_statement)
+  (each_statement)
+  (for_statement)
+  (while_statement)
+  (if_clause)
+  (else_if_clause)
+  (else_clause)
 ] @context)
 
