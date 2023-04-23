@@ -88,7 +88,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `embedded_template`
   - [ ] `erlang`
   - [ ] `fennel`
-  - [ ] `fish`
+  - [x] `fish`
   - [ ] `foam`
   - [ ] `fsh`
   - [ ] `func`
