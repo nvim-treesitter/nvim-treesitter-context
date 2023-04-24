@@ -21,7 +21,8 @@
 
     }
 
-    @color-profile --swop5c {
+    @color-profile
+    --swop5c {
 
 
 
@@ -75,7 +76,9 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@media (
+
+prefers-reduced-motion: reduce) {
 
 
 
@@ -86,6 +89,22 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   }
 
 
