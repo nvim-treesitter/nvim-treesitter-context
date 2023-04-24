@@ -1,0 +1,233 @@
+$sizes: 40px, 50px, 80px;
+
+.foo-container {
+  .foo-item {
+    color: red;
+
+
+
+
+
+  }
+  .foo-image {
+    width: 100%;
+    height: 100%;
+
+
+
+
+
+
+  }
+}
+
+@each $size in $sizes {
+  .foo-#{$size} {
+
+
+
+
+    width: $size;
+
+
+
+
+
+    height: $size;
+  }
+}
+
+@for $i from 1 through 3 {
+
+
+
+
+  .foo-#{$i} {
+
+
+
+    width: $i * 10px;
+
+
+
+
+
+  }
+
+
+
+
+}
+
+@while $i < 10 {
+
+
+
+
+
+
+
+
+
+
+
+}
+
+@keyframes FooKeyframes {
+  0% {
+
+
+
+
+
+
+    transform: rotateX(60deg) rotateZ(-45deg) scale(1);
+    filter: blur(5px);
+  }
+
+  50% {
+
+
+
+
+
+
+
+    transform: rotateX(60deg) rotateZ(-225deg) scale(1.1);
+    filter: blur(15px);
+  }
+
+  100% {
+    transform: rotateX(60deg) rotateZ(-405deg) scale(1);
+    filter: blur(5px);
+
+
+
+
+
+
+
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+@mixin FooMixin($a, $b) {
+
+  @if $a > $b {
+    color: red;
+
+
+
+
+
+
+
+
+
+  } @else if $a < $b {
+    color: blue;
+
+
+
+
+
+
+
+  } @else {
+
+
+
+
+    color: green;
+
+
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+@function add($a, $b) {
+
+
+
+
+
+
+
+  @return $a + $b;
+
+
+
+
+
+
+}
+
+@at-root {
+
+
+
+
+
+  color: red;
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

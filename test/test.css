@@ -1,0 +1,112 @@
+.foo {
+    background-color: #fff;
+    color: #000;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+
+    font-size: 14px;
+
+
+    @supports (font-size: calc(1vw + 1vh + 1vmin)) {
+
+
+
+        font-size: calc(1vw + 1vh + 1vmin);
+
+
+
+
+
+
+
+    }
+
+    @color-profile --swop5c {
+
+
+
+      src: url("https://example.org/SWOP2006_Coated5v2.icc");
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+    line-height: 1.42857143;
+}
+
+@keyframes wave {
+    0% {
+        transform: translateY(-50%) scale(0);
+        opacity: 0;
+
+
+
+
+
+
+
+
+    }
+    50% {
+
+
+
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-50%) scale(0);
+
+
+
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
