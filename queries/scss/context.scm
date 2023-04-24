@@ -1,13 +1,31 @@
 ; inherits: css
 
-([
-  (mixin_statement)
-  (function_statement)
-  (each_statement)
-  (for_statement)
-  (while_statement)
-  (if_clause)
-  (else_if_clause)
-  (else_clause)
-] @context)
+(if_statement) @context
 
+(else_if_clause
+  (block (_) @context.end)
+) @context
+
+(else_clause
+  (block (_) @context.end)
+) @context
+
+(while_statement
+  (block (_) @context.end)
+) @context
+
+(for_statement
+  (block (_) @context.end)
+) @context
+
+(each_statement
+  (block (_) @context.end)
+) @context
+
+(mixin_statement
+  (block (_) @context.end)
+) @context
+
+(function_statement
+  (block (_) @context.end)
+) @context

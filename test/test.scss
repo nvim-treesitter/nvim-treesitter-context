@@ -22,6 +22,9 @@ $sizes: 40px, 50px, 80px;
 }
 
 @each $size in $sizes {
+}
+
+@each $size in $sizes {
   .foo-#{$size} {
 
 
@@ -42,19 +45,8 @@ $sizes: 40px, 50px, 80px;
 
 
 
-  .foo-#{$i} {
 
-
-
-    width: $i * 10px;
-
-
-
-
-
-  }
-
-
+  // only works if something is here
 
 
 }
@@ -67,7 +59,7 @@ $sizes: 40px, 50px, 80px;
 
 
 
-
+  // comment
 
 
 
@@ -137,7 +129,8 @@ $sizes: 40px, 50px, 80px;
 
 }
 
-@mixin FooMixin($a, $b) {
+@mixin FooMixin($a,
+$b) {
 
   @if $a > $b {
     color: red;
@@ -189,7 +182,8 @@ $sizes: 40px, 50px, 80px;
 
 
 
-@function add($a, $b) {
+@function add($a,
+$b) {
 
 
 
