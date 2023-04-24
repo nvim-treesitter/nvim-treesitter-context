@@ -169,7 +169,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `supercollider`
   - [ ] `surface`
   - [ ] `svelte`
-  - [ ] `swift`
+  - [x] `swift`
   - [ ] `sxhkdrc`
   - [ ] `t32`
   - [ ] `terraform`
