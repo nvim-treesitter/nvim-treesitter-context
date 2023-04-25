@@ -1,5 +1,9 @@
 ; inherits: c
 
+(for_range_loop
+  body: (_ (_) @context.end)
+) @context
+
 (class_specifier
   body: (_ (_) @context.end)
 ) @context
