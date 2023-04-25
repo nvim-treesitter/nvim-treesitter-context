@@ -73,11 +73,14 @@ int main(int arg1,
 
 
   do {
+    int array[1];
+    for (auto value : array) {
 
 
 
 
 
-    // cursor position 5
+      // cursor position 5
+    }
   } while (1);
 }

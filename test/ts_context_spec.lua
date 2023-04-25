@@ -296,17 +296,17 @@ describe('ts_context', function()
                                       |
       ]]}
 
-      feed'16<C-e>'
+      feed'18<C-e>'
       screen:expect{grid=[[
         {7:int}{2: main(}{7:int}{2: arg1, }{7:char}{2: **arg2}|
         {2:  }{1:do}{2: {                        }|
+        {2:    }{1:for}{2: (}{7:auto}{2: value : array) {}|
                                       |
                                       |
-                                      |
-        ^    {8:// cursor position 5}      |
+        ^      {8:// cursor position 5}    |
+            }                         |
           } {4:while} ({11:1});                |
         }                             |
-        {6:~                             }|
         {6:~                             }|
         {6:~                             }|
         {6:~                             }|
