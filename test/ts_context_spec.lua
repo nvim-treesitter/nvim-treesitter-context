@@ -211,6 +211,112 @@ describe('ts_context', function()
       ]]}
     end)
 
+    it('cpp', function()
+      cmd('edit test/test.cpp')
+      feed'<C-e>'
+
+      screen:expect{grid=[[
+        {7:struct}{2: Struct {               }|
+            {9:int} *f2;                  |
+                                      |
+                                      |
+                                      |
+        ^    {8:// cursor position 1}      |
+        };                            |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+      ]]}
+
+      feed'16<C-e>'
+
+      screen:expect{grid=[[
+        {7:class}{2: Class {                 }|
+            {9:int} *f2;                  |
+                                      |
+                                      |
+                                      |
+        ^    {8:// cursor position 2}      |
+        };                            |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+      ]]}
+
+      feed'16<C-e>'
+
+      screen:expect{grid=[[
+        {7:typedef}{2: }{7:enum}{2: {                }|
+          E2,                         |
+          E3                          |
+                                      |
+                                      |
+        ^  {8:// cursor position 3}        |
+        } myenum;                     |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+      ]]}
+
+      feed'26<C-e>'
+      screen:expect{grid=[[
+        {7:int}{2: main(}{7:int}{2: arg1, }{7:char}{2: **arg2}|
+        {2:  }{1:if}{2: (arg1 == }{10:4}{2: && arg2 == arg}|
+        {2:    }{1:for}{2: (}{7:int}{2: i = }{10:0}{2:; i < arg1; }|
+        {2:      }{1:while}{2: (}{10:1}{2:) {             }|
+                                      |
+        ^        {8:// cursor position 4}  |
+              }                       |
+            }                         |
+          }                           |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+                                      |
+      ]]}
+
+      feed'16<C-e>'
+      screen:expect{grid=[[
+        {7:int}{2: main(}{7:int}{2: arg1, }{7:char}{2: **arg2}|
+        {2:  }{1:do}{2: {                        }|
+                                      |
+                                      |
+                                      |
+        ^    {8:// cursor position 5}      |
+          } {4:while} ({11:1});                |
+        }                             |
+        {6:~                             }|
+        {6:~                             }|
+        {6:~                             }|
+        {6:~                             }|
+        {6:~                             }|
+        {6:~                             }|
+        {6:~                             }|
+                                      |
+      ]]}
+    end)
+
     it('typescript', function()
       cmd('edit test/test.ts')
       feed'<C-e>'
