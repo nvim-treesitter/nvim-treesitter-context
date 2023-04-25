@@ -28,6 +28,7 @@ export VIMRUNTIME=$(PWD)/$(NEOVIM)/runtime
 
 .PHONY: test
 test: $(NEOVIM) nvim-treesitter \
+	nvim-treesitter/parser/cpp.so \
 	nvim-treesitter/parser/lua.so \
 	nvim-treesitter/parser/rust.so \
 	nvim-treesitter/parser/typescript.so
