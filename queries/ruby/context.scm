@@ -10,6 +10,10 @@
   (body_statement) @context.end
 ) @context
 
+(singleton_method
+  (body_statement) @context.end
+) @context
+
 (if
   (then) @context.end
 ) @context
