@@ -35,21 +35,28 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `c`
   - [x] `c_sharp`
   - [x] `cpp`
+  - [x] `css`
   - [x] `dart`
   - [x] `elixir`
+  - [x] `fish`
   - [x] `go`
+  - [x] `ini`
   - [x] `java`
   - [x] `javascript`
   - [x] `json`
   - [x] `latex`
   - [x] `lua`
   - [x] `markdown`
+  - [x] `ocaml_interface`
+  - [x] `ocaml`
   - [x] `php`
   - [x] `python`
   - [x] `r`
   - [x] `ruby`
   - [x] `rust`
   - [x] `scala`
+  - [x] `scss`
+  - [x] `swift`
   - [x] `teal`
   - [x] `toml`
   - [x] `tsx`
@@ -57,6 +64,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `verilog`
   - [x] `vim`
   - [x] `yaml`
+  - [x] `zig`
   - [ ] `ada`
   - [ ] `agda`
   - [ ] `arduino`
@@ -72,7 +80,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `commonlisp`
   - [ ] `cooklang`
   - [ ] `cpon`
-  - [x] `css`
   - [ ] `cuda`
   - [ ] `d`
   - [ ] `devicetree`
@@ -88,7 +95,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `embedded_template`
   - [ ] `erlang`
   - [ ] `fennel`
-  - [x] `fish`
   - [ ] `foam`
   - [ ] `fsh`
   - [ ] `func`
@@ -114,7 +120,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `html_tags`
   - [ ] `htmldjango`
   - [ ] `http`
-  - [x] `ini`
   - [ ] `jq`
   - [ ] `jsdoc`
   - [ ] `json5`
@@ -134,8 +139,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `meson`
   - [ ] `nickel`
   - [ ] `nix`
-  - [x] `ocaml`
-  - [x] `ocaml_interface`
   - [ ] `ocamllex`
   - [ ] `pascal`
   - [ ] `perl`
@@ -158,7 +161,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `ron`
   - [ ] `rst`
   - [ ] `scheme`
-  - [x] `scss`
   - [ ] `slint`
   - [ ] `smali`
   - [ ] `smithy`
@@ -169,7 +171,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `supercollider`
   - [ ] `surface`
   - [ ] `svelte`
-  - [x] `swift`
   - [ ] `sxhkdrc`
   - [ ] `t32`
   - [ ] `terraform`
@@ -188,7 +189,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `wgsl_bevy`
   - [ ] `yang`
   - [ ] `yuck`
-  - [x] `zig`
 
 ## Configuration
 
