@@ -114,7 +114,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `html_tags`
   - [ ] `htmldjango`
   - [ ] `http`
-  - [ ] `ini`
+  - [x] `ini`
   - [ ] `jq`
   - [ ] `jsdoc`
   - [ ] `json5`
