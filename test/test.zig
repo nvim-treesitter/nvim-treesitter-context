@@ -1,15 +1,18 @@
 test "stuff" {
-    while (i < 3) {
+    while (i < 3 &&
+        j > 4) {
         i += 1;
 
 
-        if (i == 2) {
+        if (i == 2
+        && j == 3) {
             // stuff
 
 
 
 
-        } else if (i == 3) {
+        } else if (i == 3 &&
+            j == 4) {
             // stuff
 
 
@@ -48,19 +51,13 @@ test "stuff" {
 
     const items = [_]i32 { 4, 5, 3, 4, 0 };
 
-    for (items) |value| {
-
-
-
-
-
-
-        sum += value;
-    }
+    // counting for loop
+    for
 
 
     var sum: i32 = 0;
-    const result = for (items) |value| {
+    const result = for (
+    items) |value| {
         if (value != null) {
             sum += value.?;
         }
@@ -109,9 +106,23 @@ const Stuff = struct {
     d: i8,
 }
 
-fn bar(a: i8) {
+fn bar(a: i8,
+b: i8) {
+    switch (a) {
+        42,
+        1 => {
+
+        }
+    }
     const b = switch (a) {
-        101 => blk: {
+        42,
+        1 => {
+
+
+        },
+
+        101,
+        102=> blk: {
 
 
 
@@ -128,7 +139,9 @@ fn bar(a: i8) {
     };
 
 }
-fn foo(a: i8, b:i8) Stuff {
+fn foo(a: i8,
+
+b:i8) Stuff {
     var p = Stuff {
         a: 1,
 
@@ -146,22 +159,10 @@ fn foo(a: i8, b:i8) Stuff {
     };
 
     return Stuff {
-        a: a,
+        .a = a,
 
 
-
-
-        b: b,
-
-
-
-
-        c: 0,
-
-
-
-
-        d: 0,
+        .b = b,
 
 
     };
