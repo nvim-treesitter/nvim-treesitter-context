@@ -40,6 +40,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `elixir`
   - [x] `fish`
   - [x] `go`
+  - [x] `graphql`
   - [x] `ini`
   - [x] `java`
   - [x] `javascript`
@@ -109,7 +110,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `gomod`
   - [ ] `gosum`
   - [ ] `gowork`
-  - [ ] `graphql`
   - [ ] `hack`
   - [ ] `haskell`
   - [ ] `hcl`
