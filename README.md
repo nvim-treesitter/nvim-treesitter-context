@@ -50,6 +50,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `ocaml_interface`
   - [x] `ocaml`
   - [x] `php`
+  - [x] `prisma`
   - [x] `python`
   - [x] `r`
   - [x] `ruby`
@@ -146,7 +147,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `pioasm`
   - [ ] `po`
   - [ ] `poe_filter`
-  - [ ] `prisma`
   - [ ] `proto`
   - [ ] `prql`
   - [ ] `pug`
