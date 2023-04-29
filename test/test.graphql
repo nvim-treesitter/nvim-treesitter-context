@@ -1,0 +1,79 @@
+interface
+  Foo
+{
+  id: ID!
+  name: String
+
+
+}
+
+input
+  Stuff {
+  limit: Int
+  since_id: ID
+
+}
+
+type Bar
+  implements Foo {
+  age: Int
+
+}
+
+type Mutation {
+  addBar(name: String, age: int): Bar
+}
+
+query Stuff {
+  name
+  foo {
+    name
+  }
+}
+
+query GetSearchResults {
+  search(contains: "Shakespeare") {
+    __typename
+    # inline fragment
+    ... on Book {
+      title
+    }
+    ... on Author {
+      name
+
+    }
+  }
+}
+
+mutation
+  CreateBar {
+  addBar(name: "AAAA",
+    age: 42) {
+    name
+    foo {
+      age
+
+    }
+  }
+}
+
+type Root {
+  name: String
+
+
+}
+
+schema {
+  query: Root
+
+
+}
+
+
+
+
+
+
+
+
+
