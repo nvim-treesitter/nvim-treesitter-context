@@ -48,6 +48,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `latex`
   - [x] `lua`
   - [x] `markdown`
+  - [x] `matlab`
   - [x] `ocaml_interface`
   - [x] `ocaml`
   - [x] `php`
@@ -134,7 +135,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `ledger`
   - [ ] `llvm`
   - [ ] `m68k`
-  - [ ] `matlab`
   - [ ] `menhir`
   - [ ] `mermaid`
   - [ ] `meson`
