@@ -231,6 +231,14 @@ However, you can use this to create a border by applying an underline highlight,
 hi TreesitterContextBottom gui=underline guisp=Grey
 ```
 
+## Jumping to previous context (upwards)
+
+```lua
+vim.keymap.set("n", "[c", function()
+  require("treesitter-context").go_to_previous_context()
+end, { silent = true })
+```
+
 ## Adding support for other languages
 
 To add support for another language, simply add a `context.scm` file under

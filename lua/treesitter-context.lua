@@ -65,6 +65,9 @@ local ns = api.nvim_create_namespace('nvim-treesitter-context')
 --- @type TSNode[]?
 local previous_nodes
 
+--- @type Context[]
+local contexts = {}
+
 --- @return TSNode
 local function get_root_node()
   ---@diagnostic disable-next-line
@@ -640,7 +643,7 @@ local function open(ctx_ranges)
   local context_text --[[@type string[] ]] = {}
   local lno_text --[[@type string[] ]] = {}
   local lno_highlights --[[@type StatusLineHighlight[][] ]] = {}
-  local contexts --[[@type Context[] ]] = {}
+  contexts = {}
 
   for _, range0 in ipairs(ctx_ranges) do
     local lines, range = get_text_for_range(range0)
@@ -801,6 +804,26 @@ function M.setup(options)
   else
     M.disable()
   end
+end
+
+function M.go_to_previous_context()
+  local line = vim.api.nvim_win_get_cursor(0)[1]
+  local context = nil
+
+  for _, v in ipairs(contexts) do
+    if v.range[1] + 1 < line then
+      context = v
+    end
+  end
+
+  if context == nil then
+    return
+  end
+
+  vim.fn.setpos(
+    ".",
+    { 0, context.range[1] + 1, context.range[2] }
+  )
 end
 
 command('TSContextEnable' , M.enable , {})
