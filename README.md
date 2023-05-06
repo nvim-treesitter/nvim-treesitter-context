@@ -41,6 +41,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `fish`
   - [x] `go`
   - [x] `graphql`
+  - [x] `html_tags`
   - [x] `ini`
   - [x] `java`
   - [x] `javascript`
@@ -119,7 +120,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `hlsl`
   - [ ] `hocon`
   - [ ] `html`
-  - [ ] `html_tags`
   - [ ] `htmldjango`
   - [ ] `http`
   - [ ] `jq`
