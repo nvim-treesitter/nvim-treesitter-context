@@ -60,6 +60,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `rust`
   - [x] `scala`
   - [x] `scss`
+  - [x] `smali`
   - [x] `swift`
   - [x] `teal`
   - [x] `toml`
@@ -162,7 +163,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `rst`
   - [ ] `scheme`
   - [ ] `slint`
-  - [ ] `smali`
   - [ ] `smithy`
   - [ ] `solidity`
   - [ ] `sparql`
