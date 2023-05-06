@@ -4,6 +4,8 @@
   (import_declaration)
   (const_declaration)
   (select_statement)
+  (expression_switch_statement)
+  (expression_case)
 ] @context)
 
 (function_declaration
