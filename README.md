@@ -119,7 +119,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `hlsl`
   - [ ] `hocon`
   - [ ] `html`
-  - [ ] `html_tags`
+  - [x] `html_tags`
   - [ ] `htmldjango`
   - [ ] `http`
   - [ ] `jq`
