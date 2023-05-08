@@ -37,6 +37,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `capnp`
   - [x] `cpp`
   - [x] `css`
+  - [x] `cuda`
   - [x] `dart`
   - [x] `elixir`
   - [x] `fish`
@@ -84,7 +85,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `commonlisp`
   - [ ] `cooklang`
   - [ ] `cpon`
-  - [ ] `cuda`
   - [ ] `d`
   - [ ] `devicetree`
   - [ ] `dhall`
