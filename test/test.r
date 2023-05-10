@@ -30,22 +30,22 @@ if (b > a) {
 
   print("b is greater than a")
 } else if (a == b) {
+
+
+
+
   print("a and b are equal")
 } else {
+
+
+
+
+
   print("a is greater than b")
 }
 
 # (left_assignment)
 left_assign <- list("a",
-
-
-
-
-
-  "b")
-
-# (right_assignment)
-right_assign -> list("a",
 
 
 
@@ -62,6 +62,15 @@ equals_assign = list("a",
 
   "b")
 
+
+# (super_assignment)
+super_assign <<- list("a",
+
+
+
+
+
+  "b")
 
 # (binary)
 mtcars %>%
@@ -80,3 +89,16 @@ library(
 
 
 ggplot2)
+
+# (function_definition)
+
+function(foo, bar) {
+
+
+
+
+
+
+  print(foo)
+  print(bar)
+}
