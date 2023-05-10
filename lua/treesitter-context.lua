@@ -392,31 +392,25 @@ end
 
 --- @generic F: function
 --- @param fn F
+--- @param ms? number
 --- @return F
-local function throttle_fn(fn)
-  local recalc_after_cooldown = false
-  local cooling_down = false
-  local function wrapped()
-    if cooling_down then
-      recalc_after_cooldown = true
-    else
-      local start = vim.loop.hrtime()
-      fn()
-      local elapsed_ms = math.floor((vim.loop.hrtime() - start) / 1e6)
-      -- If this took < 2ms, we don't need a cooldown period. This prevents the context floats from flickering
-      if elapsed_ms > 2 then
-        cooling_down = true
-        vim.defer_fn(function()
-          cooling_down = false
-          if recalc_after_cooldown then
-            recalc_after_cooldown = false
-            wrapped()
-          end
-        end, 20)
-      end
+local function debounce(fn, ms)
+  ms = ms or 100
+  local timer = vim.loop.new_timer()
+  local waiting = 0
+  return function()
+    if waiting == 0 then
+      fn() -- first call, execute immediately
     end
+    waiting = waiting + 1
+    timer:start(ms, 0, function()
+      timer:stop()
+      if waiting > 1 then
+        vim.schedule(fn) -- only execute if there are calls waiting
+      end
+      waiting = 0
+    end)
   end
-  return wrapped
 end
 
 local function close()
@@ -705,7 +699,7 @@ end
 
 local attached = {} --- @type table<integer,true>
 
-local update = throttle_fn(function()
+local update = debounce(function()
   local buf = api.nvim_get_current_buf()
 
   if not attached[buf] then
