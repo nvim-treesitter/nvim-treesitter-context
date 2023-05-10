@@ -132,6 +132,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `menhir`
   - [ ] `mermaid`
   - [ ] `meson`
+  - [x] `norg`
   - [ ] `nickel`
   - [ ] `nix`
   - [x] `ocaml`
