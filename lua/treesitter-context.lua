@@ -20,7 +20,8 @@ local command = api.nvim_create_user_command
 --- @field trim_scope 'outer'|'inner'
 --- @field zindex integer
 --- @field mode 'cursor'|'topline'
---- @field separator string?
+--- @field separator? string
+--- @field on_attach? fun(buf: integer): boolean
 
 --- @type Config
 local defaultConfig = {
@@ -31,8 +32,7 @@ local defaultConfig = {
   multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
   trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
   zindex = 20,
-  mode = 'cursor', -- Choices: 'cursor', 'topline'
-  separator = nil,
+  mode = 'cursor',
 }
 
 --- @type Config
@@ -703,7 +703,15 @@ local function calc_max_lines(config_max)
   return max_lines
 end
 
+local attached = {} --- @type table<integer,true>
+
 local update = throttle_fn(function()
+  local buf = api.nvim_get_current_buf()
+
+  if not attached[buf] then
+    return
+  end
+
   if vim.bo.buftype ~= '' or vim.wo.previewwindow then
     close()
     return
@@ -755,6 +763,16 @@ function M.enable()
   local autocmd = autocmd_for_group('treesitter_context_update')
 
   autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
+
+  autocmd('BufReadPost', function(args)
+    if not config.on_attach or config.on_attach(args.buf) ~= false then
+      attached[args.buf] = true
+    end
+  end)
+
+  autocmd('BufDelete', function(args)
+    attached[args.buf] = nil
+  end)
 
   autocmd('CursorMoved', function()
     if cursor_moved_vertical() then
