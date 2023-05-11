@@ -779,7 +779,7 @@ function M.enable()
     end
   end)
 
-  autocmd('WinLeave', close)
+  autocmd({'BufLeave', 'WinLeave'}, close)
 
   autocmd('User', {close , pattern = 'SessionSavePre'  })
   autocmd('User', {update, pattern = 'SessionSavePost' })
