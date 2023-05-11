@@ -29,7 +29,9 @@ use 'nvim-treesitter/nvim-treesitter-context'
 
 ![theme](./static/demo.gif)
 
-## Supported languages
+## Supported Languages
+<details>
+<summary>click to expand</summary
 
   - [x] `bash`
   - [x] `c`
@@ -190,7 +192,8 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `wgsl_bevy`
   - [ ] `yang`
   - [ ] `yuck`
-
+<details>
+  
 ## Configuration
 
 (Default values are shown below)
