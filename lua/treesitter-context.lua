@@ -404,21 +404,21 @@ end
 --- @param fn F
 --- @param ms? number
 --- @return F
-local function debounce(fn, ms)
-  ms = ms or 100
+local function throttle(fn, ms)
+  ms = ms or 200
   local timer = vim.loop.new_timer()
   local waiting = 0
   return function()
-    if waiting == 0 then
-      fn() -- first call, execute immediately
+    if timer:is_active() then
+      waiting = waiting + 1
+      return
     end
-    waiting = waiting + 1
+    waiting = 0
+    fn() -- first call, execute immediately
     timer:start(ms, 0, function()
-      timer:stop()
       if waiting > 1 then
         vim.schedule(fn) -- only execute if there are calls waiting
       end
-      waiting = 0
     end)
   end
 end
@@ -711,7 +711,7 @@ end
 
 local attached = {} --- @type table<integer,true>
 
-local update = debounce(function()
+local update = throttle(function()
   local buf = api.nvim_get_current_buf()
 
   if not attached[buf] then
