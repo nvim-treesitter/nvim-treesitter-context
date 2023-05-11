@@ -65,6 +65,9 @@ local ns = api.nvim_create_namespace('nvim-treesitter-context')
 --- @type TSNode[]?
 local previous_nodes
 
+--- @type table<integer, Context[]>
+local all_contexts = {}
+
 --- @return TSNode
 local function get_root_node()
   ---@diagnostic disable-next-line
@@ -666,6 +669,8 @@ local function open(ctx_ranges)
     table.insert(lno_highlights, hl)
   end
 
+  all_contexts[bufnr] = contexts
+
   set_lines(gbufnr, lno_text)
   highlight_lno_str(gbufnr, lno_text, lno_highlights)
 
@@ -818,6 +823,25 @@ function M.setup(options)
   else
     M.disable()
   end
+end
+
+function M.go_to_context()
+  local line = vim.api.nvim_win_get_cursor(0)[1]
+  local context = nil
+  local bufnr = api.nvim_get_current_buf()
+  local contexts = all_contexts[bufnr] or {}
+
+  for _, v in ipairs(contexts) do
+    if v.range[1] + 1 < line then
+      context = v
+    end
+  end
+
+  if context == nil then
+    return
+  end
+
+  vim.api.nvim_win_set_cursor(0, { context.range[1] + 1, context.range[2] })
 end
 
 command('TSContextEnable' , M.enable , {})
