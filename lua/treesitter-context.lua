@@ -806,7 +806,7 @@ function M.setup(options)
   end
 end
 
-function M.go_to_previous_context()
+function M.go_to_context()
   local line = vim.api.nvim_win_get_cursor(0)[1]
   local context = nil
 
@@ -820,10 +820,7 @@ function M.go_to_previous_context()
     return
   end
 
-  vim.fn.setpos(
-    ".",
-    { 0, context.range[1] + 1, context.range[2] }
-  )
+  vim.api.nvim_win_set_cursor(0, { context.range[1] + 1, context.range[2] })
 end
 
 command('TSContextEnable' , M.enable , {})
