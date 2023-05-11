@@ -97,7 +97,9 @@ local is_valid = cache.memoize(function(node, query)
   -- level node
   local iter_node = node:parent() or node
 
-  for _, match in query:iter_matches(iter_node, bufnr, 0, -1) do
+  -- max_start_depth depth is only supported in nvim 0.10. It is ignored on
+  -- versions 0.9 or less. It is only needed to improve performance
+  for _, match in query:iter_matches(iter_node, bufnr, 0, -1, { max_start_depth = 1 }) do
     local r = false
 
     for id, node0 in pairs(match --[[@as table<integer,TSNode>]]) do
