@@ -530,11 +530,15 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   end
 end
 
+--- @class StatusLineHighlight
+--- @field group string
+--- @field start integer
+
 --- @param win integer
 --- @param lnum integer
 --- @param relnum integer?
 --- @param width integer
---- @return string, table?
+--- @return string, StatusLineHighlight[]?
 local function build_lno_str(win, lnum, relnum, width)
   local has_col, statuscol = pcall(api.nvim_get_option_value, 'statuscolumn', {win = win, scope = "local"})
   if has_col and statuscol and statuscol ~= ""  then
@@ -555,7 +559,7 @@ end
 
 --- @param buf integer
 --- @param text string[]
---- @param highlights table[]
+--- @param highlights StatusLineHighlight[][]
 local function highlight_lno_str(buf, text, highlights)
   for line, linehl in ipairs(highlights) do
     for hlidx, hl in ipairs(linehl) do
@@ -635,7 +639,7 @@ local function open(ctx_ranges)
 
   local context_text --[[@type string[] ]] = {}
   local lno_text --[[@type string[] ]] = {}
-  local lno_highlights --[[@type table[] ]] = {}
+  local lno_highlights --[[@type StatusLineHighlight[][] ]] = {}
   local contexts --[[@type Context[] ]] = {}
 
   for _, range0 in ipairs(ctx_ranges) do
@@ -654,7 +658,7 @@ local function open(ctx_ranges)
     table.insert(context_text, text)
 
     local ctx_line_num = range[1] + 1
-    local relnum
+    local relnum  --- @type integer?
     if vim.wo[win].relativenumber then
       relnum = get_relative_line_num(ctx_line_num)
     end
