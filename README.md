@@ -43,6 +43,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `dart`
   - [x] `elixir`
   - [x] `fish`
+  - [x] `fortran`
   - [x] `go`
   - [x] `graphql`
   - [x] `html_tags`
@@ -54,6 +55,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `lua`
   - [x] `markdown`
   - [x] `matlab`
+  - [x] `norg`
   - [x] `ocaml_interface`
   - [x] `ocaml`
   - [x] `php`
@@ -141,7 +143,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `menhir`
   - [ ] `mermaid`
   - [ ] `meson`
-  - [x] `norg`
   - [ ] `nickel`
   - [ ] `nix`
   - [ ] `ocamllex`
