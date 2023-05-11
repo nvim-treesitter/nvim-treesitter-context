@@ -65,8 +65,8 @@ local ns = api.nvim_create_namespace('nvim-treesitter-context')
 --- @type TSNode[]?
 local previous_nodes
 
---- @type Context[]
-local contexts = {}
+--- @type table<integer, Context[]>
+local all_contexts = {}
 
 --- @return TSNode
 local function get_root_node()
@@ -643,7 +643,7 @@ local function open(ctx_ranges)
   local context_text --[[@type string[] ]] = {}
   local lno_text --[[@type string[] ]] = {}
   local lno_highlights --[[@type StatusLineHighlight[][] ]] = {}
-  contexts = {}
+  local contexts --[[@type Context[] ]] = {}
 
   for _, range0 in ipairs(ctx_ranges) do
     local lines, range = get_text_for_range(range0)
@@ -669,6 +669,8 @@ local function open(ctx_ranges)
     table.insert(lno_text, txt)
     table.insert(lno_highlights, hl)
   end
+
+  all_contexts[bufnr] = contexts
 
   set_lines(gbufnr, lno_text)
   highlight_lno_str(gbufnr, lno_text, lno_highlights)
@@ -809,6 +811,8 @@ end
 function M.go_to_context()
   local line = vim.api.nvim_win_get_cursor(0)[1]
   local context = nil
+  local bufnr = api.nvim_get_current_buf()
+  local contexts = all_contexts[bufnr] or {}
 
   for _, v in ipairs(contexts) do
     if v.range[1] + 1 < line then
