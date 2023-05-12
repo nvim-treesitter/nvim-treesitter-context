@@ -193,9 +193,9 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `wgsl_bevy`
   - [ ] `yang`
   - [ ] `yuck`
-  
+
 </details>
-  
+
 ## Configuration
 
 (Default values are shown below)
