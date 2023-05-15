@@ -827,15 +827,21 @@ function M.setup(options)
   end
 end
 
-function M.go_to_context()
+---@param depth integer? default 1
+function M.go_to_context(depth)
+  depth = depth or 1
   local line = vim.api.nvim_win_get_cursor(0)[1]
   local context = nil
   local bufnr = api.nvim_get_current_buf()
   local contexts = all_contexts[bufnr] or {}
 
-  for _, v in ipairs(contexts) do
+  for v in vim.iter(contexts):rev() do
+    if depth == 0 then
+      break
+    end
     if v.range[1] + 1 < line then
       context = v
+      depth = depth - 1
     end
   end
 
