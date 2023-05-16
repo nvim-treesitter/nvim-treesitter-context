@@ -2,9 +2,14 @@ local api = vim.api
 local highlighter = vim.treesitter.highlighter
 
 local cache = require'treesitter-context.cache'
-local parsers = require'nvim-treesitter.parsers'
 
-local get_query = vim.treesitter.query.get or vim.treesitter.query.get_query
+local get_lang =
+  vim.treesitter.language.get_lang
+  or require'nvim-treesitter.parsers'.ft_to_lang
+
+local get_query =
+  vim.treesitter.query.get or
+  vim.treesitter.query.get_query
 
 local augroup = api.nvim_create_augroup
 local command = api.nvim_create_user_command
@@ -71,7 +76,7 @@ local all_contexts = {}
 --- @return TSNode
 local function get_root_node()
   ---@diagnostic disable-next-line
-  local tree = parsers.get_parser():parse()[1]
+  local tree = vim.treesitter.get_parser():parse()[1]
   return tree:root()
 end
 
@@ -315,12 +320,12 @@ local function get_parent_matches(max_lines)
     return
   end
 
-  if not parsers.has_parser() then
+  if not pcall(vim.treesitter.get_parser) then
     return
   end
 
   --- @type string
-  local lang = parsers.ft_to_lang(vim.bo.filetype)
+  local lang = assert(get_lang(vim.bo.filetype))
 
   local ok, query = pcall(get_query, lang, 'context')
 
@@ -490,7 +495,8 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
     vim.bo[ctx_bufnr].tabstop = current_tabstop
   end
 
-  local buf_query = buf_highlighter:get_query(parsers.ft_to_lang(vim.bo.filetype))
+  local lang = assert(get_lang(vim.bo.filetype))
+  local buf_query = buf_highlighter:get_query(lang)
 
   local query = assert(buf_query:query())
   local root = get_root_node()
