@@ -264,10 +264,10 @@ local function display_window(bufnr, winid, width, height, col, ty, hl)
       zindex = config.zindex,
       border = sep and {'', '', '', '', sep, sep, sep, ''} or nil,
     })
-    api.nvim_win_set_var(winid, ty, true)
-    api.nvim_win_set_option(winid, 'wrap', false)
-    api.nvim_win_set_option(winid, 'foldenable', false)
-    api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:' .. hl)
+    vim.w[winid][ty] = true
+    vim.wo[winid].wrap = false
+    vim.wo[winid].foldenable = false
+    vim.wo[winid].winhl = 'NormalFloat:' .. hl
   else
     api.nvim_win_set_config(winid, {
       win = api.nvim_get_current_win(),
@@ -466,7 +466,7 @@ local function set_lines(bufnr, lines)
 
   if redraw then
     api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-    api.nvim_buf_set_option(bufnr, 'modified', false)
+    vim.bo[bufnr].modified = false
   end
 
   return redraw
