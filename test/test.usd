@@ -1,0 +1,111 @@
+def Xform "thing"
+{
+
+
+
+
+
+
+
+    def "thing" {}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def Scope "child"
+    {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        variantSet "thing" = {
+            "stuff" {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                def Scope "more_child_001"
+                {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                }
+            }
+
+
+
+
+
+
+
+
+        }
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+}
