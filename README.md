@@ -73,6 +73,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `toml`
   - [x] `tsx`
   - [x] `typescript`
+  - [x] `usd`
   - [x] `verilog`
   - [x] `vim`
   - [x] `yaml`
