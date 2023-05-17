@@ -7,4 +7,9 @@ global_helpers.isCI = function(_)
   return false
 end
 
+-- v0.9
+global_helpers.is_ci = function()
+  return false
+end
+
 local helpers = require('test.functional.helpers')()
