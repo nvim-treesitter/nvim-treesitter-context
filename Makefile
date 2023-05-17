@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := test
 
-NEOVIM_BRANCH := master
+NEOVIM_BRANCH := v0.9.0
 
 FILTER=.*
 
@@ -26,13 +26,17 @@ nvim-treesitter/parser/%.so: nvim-treesitter $(NEOVIM)
 
 export VIMRUNTIME=$(PWD)/$(NEOVIM)/runtime
 
+BUSTED = $$( [ -f $(NEOVIM)/test/busted_runner.lua ] \
+        && echo "$(NEOVIM)/build/bin/nvim -ll $(NEOVIM)/test/busted_runner.lua" \
+        || echo "$(NEOVIM)/.deps/usr/bin/busted" )
+
 .PHONY: test
 test: $(NEOVIM) nvim-treesitter \
 	nvim-treesitter/parser/cpp.so \
 	nvim-treesitter/parser/lua.so \
 	nvim-treesitter/parser/rust.so \
 	nvim-treesitter/parser/typescript.so
-	$(NEOVIM)/.deps/usr/bin/busted \
+	$(BUSTED) \
 		-v \
 		--lazy \
 		--helper=$(PWD)/test/preload.lua \

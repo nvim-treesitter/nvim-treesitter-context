@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        neovim_branch: ['v0.8.2']
+        neovim_branch: ['v0.8.2', 'v0.9.0']
     runs-on: ubuntu-latest
     env:
       NEOVIM_BRANCH: ${{ matrix.neovim_branch }}
@@ -21,27 +21,14 @@ jobs:
 
       - name: Setup build dependencies
         run: |
-          sudo apt update &&
-          sudo apt install -y \
-            autoconf \
-            automake \
+          sudo apt-get update &&
+          sudo apt-get install -y \
             cmake \
             g++ \
             gettext \
-            gperf \
-            libjemalloc-dev \
-            libluajit-5.1-dev \
-            libmsgpack-dev \
-            libtermkey-dev \
-            libtool \
             libtool-bin \
-            libunibilium-dev \
-            libvterm-dev \
             lua-bitop \
-            lua-lpeg \
-            lua-mpack \
             ninja-build \
-            pkg-config \
             unzip
 
       - name: Cache neovim

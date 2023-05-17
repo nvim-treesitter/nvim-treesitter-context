@@ -101,24 +101,13 @@ local is_valid = cache.memoize(function(node, query)
   range[3] = range[1]
   range[4] = -1
 
-  local node_srow = range[1]
-
-  -- Try and iterate on the parent node as iter_matches won't match on the top
-  -- level node
-  local iter_node = node:parent() or node
-
   -- max_start_depth depth is only supported in nvim 0.10. It is ignored on
   -- versions 0.9 or less. It is only needed to improve performance
-  for _, match in query:iter_matches(iter_node, bufnr, 0, -1, { max_start_depth = 1 }) do
+  for _, match in query:iter_matches(node, bufnr, 0, -1, { max_start_depth = 1 }) do
     local r = false
 
-    for id, node0 in pairs(match --[[@as table<integer,TSNode>]]) do
+    for id, node0 in pairs(match) do
       local srow, scol, erow, ecol = node0:range()
-
-      -- because iter_node != node we could match outside of node
-      if srow < node_srow then
-        break
-      end
 
       local name = query.captures[id] -- name of the capture in the query
       if not r and name == 'context' then
