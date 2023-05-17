@@ -411,7 +411,7 @@ end
 --- @return F
 local function throttle(fn, ms)
   ms = ms or 200
-  local timer = vim.loop.new_timer()
+  local timer = assert(vim.loop.new_timer())
   local waiting = 0
   return function()
     if timer:is_active() then
