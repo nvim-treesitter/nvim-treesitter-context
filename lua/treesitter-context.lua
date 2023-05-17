@@ -478,7 +478,7 @@ end
 local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   api.nvim_buf_clear_namespace(ctx_bufnr, ns, 0, -1)
 
-  local buf_highlighter = highlighter.active[bufnr] --[[@as TSHighlighter]]
+  local buf_highlighter = highlighter.active[bufnr]
 
   if not buf_highlighter then
     -- Use standard highlighting when TS highlighting is not available
