@@ -487,7 +487,13 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   local lang = assert(get_lang(vim.bo.filetype))
   local buf_query = buf_highlighter:get_query(lang)
 
-  local query = assert(buf_query:query())
+  local query = buf_query:query()
+
+  if not query then
+    -- no highlight query
+    return
+  end
+
   local root = get_root_node()
 
   for i, context in ipairs(contexts) do
