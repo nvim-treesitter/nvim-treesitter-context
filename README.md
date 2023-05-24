@@ -40,6 +40,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `cpp`
   - [x] `css`
   - [x] `cuda`
+  - [x] `d`
   - [x] `dart`
   - [x] `elixir`
   - [x] `fish`
@@ -92,7 +93,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `commonlisp`
   - [ ] `cooklang`
   - [ ] `cpon`
-  - [ ] `d`
   - [ ] `devicetree`
   - [ ] `dhall`
   - [ ] `dockerfile`
