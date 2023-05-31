@@ -769,6 +769,10 @@ end
 function M.enable()
   local autocmd = autocmd_for_group('treesitter_context_update')
 
+  local cbuf = api.nvim_get_current_buf()
+
+  attached[cbuf] = true
+
   autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
 
   autocmd('BufReadPost', function(args)
@@ -798,6 +802,7 @@ end
 
 function M.disable()
   augroup('treesitter_context_update', {})
+  attached = {}
   close()
   delete_bufs()
   enabled = false
