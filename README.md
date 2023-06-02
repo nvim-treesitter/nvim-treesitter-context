@@ -56,6 +56,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `lua`
   - [x] `markdown`
   - [x] `matlab`
+  - [x] `nix`
   - [x] `norg`
   - [x] `ocaml_interface`
   - [x] `ocaml`
@@ -146,7 +147,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `mermaid`
   - [ ] `meson`
   - [ ] `nickel`
-  - [ ] `nix`
   - [ ] `ocamllex`
   - [ ] `pascal`
   - [ ] `perl`
