@@ -230,6 +230,9 @@ context. Per default it links to `NormalFloat`.
 Use the highlight group `TreesitterContextLineNumber` to change the colors of the
 context line numbers if `line_numbers` is set. Per default it links to `LineNr`.
 
+Use the highlight group `TreesitterContextSeparator` to change the colors of the
+separator if `separator` is set. By default it links to `FloatBorder`.
+
 Use the highlight group `TreesitterContextBottom` to change the highlight of the
 last line of the context window. By default it links to `NONE`.
 However, you can use this to create a border by applying an underline highlight, e.g:
