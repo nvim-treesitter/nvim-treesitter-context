@@ -240,7 +240,7 @@ end
 --- @return integer
 local function display_window(bufnr, winid, width, height, col, ty, hl)
   if not winid or not api.nvim_win_is_valid(winid) then
-    local sep = config.separator
+    local sep = config.separator and { config.separator, "TreesitterContextSeparator" } or nil
     winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
       width = width,
@@ -860,6 +860,7 @@ command('TSContextToggle' , M.toggle , {})
 api.nvim_set_hl(0, 'TreesitterContext',           {link = 'NormalFloat', default = true})
 api.nvim_set_hl(0, 'TreesitterContextLineNumber', {link = 'LineNr',      default = true})
 api.nvim_set_hl(0, 'TreesitterContextBottom',     {link = 'NONE',        default = true})
+api.nvim_set_hl(0, 'TreesitterContextSeparator',  {link = 'FloatBorder', default = true})
 
 -- Setup with default options if user didn't call setup()
 autocmd_for_group('treesitter_context')('VimEnter', function()
