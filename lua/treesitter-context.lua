@@ -716,6 +716,7 @@ local update = throttle(function()
   local buf = api.nvim_get_current_buf()
 
   if not attached[buf] then
+    close()
     return
   end
 
