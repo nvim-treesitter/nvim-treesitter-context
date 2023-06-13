@@ -92,12 +92,19 @@ func foo(a int,
 
 
 
+var _ = Describe("something", func() {
 
 
 
+  When("it works", func() {
 
 
 
+    It("works!", func() {
+      Expect(thing).To(Work())
 
 
 
+    })
+  })
+})
