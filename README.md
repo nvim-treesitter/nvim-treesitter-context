@@ -45,6 +45,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `elixir`
   - [x] `fish`
   - [x] `fortran`
+  - [x] `glimmer`
   - [x] `go`
   - [x] `graphql`
   - [x] `html_tags`
@@ -114,7 +115,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `gdscript`
   - [ ] `git_rebase`
   - [ ] `gleam`
-  - [ ] `glimmer`
   - [ ] `glsl`
   - [ ] `godot_resource`
   - [ ] `gomod`
