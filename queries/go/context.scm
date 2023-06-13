@@ -12,6 +12,10 @@
   body: (block (_) @context.end)
 ) @context
 
+(func_literal
+  body: (block (_) @context.end)
+) @context
+
 (method_declaration
   body: (block (_) @context.end)
 ) @context
