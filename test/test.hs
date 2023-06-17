@@ -1,5 +1,3 @@
-action = undefined
-
 function arg1 arg2 =
 
 
