@@ -48,6 +48,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `glimmer`
   - [x] `go`
   - [x] `graphql`
+  - [x] `haskell`
   - [x] `html_tags`
   - [x] `ini`
   - [x] `java`
@@ -121,7 +122,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `gosum`
   - [ ] `gowork`
   - [ ] `hack`
-  - [ ] `haskell`
   - [ ] `hcl`
   - [ ] `heex`
   - [ ] `hjson`
