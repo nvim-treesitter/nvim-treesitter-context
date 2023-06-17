@@ -1,3 +1,5 @@
-(function
-  rhs: (_) @context.end
-) @context
+([
+  (alt)
+  (exp_case)
+  (function)
+] @context)
