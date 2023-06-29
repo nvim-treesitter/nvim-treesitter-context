@@ -25,3 +25,7 @@
 (if_statement
   consequence: (_) @context.end
 ) @context
+
+(repeat_statement
+  body: (_) @context.end
+) @context
