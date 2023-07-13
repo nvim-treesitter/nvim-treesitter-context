@@ -9,22 +9,6 @@ Neovim >= v0.8.2
 
 Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
 
-## Install
-
-via vim-plug
-
-```vim
-Plug 'nvim-treesitter/nvim-treesitter'
-Plug 'nvim-treesitter/nvim-treesitter-context'
-```
-
-via packer
-
-```lua
-use 'nvim-treesitter/nvim-treesitter'
-use 'nvim-treesitter/nvim-treesitter-context'
-```
-
 ## Screenshot
 
 ![theme](./static/demo.gif)
