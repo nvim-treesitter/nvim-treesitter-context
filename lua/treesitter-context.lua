@@ -205,29 +205,28 @@ do
   end
 end
 
---- @return integer, integer
-local function get_bufs()
-  if not context_bufnr or not api.nvim_buf_is_valid(context_bufnr) then
-    context_bufnr = api.nvim_create_buf(false, true)
+--- @param buf integer?
+--- @return integer buf
+local function create_buf(buf)
+  if buf and api.nvim_buf_is_valid(buf) then
+    return buf
   end
 
-  if not gutter_bufnr or not api.nvim_buf_is_valid(gutter_bufnr) then
-    gutter_bufnr = api.nvim_create_buf(false, true)
-  end
+  buf = api.nvim_create_buf(false, true)
 
-  return gutter_bufnr, context_bufnr
+  vim.bo[buf].undolevels = -1
+  vim.bo[buf].bufhidden = 'wipe'
+
+  return buf
 end
 
-local function delete_bufs()
-  if context_bufnr and api.nvim_buf_is_valid(context_bufnr) then
-    api.nvim_buf_delete(context_bufnr, { force = true })
-  end
-  context_bufnr = nil
+--- @return integer gutter_bufnr
+--- @return integer context_bufnr
+local function get_bufs()
+  context_bufnr = create_buf(context_bufnr)
+  gutter_bufnr = create_buf(gutter_bufnr)
 
-  if gutter_bufnr and api.nvim_buf_is_valid(gutter_bufnr) then
-    api.nvim_buf_delete(gutter_bufnr, { force = true })
-  end
-  gutter_bufnr = nil
+  return gutter_bufnr, context_bufnr
 end
 
 --- @param bufnr integer
@@ -421,7 +420,6 @@ local function close()
   previous_nodes = nil
   -- Can't close other windows when the command-line window is open
   if vim.fn.getcmdwintype() ~= '' then
-    delete_bufs()
     return
   end
 
@@ -805,7 +803,6 @@ function M.disable()
   augroup('treesitter_context_update', {})
   attached = {}
   close()
-  delete_bufs()
   enabled = false
 end
 
