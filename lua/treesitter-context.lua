@@ -406,7 +406,9 @@ end
 
 local function win_close(winid)
   if winid ~= nil and api.nvim_win_is_valid(winid) then
-    api.nvim_win_close(winid, true)
+    pcall(function()
+      api.nvim_win_close(winid, true)
+    end)
   end
 end
 
