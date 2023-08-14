@@ -405,9 +405,11 @@ local function throttle(f, ms)
 end
 
 local function win_close(winid)
-  if winid ~= nil and api.nvim_win_is_valid(winid) then
-    vim.schedule(function() api.nvim_win_close(winid, true) end)
-  end
+  vim.schedule(function() 
+    if winid ~= nil and api.nvim_win_is_valid(winid) then
+      api.nvim_win_close(winid, true)
+    end
+  end)
 end
 
 local function close()
