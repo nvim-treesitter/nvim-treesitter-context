@@ -727,7 +727,7 @@ local function calc_max_lines(config_max)
   return max_lines
 end
 
-local attached = {} --- @type table<integer,true>
+local attached = {} --- @type table<integer,boolean>
 
 local update = throttle(function()
   local buf = api.nvim_get_current_buf()
@@ -796,6 +796,8 @@ function M.enable()
   autocmd('BufReadPost', function(args)
     if not config.on_attach or config.on_attach(args.buf) ~= false then
       attached[args.buf] = true
+    else
+      attached[args.buf] = false
     end
   end)
 
