@@ -21,6 +21,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `c`
   - [x] `c_sharp`
   - [x] `capnp`
+  - [x] `cmake`
   - [x] `cpp`
   - [x] `css`
   - [x] `cuda`
@@ -76,7 +77,6 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [ ] `blueprint`
   - [ ] `chatito`
   - [ ] `clojure`
-  - [ ] `cmake`
   - [ ] `commonlisp`
   - [ ] `cooklang`
   - [ ] `cpon`
