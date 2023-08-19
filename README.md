@@ -47,6 +47,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `norg`
   - [x] `ocaml_interface`
   - [x] `ocaml`
+  - [x] `odin`
   - [x] `php`
   - [x] `prisma`
   - [x] `python`
