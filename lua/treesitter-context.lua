@@ -91,7 +91,7 @@ local is_valid = cache.memoize(function(node, query)
 
   -- max_start_depth depth is only supported in nvim 0.10. It is ignored on
   -- versions 0.9 or less. It is only needed to improve performance
-  for _, match in query:iter_matches(node, bufnr, 0, -1, { max_start_depth = 1 }) do
+  for _, match in query:iter_matches(node, bufnr, 0, -1, { max_start_depth = 0 }) do
     local r = false
 
     for id, node0 in pairs(match) do
@@ -405,7 +405,7 @@ local function throttle(f, ms)
 end
 
 local function win_close(winid)
-  vim.schedule(function() 
+  vim.schedule(function()
     if winid ~= nil and api.nvim_win_is_valid(winid) then
       api.nvim_win_close(winid, true)
     end
