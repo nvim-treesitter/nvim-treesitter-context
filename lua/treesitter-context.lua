@@ -36,7 +36,7 @@ local defaultConfig = {
 }
 
 --- @type TSContext.Config
-local config = {}
+local config = vim.deepcopy(defaultConfig)
 
 -- Constants
 
@@ -841,7 +841,7 @@ function M.setup(options)
 
   local userOptions = options or {}
 
-  config = vim.tbl_deep_extend('force', {}, defaultConfig, userOptions)
+  config = vim.tbl_deep_extend('force', config, userOptions)
 
   if config.enable then
     M.enable()
