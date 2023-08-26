@@ -80,6 +80,34 @@ local function hash_node(node)
   }, ',')
 end
 
+--- @param range Range4
+--- @return string[]?, Range4?
+local function get_text_for_range(range)
+  if range[4] == 0 then
+    range[3] = range[3] - 1
+    range[4] = -1
+  end
+  local lines = api.nvim_buf_get_text(0, range[1], 0, range[3], range[4], {})
+  if not lines then
+    return
+  end
+
+  local start_row = range[1]
+  local end_row = range[3]
+  local end_col = range[4]
+
+  lines = vim.list_slice(lines, 1, end_row - start_row + 1)
+  lines[#lines] = lines[#lines]:sub(1, end_col)
+
+  if #lines > config.multiline_threshold then
+    lines = vim.list_slice(lines, 1, 1)
+    end_row = start_row
+    end_col = #lines[1]
+  end
+
+  return lines, { start_row, 0, end_row, end_col }
+end
+
 --- @param node TSNode
 --- @param query Query
 --- @return Range4?
@@ -113,38 +141,11 @@ local is_valid = cache.memoize(function(node, query)
     end
 
     if r then
-      return range
+      local _, range_trim = get_text_for_range(range)
+      return range_trim
     end
   end
 end, hash_node)
-
---- @param range Range4
---- @return string[]?, Range4?
-local function get_text_for_range(range)
-  if range[4] == 0 then
-    range[3] = range[3] - 1
-    range[4] = -1
-  end
-  local lines = api.nvim_buf_get_text(0, range[1], 0, range[3], range[4], {})
-  if not lines then
-    return
-  end
-
-  local start_row = range[1]
-  local end_row = range[3]
-  local end_col = range[4]
-
-  lines = vim.list_slice(lines, 1, end_row - start_row + 1)
-  lines[#lines] = lines[#lines]:sub(1, end_col)
-
-  if #lines > config.multiline_threshold then
-    lines = vim.list_slice(lines, 1, 1)
-    end_row = start_row
-    end_col = #lines[1]
-  end
-
-  return lines, { start_row, 0, end_row, end_col }
-end
 
 -- Merge lines, removing the indentation after 1st line
 --- @param lines string[]
