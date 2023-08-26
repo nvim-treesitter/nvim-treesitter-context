@@ -16,7 +16,7 @@ function M.memoize(fn, hash_fn)
     end
 
     local v = cache[key]
-    return v ~= vim.NIL and v or nil
+    return v ~= vim.NIL and vim.deepcopy(v) or nil
   end
 end
 

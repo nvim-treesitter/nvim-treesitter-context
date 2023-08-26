@@ -26,6 +26,7 @@ describe('ts_context', function()
       [10] = {foreground = Screen.colors.Fuchsia, background = Screen.colors.LightMagenta};
       [11] = {foreground = Screen.colors.Fuchsia};
       [12] = {foreground = tonumber('0x6a0dad'), background = Screen.colors.LightMagenta};
+      [13] = {foreground = Screen.colors.White, background = Screen.colors.Red};
     })
     cmd [[set runtimepath+=.,./nvim-treesitter]]
     cmd [[let $XDG_CACHE_HOME='scratch/cache']]
@@ -192,11 +193,11 @@ describe('ts_context', function()
 
       feed'40<C-e>'
       screen:expect{grid=[[
-        {7:int}{2: main(}{7:int}{2: arg1, }{7:char}{2: **arg2}|
-        {2:  }{1:if}{2: (arg1 == }{10:4}{2: && arg2 == arg}|
+        {7:int}{2: main(}{7:int}{2: arg1,            }|
+        {2:         }{7:char}{2: **arg2,         }|
+        {2:  }{1:if}{2: (arg1 == }{10:4}{2:               }|
+        {2:      && arg2 == arg3) }{13:{}{2:      }|
         {2:    }{1:for}{2: (}{7:int}{2: i = }{10:0}{2:; i < arg1; }|
-        {2:      }{1:while}{2: (}{10:1}{2:) {             }|
-              }                       |
         ^                              |
               {4:do} {                    |
                 {8:// comment}            |
@@ -278,11 +279,11 @@ describe('ts_context', function()
 
       feed'26<C-e>'
       screen:expect{grid=[[
-        {7:int}{2: main(}{7:int}{2: arg1, }{7:char}{2: **arg2}|
-        {2:  }{1:if}{2: (arg1 == }{10:4}{2: && arg2 == arg}|
+        {7:int}{2: main(}{7:int}{2: arg1,            }|
+        {2:  }{1:if}{2: (arg1 == }{10:4}{2:               }|
+        {2:      && arg2 == arg3) {      }|
         {2:    }{1:for}{2: (}{7:int}{2: i = }{10:0}{2:; i < arg1; }|
         {2:      }{1:while}{2: (}{10:1}{2:) {             }|
-                                      |
         ^        {8:// cursor position 4}  |
               }                       |
             }                         |
@@ -298,11 +299,11 @@ describe('ts_context', function()
 
       feed'18<C-e>'
       screen:expect{grid=[[
-        {7:int}{2: main(}{7:int}{2: arg1, }{7:char}{2: **arg2}|
+        {7:int}{2: main(}{7:int}{2: arg1,            }|
+        {2:         }{7:char}{2: **arg2,         }|
+        {2:         }{7:char}{2: **arg3          }|
         {2:  }{1:do}{2: {                        }|
         {2:    }{1:for}{2: (}{7:auto}{2: value : array) {}|
-                                      |
-                                      |
         ^      {8:// cursor position 5}    |
             }                         |
           } {4:while} ({11:1});                |
