@@ -547,16 +547,34 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   end)
 end
 
+--- @param ctx_node_line_num integer
+--- @return integer
+local function get_relative_line_num(ctx_node_line_num)
+  local cursor_line_num = fn.line('.')
+  local num_folded_lines = 0
+  -- Find all folds between the context node and the cursor
+  local current_line = ctx_node_line_num
+  while current_line < cursor_line_num do
+    local fold_end = fn.foldclosedend(current_line)
+    if fold_end == -1 then
+      current_line = current_line + 1
+    else
+      num_folded_lines = num_folded_lines + fold_end - current_line
+      current_line = fold_end + 1
+    end
+  end
+  return cursor_line_num - ctx_node_line_num - num_folded_lines
+end
+
 --- @class StatusLineHighlight
 --- @field group string
 --- @field start integer
 
 --- @param win integer
 --- @param lnum integer
---- @param relnum integer?
 --- @param width integer
 --- @return string, StatusLineHighlight[]?
-local function build_lno_str(win, lnum, relnum, width)
+local function build_lno_str(win, lnum, width)
   local has_col, statuscol =
     pcall(api.nvim_get_option_value, 'statuscolumn', { win = win, scope = 'local' })
   if has_col and statuscol and statuscol ~= '' then
@@ -569,10 +587,11 @@ local function build_lno_str(win, lnum, relnum, width)
       return data.str, data.highlights
     end
   end
-  if relnum then
-    lnum = relnum
+  local relnum --- @type integer?
+  if vim.wo[win].relativenumber then
+    relnum = get_relative_line_num(lnum)
   end
-  return string.format('%' .. width .. 'd', lnum)
+  return string.format('%' .. width .. 'd', relnum or lnum)
 end
 
 --- @param buf integer
@@ -600,24 +619,27 @@ local function highlight_lno_str(buf, text, highlights)
   )
 end
 
---- @param ctx_node_line_num integer
---- @return integer
-local function get_relative_line_num(ctx_node_line_num)
-  local cursor_line_num = fn.line('.')
-  local num_folded_lines = 0
-  -- Find all folds between the context node and the cursor
-  local current_line = ctx_node_line_num
-  while current_line < cursor_line_num do
-    local fold_end = fn.foldclosedend(current_line)
-    if fold_end == -1 then
-      current_line = current_line + 1
-    else
-      num_folded_lines = num_folded_lines + fold_end - current_line
-      current_line = fold_end + 1
-    end
+---@param win integer
+---@param bufnr integer
+---@param contexts Range4[]
+---@param gutter_width integer
+---@return integer
+local function render_lno(win, bufnr, contexts, gutter_width)
+  local lno_text = {} --- @type string[]
+  local lno_highlights = {} --- @type StatusLineHighlight[][]
+
+  for _, range in ipairs(contexts) do
+    local txt, hl = build_lno_str(win, range[1] + 1, gutter_width - 1)
+    table.insert(lno_text, txt)
+    table.insert(lno_highlights, hl)
   end
-  return cursor_line_num - ctx_node_line_num - num_folded_lines
+
+  set_lines(bufnr, lno_text)
+  highlight_lno_str(bufnr, lno_text, lno_highlights)
+
+  return #lno_text
 end
+
 
 local function horizontal_scroll_contexts()
   if context_winid == nil then
@@ -674,8 +696,6 @@ local function open(ctx_ranges)
   -- Set text
 
   local context_text = {} --- @type string[]
-  local lno_text = {} --- @type string[]
-  local lno_highlights = {} --- @type StatusLineHighlight[][]
   local contexts = {} --- @type Context[]
 
   for _, range0 in ipairs(ctx_ranges) do
@@ -692,21 +712,11 @@ local function open(ctx_ranges)
     }
 
     table.insert(context_text, text)
-
-    local ctx_line_num = range[1] + 1
-    local relnum --- @type integer?
-    if vim.wo[win].relativenumber then
-      relnum = get_relative_line_num(ctx_line_num)
-    end
-    local txt, hl = build_lno_str(win, ctx_line_num, relnum, gutter_width - 1)
-    table.insert(lno_text, txt)
-    table.insert(lno_highlights, hl)
   end
 
   all_contexts[bufnr] = contexts
 
-  set_lines(gbufnr, lno_text)
-  highlight_lno_str(gbufnr, lno_text, lno_highlights)
+  local lno_width = render_lno(win, gbufnr, ctx_ranges, gutter_width)
 
   if not set_lines(ctx_bufnr, context_text) then
     -- Context didn't change, can return here
@@ -718,9 +728,9 @@ local function open(ctx_ranges)
   api.nvim_buf_set_extmark(
     ctx_bufnr,
     ns,
-    #lno_text - 1,
+    lno_width - 1,
     0,
-    { end_line = #lno_text, hl_group = 'TreesitterContextBottom', hl_eol = true }
+    { end_line = lno_width, hl_group = 'TreesitterContextBottom', hl_eol = true }
   )
 end
 
