@@ -451,6 +451,18 @@ local function set_lines(bufnr, lines)
   return redraw
 end
 
+---@param name string
+---@param from_buf integer
+---@param to_buf integer
+local function copy_option(name, from_buf, to_buf)
+  --- @cast name any
+  local current = vim.bo[from_buf][name]
+  -- Only set when necessary to avoid OptionSet events
+  if current ~= vim.bo[to_buf][name] then
+    vim.bo[to_buf][name] = current
+  end
+end
+
 --- @param bufnr integer
 --- @param ctx_bufnr integer
 --- @param contexts Context[]
@@ -461,70 +473,77 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
 
   if not buf_highlighter then
     -- Use standard highlighting when TS highlighting is not available
-    local current_ft = vim.bo.filetype
-    if current_ft ~= vim.bo[ctx_bufnr].filetype then
-      vim.bo[ctx_bufnr].filetype = current_ft
+    copy_option('filetype', bufnr, ctx_bufnr)
+    return
+  end
+
+  copy_option('tabstop', bufnr, ctx_bufnr)
+
+  local parser = buf_highlighter.tree
+
+  parser:for_each_tree(function(tstree, ltree)
+    local buf_query = buf_highlighter:get_query(ltree:lang())
+    local query = buf_query:query()
+    if not query then
+      return
     end
-    return
-  end
 
-  -- Only set when necessary to avoid OptionSet events
-  local current_tabstop = vim.bo.tabstop
-  if current_tabstop ~= vim.bo[ctx_bufnr].tabstop then
-    vim.bo[ctx_bufnr].tabstop = current_tabstop
-  end
+    local p = 0
+    for i, context in ipairs(contexts) do
+      local start_row = context.range[1]
+      local end_row = context.range[3]
+      local end_col = context.range[4]
+      local indents = context.indents
+      local lines = context.lines
 
-  local lang = assert(get_lang(vim.bo.filetype))
-  local buf_query = buf_highlighter:get_query(lang)
+      for capture, node, metadata in query:iter_captures(tstree:root(), bufnr, start_row, end_row + 1) do
+        local range = vim.treesitter.get_range(node, bufnr, metadata[capture])
+        local node_start_row, node_start_col, node_end_row, node_end_col =
+          range[1], range[2], range[4], range[5]
 
-  local query = buf_query:query()
-
-  if not query then
-    -- no highlight query
-    return
-  end
-
-  local root = get_root_node()
-
-  for i, context in ipairs(contexts) do
-    local start_row = context.range[1]
-    local end_row = context.range[3]
-    local end_col = context.range[4]
-    local indents = context.indents
-    local lines = context.lines
-
-    for capture, node in query:iter_captures(root, bufnr, start_row, end_row + 1) do
-      local node_start_row, node_start_col, node_end_row, node_end_col = node:range()
-
-      if
-        node_end_row > end_row
-        or (node_end_row == end_row and node_end_col > end_col and end_col ~= -1)
-      then
-        break
-      end
-
-      if node_start_row >= start_row then
-        local intended_start_row = node_start_row - start_row
-
-        -- Add 1 for each space added between lines when
-        -- we replace '\n' with ' '
-        local offset = intended_start_row
-        -- Add the length of each preceding lines
-        for j = 1, intended_start_row do
-          offset = offset + #lines[j] - indents[j]
+        if
+          node_end_row > end_row
+          or (node_end_row == end_row and node_end_col > end_col and end_col ~= -1)
+        then
+          break
         end
-        -- Remove the indentation negative offset for current line
-        offset = offset - indents[intended_start_row + 1]
 
-        local row = i - 1
-        api.nvim_buf_set_extmark(ctx_bufnr, ns, row, node_start_col + offset, {
-          end_line = row,
-          end_col = node_end_col + offset,
-          hl_group = buf_query.hl_cache[capture],
-        })
+        if node_start_row >= start_row then
+          local intended_start_row = node_start_row - start_row
+
+          -- Add 1 for each space added between lines when
+          -- we replace '\n' with ' '
+          local offset = intended_start_row
+          -- Add the length of each preceding lines
+          for j = 1, intended_start_row do
+            offset = offset + #lines[j] - indents[j]
+          end
+          -- Remove the indentation negative offset for current line
+          offset = offset - indents[intended_start_row + 1]
+
+          local hl = buf_query.hl_cache[capture]
+          local row = i - 1
+          local priority = tonumber(metadata.priority) or vim.highlight.priorities.treesitter
+
+          api.nvim_buf_set_extmark(ctx_bufnr, ns, row, node_start_col + offset, {
+            end_line = row,
+            end_col = node_end_col + offset,
+            hl_group = hl,
+            priority = priority + p
+          })
+
+          -- TODO(lewis6991): Extmarks of equal priority appear to apply
+          -- highlights differently between ephemeral and non-ephemeral:
+          -- - ephemeral:  give priority to the last mark applied
+          -- - non-ephemeral: give priority to the first mark applied
+          --
+          -- In order the match the behaviour of main highlighter which uses
+          -- ephemeral marks, make sure increase the priority as we apply marks.
+          p = p + 1
+        end
       end
     end
-  end
+  end)
 end
 
 --- @class StatusLineHighlight
