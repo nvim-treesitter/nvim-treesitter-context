@@ -1,7 +1,6 @@
 # nvim-treesitter-context
 
 Lightweight alternative to [context.vim](https://github.com/wellle/context.vim)
-implemented with [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter).
 
 ## Requirements
 
@@ -187,13 +186,15 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
 
 (Default values are shown below)
 
+Note: calling `setup()` is optional.
+
 ```lua
 require'treesitter-context'.setup{
   enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
   max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
   min_window_height = 0, -- Minimum editor window height to enable context. Values <= 0 mean no limit.
   line_numbers = true,
-  multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
+  multiline_threshold = 20, -- Maximum number of lines to show for a single context
   trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
   mode = 'cursor',  -- Line used to calculate context. Choices: 'cursor', 'topline'
   -- Separator between context and content. Should be a single character string, like '-'.

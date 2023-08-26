@@ -29,7 +29,7 @@ local defaultConfig = {
   max_lines = 0, -- no limit
   min_window_height = 0,
   line_numbers = true,
-  multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
+  multiline_threshold = 20, -- Maximum number of lines to show for a single context
   trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
   zindex = 20,
   mode = 'cursor',
@@ -38,13 +38,6 @@ local defaultConfig = {
 --- @type TSContext.Config
 local config = vim.deepcopy(defaultConfig)
 
--- Constants
-
-local INDENT_PATTERN = '^%s+'
-
--- Script variables
-
-local did_setup = false
 local enabled = false
 
 -- Don't access directly, use get_bufs()
@@ -57,16 +50,10 @@ local context_winid --- @type integer?
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 
 --- @type TSNode[]?
-local previous_nodes
+local previous_context
 
---- @type table<integer, Context[]>
+--- @type table<integer, Range4[]>
 local all_contexts = {}
-
---- @return TSNode
-local function get_root_node()
-  local tree = vim.treesitter.get_parser():parse()[1]
-  return tree:root()
-end
 
 ---@param node TSNode
 ---@return string
@@ -81,37 +68,37 @@ local function hash_node(node)
 end
 
 --- @param range Range4
---- @return string[]?, Range4?
+--- @return Range4, string[]
 local function get_text_for_range(range)
-  if range[4] == 0 then
-    range[3] = range[3] - 1
-    range[4] = -1
-  end
-  local lines = api.nvim_buf_get_text(0, range[1], 0, range[3], range[4], {})
-  if not lines then
-    return
+  local start_row, end_row, end_col = range[1], range[3], range[4]
+
+  if end_col == 0 then
+    end_row = end_row - 1
+    end_col = -1
   end
 
-  local start_row = range[1]
-  local end_row = range[3]
-  local end_col = range[4]
+  local lines = api.nvim_buf_get_text(0, start_row, 0, end_row, -1, {})
 
-  lines = vim.list_slice(lines, 1, end_row - start_row + 1)
-  lines[#lines] = lines[#lines]:sub(1, end_col)
-
-  if #lines > config.multiline_threshold then
-    lines = vim.list_slice(lines, 1, 1)
-    end_row = start_row
-    end_col = #lines[1]
+  -- Strip any empty lines from the node
+  while #lines > 0 do
+    local last_line_of_node = lines[#lines]:sub(1, end_col)
+    if last_line_of_node:match('%S') and #lines <= config.multiline_threshold then
+      break
+    end
+    lines[#lines] = nil
+    end_col = -1
+    end_row = end_row - 1
   end
 
-  return lines, { start_row, 0, end_row, end_col }
+  return { start_row, 0, end_row, -1 }, lines
 end
 
+--- Run the context query on a node and return the range if it is a valid
+--- context node.
 --- @param node TSNode
 --- @param query Query
 --- @return Range4?
-local is_valid = cache.memoize(function(node, query)
+local context_range = cache.memoize(function(node, query)
   local bufnr = api.nvim_get_current_buf()
   local range = { node:range() } --- @type Range4
   range[3] = range[1]
@@ -141,42 +128,10 @@ local is_valid = cache.memoize(function(node, query)
     end
 
     if r then
-      local _, range_trim = get_text_for_range(range)
-      return range_trim
+      return range
     end
   end
 end, hash_node)
-
--- Merge lines, removing the indentation after 1st line
---- @param lines string[]
---- @return string
-local function merge_lines(lines)
-  local text = { lines[1] }
-  for i = 2, #lines do
-    text[i] = lines[i]:gsub(INDENT_PATTERN, '')
-  end
-  return table.concat(text, ' ')
-end
-
--- Get indentation for lines except first
---- @param lines string[]
---- @return integer[]
-local function get_indents(lines)
-  --- @type integer[]
-  local indents = vim.tbl_map(
-    --- @param line string
-    --- @return integer
-    function(line)
-      --- @type string?
-      local indent = line:match(INDENT_PATTERN)
-      return indent and #indent or 0
-    end,
-    lines
-  )
-  -- Dont skip first line indentation
-  indents[1] = 0
-  return indents
-end
 
 --- @param winid integer
 --- @return integer
@@ -261,47 +216,87 @@ local function display_window(bufnr, winid, width, height, col, ty, hl)
   return winid
 end
 
--- Exports
-
-local M = {
-  config = config,
-}
-
---- @param node TSNode?
+--- @param node TSNode
 --- @return TSNode[]
-local function get_node_parents(node)
-  -- save nodes in a table to iterate from top to bottom
-  --- @type TSNode[]
-  local parents = {}
-  while node ~= nil do
-    parents[#parents + 1] = node
-    node = node:parent()
+local function get_parent_nodes(node)
+  local n = node --- @type TSNode?
+  local ret = {} --- @type TSNode[]
+  while n do
+    ret[#ret + 1] = n
+    n = n:parent()
   end
-  return parents
+  return ret
 end
 
---- @param winid integer
---- @return integer, integer
-local function get_pos(winid)
-  --- @type integer, integer
-  local lnum, col
-  if config.mode == 'topline' then
-    lnum, col =
-      fn.line('w0'), --[[@as integer]]
-      0
-  else -- default to 'cursor'
-    lnum, col = unpack(api.nvim_win_get_cursor(winid)) --[[@as integer]]
+---@param r Range4
+local function get_range_height(r)
+  return r[3] - r[1] + (r[4] == 0 and 0 or 1)
+end
+
+---@param bufnr integer
+---@return Query?
+local function get_context_query(bufnr)
+  --- @type string
+  local lang = assert(get_lang(vim.bo[bufnr].filetype))
+
+  local ok, query = pcall(get_query, lang, 'context')
+
+  if not ok then
+    vim.notify_once(
+      string.format('Unable to load context query for %s:\n%s', lang, query),
+      vim.log.levels.ERROR,
+      { title = 'nvim-treesitter-context' }
+    )
+    return
   end
 
-  return lnum, col
+  return query
+end
+
+---@param bufnr integer
+---@param row integer
+---@param col integer
+---@return TSNode?
+local function get_node(bufnr, row, col)
+  local root_tree = vim.treesitter.get_parser(bufnr)
+  if not root_tree then
+    return
+  end
+
+  return root_tree:named_node_for_range({ row, col, row, col + 1 })
+end
+
+---@param context_ranges Range4[]
+---@param context_lines string[][]
+---@param trim integer
+---@param top boolean
+local function trim_contexts(context_ranges, context_lines, trim, top)
+  while trim > 0 do
+    local idx = top and 1 or #context_ranges
+    local context_to_trim = context_ranges[idx]
+
+    local height = get_range_height(context_to_trim)
+
+    if height <= trim then
+      table.remove(context_ranges, idx)
+      table.remove(context_lines, idx)
+    else
+      context_to_trim[3] = context_to_trim[3] - trim
+      context_to_trim[4] = -1
+      local context_lines_to_trim = context_lines[idx]
+      for _ = 1, trim do
+        context_lines_to_trim[#context_lines_to_trim] = nil
+      end
+    end
+    trim = math.max(0, trim - height)
+  end
 end
 
 --- @param winid integer
 --- @param config_max integer
 --- @return integer
 local function calc_max_lines(winid, config_max)
-  local max_lines = config_max
-  max_lines = max_lines == 0 and -1 or max_lines
+  local max_lines = config_max == 0 and -1 or config_max
 
   local wintop = fn.line('w0', winid)
   local cursor = fn.line('.', winid)
@@ -322,92 +317,93 @@ end
 
 --- @param bufnr integer
 --- @param winid integer
---- @return Range4[]?
-local function get_parent_matches(bufnr, winid)
+--- @return Range4[]?, string[]?
+local function get_context_ranges(bufnr, winid)
   local max_lines = calc_max_lines(winid, config.max_lines)
+
   if max_lines == 0 then
     return
   end
 
-  if not pcall(vim.treesitter.get_parser) then
+  if not pcall(vim.treesitter.get_parser, bufnr) then
     return
   end
 
-  --- @type string
-  local lang = assert(get_lang(vim.bo[bufnr].filetype))
-
-  local ok, query = pcall(get_query, lang, 'context')
-
-  if not ok then
-    vim.notify_once(
-      string.format('Unable to load context query for %s:\n%s', lang, query),
-      vim.log.levels.ERROR,
-      { title = 'nvim-treesitter-context' }
-    )
-    return
-  end
+  local query = get_context_query(bufnr)
 
   if not query then
     return
   end
 
-  local root_node = get_root_node()
-  local lnum, col = get_pos(winid)
+  local top_row = fn.line('w0', winid) - 1
 
-  --- @type Range4[]
-  local last_matches
+  --- @type integer, integer
+  local row, col
 
-  --- @type Range4[]
-  local parent_matches = {}
-  local line_offset = 0
+  if config.mode == 'topline' then
+    row, col = top_row, 0
+  else
+    local c = api.nvim_win_get_cursor(winid)
+    row, col = c[1] - 1, c[2]
+  end
 
-  repeat
-    local offset_lnum = lnum + line_offset - 1
-    local node = root_node:named_descendant_for_range(offset_lnum, col, offset_lnum, col)
+  local context_ranges = {} --- @type Range4[]
+  local context_lines = {} --- @type string[][]
+  local contexts_height = 0
+
+  for offset = 0, max_lines do
+    local node_row = row + offset
+
+    local node = get_node(bufnr, node_row, offset == 0 and col or 0)
     if not node then
       return
     end
 
-    last_matches = parent_matches
-    parent_matches = {}
-    local last_row = -1
-    local topline = fn.line('w0')
+    local parents = get_parent_nodes(node)
 
-    -- save nodes in a table to iterate from top to bottom
-    local parents = get_node_parents(node)
+    context_ranges = {}
+    context_lines = {}
+    contexts_height = 0
 
     for i = #parents, 1, -1 do
       local parent = parents[i]
-      local row = parent:start()
+      local parent_start_row = parent:range()
 
-      local height = math.min(max_lines, #parent_matches)
-      local range = is_valid(parent, query)
-      if range and row >= 0 and row < (topline + height - 1) then
-        if row == last_row then
-          parent_matches[#parent_matches] = range
-        else
-          parent_matches[#parent_matches + 1] = range
-          last_row = row
+      local contexts_end_row = top_row + math.min(max_lines, contexts_height)
+      -- Only process the parent if it is not in view.
+      if parent_start_row < contexts_end_row then
+        local range0 = context_range(parent, query)
+        if range0 then
+          local range, lines = get_text_for_range(range0)
 
-          local new_height = math.min(max_lines, #parent_matches)
-          if config.mode == 'topline' and line_offset < new_height then
-            line_offset = line_offset + 1
-            break
+          local last_context = context_ranges[#context_ranges]
+          if last_context and parent_start_row == last_context[1] then
+            -- If there are multiple contexts on the same row, then prefer the inner
+            contexts_height = contexts_height - get_range_height(last_context)
+            context_ranges[#context_ranges] = nil
+            context_lines[#context_lines] = nil
           end
+
+          contexts_height = contexts_height + get_range_height(range)
+          context_ranges[#context_ranges + 1] = range
+          context_lines[#context_lines + 1] = lines
         end
       end
     end
-  until config.mode ~= 'topline' or #last_matches >= #parent_matches
 
-  if config.trim_scope == 'inner' then
-    return vim.list_slice(parent_matches, 1, math.min(#parent_matches, max_lines))
-  else -- default to 'outer'
-    return vim.list_slice(
-      parent_matches,
-      math.max(1, #parent_matches - max_lines + 1),
-      #parent_matches
-    )
+    local contexts_end_row = top_row + math.min(max_lines, contexts_height)
+
+    if node_row >= contexts_end_row then
+      break
+    end
   end
+
+  local trim = contexts_height - max_lines
+  if trim > 0 then
+    trim_contexts(context_ranges, context_lines, trim, config.trim_scope == 'outer')
+  end
+
+  return context_ranges, vim.tbl_flatten(context_lines)
 end
 
 --- @generic F: function
@@ -442,7 +438,7 @@ local function win_close(winid)
 end
 
 local function close()
-  previous_nodes = nil
+  previous_context = nil
   -- Can't close other windows when the command-line window is open
   if fn.getcmdwintype() ~= '' then
     return
@@ -494,7 +490,7 @@ end
 
 --- @param bufnr integer
 --- @param ctx_bufnr integer
---- @param contexts Context[]
+--- @param contexts Range4[]
 local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   api.nvim_buf_clear_namespace(ctx_bufnr, ns, 0, -1)
 
@@ -518,48 +514,41 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
     end
 
     local p = 0
-    for i, context in ipairs(contexts) do
-      local start_row = context.range[1]
-      local end_row = context.range[3]
-      local end_col = context.range[4]
-      local indents = context.indents
-      local lines = context.lines
+    local offset = 0
+    for _, context in ipairs(contexts) do
+      local start_row, end_row, end_col = context[1], context[3], context[4]
 
-      for capture, node, metadata in query:iter_captures(tstree:root(), bufnr, start_row, end_row + 1) do
+      for capture, node, metadata in
+        query:iter_captures(tstree:root(), bufnr, start_row, end_row + 1)
+      do
         local range = vim.treesitter.get_range(node, bufnr, metadata[capture])
-        local node_start_row, node_start_col, node_end_row, node_end_col =
-          range[1], range[2], range[4], range[5]
+        local nsrow, nscol, nerow, necol = range[1], range[2], range[4], range[5]
 
-        if
-          node_end_row > end_row
-          or (node_end_row == end_row and node_end_col > end_col and end_col ~= -1)
-        then
+        if nerow > end_row or (nerow == end_row and necol > end_col and end_col ~= -1) then
           break
         end
 
-        if node_start_row >= start_row then
-          local intended_start_row = node_start_row - start_row
-
-          -- Add 1 for each space added between lines when
-          -- we replace '\n' with ' '
-          local offset = intended_start_row
-          -- Add the length of each preceding lines
-          for j = 1, intended_start_row do
-            offset = offset + #lines[j] - indents[j]
-          end
-          -- Remove the indentation negative offset for current line
-          offset = offset - indents[intended_start_row + 1]
+        if nsrow >= start_row then
+          local msrow = offset + (nsrow - start_row)
+          local merow = offset + (nerow - start_row)
 
           local hl = buf_query.hl_cache[capture]
-          local row = i - 1
           local priority = tonumber(metadata.priority) or vim.highlight.priorities.treesitter
-
-          api.nvim_buf_set_extmark(ctx_bufnr, ns, row, node_start_col + offset, {
-            end_line = row,
-            end_col = node_end_col + offset,
+          local ok, err = pcall(api.nvim_buf_set_extmark, ctx_bufnr, ns, msrow, nscol, {
+            end_line = merow,
+            end_col = necol,
             hl_group = hl,
-            priority = priority + p
+            priority = priority + p,
           })
+          if not ok then
+            error(
+              string.format(
+                'Could not apply exmtark to %s: %s',
+                vim.inspect({ msrow, nscol, merow, necol }),
+                err
+              )
+            )
+          end
 
           -- TODO(lewis6991): Extmarks of equal priority appear to apply
           -- highlights differently between ephemeral and non-ephemeral:
@@ -571,9 +560,14 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
           p = p + 1
         end
       end
+      offset = offset + get_range_height(context)
     end
   end)
 end
+
+--- @class StatusLineHighlight
+--- @field group string
+--- @field start integer
 
 --- @param ctx_node_line_num integer
 --- @return integer
@@ -593,10 +587,6 @@ local function get_relative_line_num(ctx_node_line_num)
   end
   return cursor_line_num - ctx_node_line_num - num_folded_lines
 end
-
---- @class StatusLineHighlight
---- @field group string
---- @field start integer
 
 --- @param win integer
 --- @param lnum integer
@@ -628,7 +618,7 @@ local function highlight_bottom(bufnr, row)
   api.nvim_buf_set_extmark(bufnr, ns, row, 0, {
     end_line = row + 1,
     hl_group = 'TreesitterContextBottom',
-    hl_eol = true
+    hl_eol = true,
   })
 end
 
@@ -661,9 +651,11 @@ local function render_lno(win, bufnr, contexts, gutter_width)
   local lno_highlights = {} --- @type StatusLineHighlight[][]
 
   for _, range in ipairs(contexts) do
-    local txt, hl = build_lno_str(win, range[1] + 1, gutter_width - 1)
-    table.insert(lno_text, txt)
-    table.insert(lno_highlights, hl)
+    for i = 1, get_range_height(range) do
+      local txt, hl = build_lno_str(win, range[1] + i, gutter_width - 1)
+      table.insert(lno_text, txt)
+      table.insert(lno_highlights, hl)
+    end
   end
 
   set_lines(bufnr, lno_text)
@@ -671,7 +663,6 @@ local function render_lno(win, bufnr, contexts, gutter_width)
 
   return #lno_text
 end
-
 
 local function horizontal_scroll_contexts()
   if context_winid == nil then
@@ -687,18 +678,17 @@ local function horizontal_scroll_contexts()
   end
 end
 
---- @class Context
---- @field indents integer[]
---- @field lines string[]
---- @field range Range4
-
 --- @param bufnr integer
 --- @param winid integer
 --- @param ctx_ranges Range4[]
-local function open(bufnr, winid, ctx_ranges)
+--- @param ctx_lines string[]
+local function open(bufnr, winid, ctx_ranges, ctx_lines)
   local gutter_width = get_gutter_width(winid)
   local win_width = math.max(1, api.nvim_win_get_width(winid) - gutter_width)
-  local win_height = math.max(1, #ctx_ranges)
+
+  all_contexts[bufnr] = ctx_ranges
+
+  local win_height = #ctx_lines
 
   local gbufnr, ctx_bufnr = get_bufs()
 
@@ -724,37 +714,14 @@ local function open(bufnr, winid, ctx_ranges)
     'TreesitterContext'
   )
 
-  -- Set text
-
-  local context_text = {} --- @type string[]
-  local contexts = {} --- @type Context[]
-
-  for _, range0 in ipairs(ctx_ranges) do
-    local lines, range = get_text_for_range(range0)
-    if lines == nil or range == nil or range[1] == nil then
-      return
-    end
-    local text = merge_lines(lines)
-
-    contexts[#contexts + 1] = {
-      lines = lines,
-      range = range,
-      indents = get_indents(lines),
-    }
-
-    table.insert(context_text, text)
-  end
-
-  all_contexts[bufnr] = contexts
-
   local lno_width = render_lno(winid, gbufnr, ctx_ranges, gutter_width)
 
-  if not set_lines(ctx_bufnr, context_text) then
+  if not set_lines(ctx_bufnr, ctx_lines) then
     -- Context didn't change, can return here
     return
   end
 
-  highlight_contexts(bufnr, ctx_bufnr, contexts)
+  highlight_contexts(bufnr, ctx_bufnr, ctx_ranges)
   highlight_bottom(ctx_bufnr, lno_width - 1)
 end
 
@@ -774,21 +741,23 @@ local update = throttle(function()
     return
   end
 
-  local context = get_parent_matches(bufnr, winid)
+  local context, context_lines = get_context_ranges(bufnr, winid)
 
   if context and #context ~= 0 then
-    if context == previous_nodes then
+    assert(context_lines)
+
+    if context == previous_context then
       return
     end
 
-    previous_nodes = context
+    previous_context = context
 
     if api.nvim_win_get_height(winid) < config.min_window_height then
       close()
       return
     end
 
-    open(bufnr, winid, context)
+    open(bufnr, winid, context, context_lines)
     horizontal_scroll_contexts()
   else
     close()
@@ -815,6 +784,10 @@ local function autocmd_for_group(group)
     api.nvim_create_autocmd(event, opts)
   end
 end
+
+local M = {
+  config = config,
+}
 
 function M.enable()
   local autocmd = autocmd_for_group('treesitter_context_update')
@@ -865,6 +838,8 @@ function M.toggle()
   end
 end
 
+local did_setup = false
+
 function M.setup(options)
   if did_setup then
     return
@@ -889,7 +864,7 @@ function M.go_to_context()
   local contexts = all_contexts[bufnr] or {}
 
   for _, v in ipairs(contexts) do
-    if v.range[1] + 1 < line then
+    if v[1] + 1 < line then
       context = v
     end
   end
@@ -898,7 +873,7 @@ function M.go_to_context()
     return
   end
 
-  api.nvim_win_set_cursor(0, { context.range[1] + 1, context.range[2] })
+  api.nvim_win_set_cursor(0, { context[1] + 1, context[2] })
 end
 
 command('TSContextEnable', M.enable, {})
