@@ -622,6 +622,16 @@ local function build_lno_str(win, lnum, width)
   return string.format('%' .. width .. 'd', relnum or lnum)
 end
 
+---@param bufnr integer
+---@param row integer
+local function hiighlight_bottom(bufnr, row)
+  api.nvim_buf_set_extmark(bufnr, ns, row, 0, {
+    end_line = row + 1,
+    hl_group = 'TreesitterContextBottom',
+    hl_eol = true
+  })
+end
+
 --- @param buf integer
 --- @param text string[]
 --- @param highlights StatusLineHighlight[][]
@@ -638,13 +648,7 @@ local function highlight_lno_str(buf, text, highlights)
       end
     end
   end
-  api.nvim_buf_set_extmark(
-    buf,
-    ns,
-    #text - 1,
-    0,
-    { end_line = #text, hl_group = 'TreesitterContextBottom', hl_eol = true }
-  )
+  hiighlight_bottom(buf, #text - 1)
 end
 
 ---@param win integer
@@ -751,14 +755,7 @@ local function open(bufnr, winid, ctx_ranges)
   end
 
   highlight_contexts(bufnr, ctx_bufnr, contexts)
-
-  api.nvim_buf_set_extmark(
-    ctx_bufnr,
-    ns,
-    lno_width - 1,
-    0,
-    { end_line = lno_width, hl_group = 'TreesitterContextBottom', hl_eol = true }
-  )
+  hiighlight_bottom(ctx_bufnr, lno_width - 1)
 end
 
 local attached = {} --- @type table<integer,true>
