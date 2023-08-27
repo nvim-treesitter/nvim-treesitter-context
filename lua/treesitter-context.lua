@@ -871,9 +871,9 @@ function M.setup(options)
   end
   did_setup = true
 
-  local userOptions = options or {}
+  local user_options = options or {}
 
-  config = vim.tbl_deep_extend('force', config, userOptions)
+  config = vim.tbl_deep_extend('force', config, user_options)
 
   if config.enable then
     M.enable()
