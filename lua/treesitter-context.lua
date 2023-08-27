@@ -884,6 +884,7 @@ function M.go_to_context()
     return
   end
 
+  vim.cmd([[ normal! m' ]]) -- add current cursor position to the jump list
   api.nvim_win_set_cursor(0, { context[1] + 1, context[2] })
 end
 
