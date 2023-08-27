@@ -692,6 +692,8 @@ local function open(bufnr, winid, ctx_ranges, ctx_lines)
 
   local gbufnr, ctx_bufnr = get_bufs()
 
+  local lno_width = 0
+
   if config.line_numbers and (vim.wo[winid].number or vim.wo[winid].relativenumber) then
     gutter_winid = display_window(
       gbufnr,
@@ -702,6 +704,9 @@ local function open(bufnr, winid, ctx_ranges, ctx_lines)
       'treesitter_context_line_number',
       'TreesitterContextLineNumber'
     )
+    lno_width = render_lno(winid, gbufnr, ctx_ranges, gutter_width)
+  else
+    win_close(gutter_winid)
   end
 
   context_winid = display_window(
@@ -713,8 +718,6 @@ local function open(bufnr, winid, ctx_ranges, ctx_lines)
     'treesitter_context',
     'TreesitterContext'
   )
-
-  local lno_width = render_lno(winid, gbufnr, ctx_ranges, gutter_width)
 
   if not set_lines(ctx_bufnr, ctx_lines) then
     -- Context didn't change, can return here
@@ -811,6 +814,13 @@ function M.enable()
 
   autocmd('CursorMoved', function()
     if cursor_moved_vertical() then
+      update()
+    end
+  end)
+
+  autocmd('OptionSet', function(args)
+    if args.match == 'number'
+      or args.match == 'relativenumber' then
       update()
     end
   end)
