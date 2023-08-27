@@ -624,7 +624,7 @@ end
 
 ---@param bufnr integer
 ---@param row integer
-local function hiighlight_bottom(bufnr, row)
+local function highlight_bottom(bufnr, row)
   api.nvim_buf_set_extmark(bufnr, ns, row, 0, {
     end_line = row + 1,
     hl_group = 'TreesitterContextBottom',
@@ -648,7 +648,7 @@ local function highlight_lno_str(buf, text, highlights)
       end
     end
   end
-  hiighlight_bottom(buf, #text - 1)
+  highlight_bottom(buf, #text - 1)
 end
 
 ---@param win integer
@@ -755,7 +755,7 @@ local function open(bufnr, winid, ctx_ranges)
   end
 
   highlight_contexts(bufnr, ctx_bufnr, contexts)
-  hiighlight_bottom(ctx_bufnr, lno_width - 1)
+  highlight_bottom(ctx_bufnr, lno_width - 1)
 end
 
 local attached = {} --- @type table<integer,true>
