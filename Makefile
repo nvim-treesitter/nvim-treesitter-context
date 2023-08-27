@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := test
 
-NEOVIM_BRANCH := v0.9.0
+NEOVIM_BRANCH := v0.9.1
 
 FILTER=.*
 
