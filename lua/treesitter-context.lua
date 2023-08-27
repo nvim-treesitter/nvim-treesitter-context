@@ -500,13 +500,13 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
 
   local buf_highlighter = highlighter.active[bufnr]
 
+  copy_option('tabstop', bufnr, ctx_bufnr)
+
   if not buf_highlighter then
     -- Use standard highlighting when TS highlighting is not available
     copy_option('filetype', bufnr, ctx_bufnr)
     return
   end
-
-  copy_option('tabstop', bufnr, ctx_bufnr)
 
   local parser = buf_highlighter.tree
 
