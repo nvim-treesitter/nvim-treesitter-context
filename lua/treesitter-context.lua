@@ -178,9 +178,10 @@ local function get_indents(lines)
   return indents
 end
 
+--- @param winid integer
 --- @return integer
-local function get_gutter_width()
-  return fn.getwininfo(api.nvim_get_current_win())[1].textoff
+local function get_gutter_width(winid)
+  return fn.getwininfo(winid)[1].textoff
 end
 
 local cursor_moved_vertical --- @type fun(): boolean
@@ -279,8 +280,9 @@ local function get_node_parents(node)
   return parents
 end
 
+--- @param winid integer
 --- @return integer, integer
-local function get_pos()
+local function get_pos(winid)
   --- @type integer, integer
   local lnum, col
   if config.mode == 'topline' then
@@ -288,15 +290,17 @@ local function get_pos()
       fn.line('w0'), --[[@as integer]]
       0
   else -- default to 'cursor'
-    lnum, col = unpack(api.nvim_win_get_cursor(0)) --[[@as integer]]
+    lnum, col = unpack(api.nvim_win_get_cursor(winid)) --[[@as integer]]
   end
 
   return lnum, col
 end
 
+--- @param bufnr integer
+--- @param winid integer
 --- @param max_lines integer
 --- @return Range4[]?
-local function get_parent_matches(max_lines)
+local function get_parent_matches(bufnr, winid, max_lines)
   if max_lines == 0 then
     return
   end
@@ -306,7 +310,7 @@ local function get_parent_matches(max_lines)
   end
 
   --- @type string
-  local lang = assert(get_lang(vim.bo.filetype))
+  local lang = assert(get_lang(vim.bo[bufnr].filetype))
 
   local ok, query = pcall(get_query, lang, 'context')
 
@@ -324,7 +328,7 @@ local function get_parent_matches(max_lines)
   end
 
   local root_node = get_root_node()
-  local lnum, col = get_pos()
+  local lnum, col = get_pos(winid)
 
   --- @type Range4[]
   local last_matches
@@ -660,18 +664,17 @@ end
 --- @field lines string[]
 --- @field range Range4
 
+--- @param bufnr integer
+--- @param winid integer
 --- @param ctx_ranges Range4[]
-local function open(ctx_ranges)
-  local bufnr = api.nvim_get_current_buf()
-  local win = api.nvim_get_current_win()
-
-  local gutter_width = get_gutter_width()
-  local win_width = math.max(1, api.nvim_win_get_width(0) - gutter_width)
+local function open(bufnr, winid, ctx_ranges)
+  local gutter_width = get_gutter_width(winid)
+  local win_width = math.max(1, api.nvim_win_get_width(winid) - gutter_width)
   local win_height = math.max(1, #ctx_ranges)
 
   local gbufnr, ctx_bufnr = get_bufs()
 
-  if config.line_numbers and (vim.wo.number or vim.wo.relativenumber) then
+  if config.line_numbers and (vim.wo[winid].number or vim.wo[winid].relativenumber) then
     gutter_winid = display_window(
       gbufnr,
       gutter_winid,
@@ -716,7 +719,7 @@ local function open(ctx_ranges)
 
   all_contexts[bufnr] = contexts
 
-  local lno_width = render_lno(win, gbufnr, ctx_ranges, gutter_width)
+  local lno_width = render_lno(winid, gbufnr, ctx_ranges, gutter_width)
 
   if not set_lines(ctx_bufnr, context_text) then
     -- Context didn't change, can return here
@@ -734,14 +737,15 @@ local function open(ctx_ranges)
   )
 end
 
+--- @param winid integer
 --- @param config_max integer
 --- @return integer
-local function calc_max_lines(config_max)
+local function calc_max_lines(winid, config_max)
   local max_lines = config_max
   max_lines = max_lines == 0 and -1 or max_lines
 
-  local wintop = fn.line('w0')
-  local cursor = fn.line('.')
+  local wintop = fn.line('w0', winid)
+  local cursor = fn.line('.', winid)
   local max_from_cursor = cursor - wintop
 
   if config.separator and max_from_cursor > 0 then
@@ -760,19 +764,20 @@ end
 local attached = {} --- @type table<integer,true>
 
 local update = throttle(function()
-  local buf = api.nvim_get_current_buf()
+  local bufnr = api.nvim_get_current_buf()
+  local winid = api.nvim_get_current_win()
 
-  if not attached[buf] then
+  if not attached[bufnr] then
     close()
     return
   end
 
-  if vim.bo.buftype ~= '' or vim.wo.previewwindow then
+  if vim.bo[bufnr].buftype ~= '' or vim.wo[winid].previewwindow then
     close()
     return
   end
 
-  local context = get_parent_matches(calc_max_lines(config.max_lines))
+  local context = get_parent_matches(bufnr, winid, calc_max_lines(winid, config.max_lines))
 
   if context and #context ~= 0 then
     if context == previous_nodes then
@@ -781,12 +786,12 @@ local update = throttle(function()
 
     previous_nodes = context
 
-    if api.nvim_win_get_height(0) < config.min_window_height then
+    if api.nvim_win_get_height(winid) < config.min_window_height then
       close()
       return
     end
 
-    open(context)
+    open(bufnr, winid, context)
     horizontal_scroll_contexts()
   else
     close()
