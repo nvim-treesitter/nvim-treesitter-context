@@ -17,6 +17,7 @@ nvim-treesitter:
 	git clone --depth 1 https://github.com/nvim-treesitter/nvim-treesitter
 
 nvim-treesitter/parser/%.so: nvim-treesitter $(NEOVIM)
+	$(RM) -r $@
 	VIMRUNTIME=$(NEOVIM)/runtime $(NEOVIM)/build/bin/nvim \
 			   --headless \
 			   --clean \
