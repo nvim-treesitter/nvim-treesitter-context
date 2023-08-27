@@ -296,11 +296,35 @@ local function get_pos(winid)
   return lnum, col
 end
 
+--- @param winid integer
+--- @param config_max integer
+--- @return integer
+local function calc_max_lines(winid, config_max)
+  local max_lines = config_max
+  max_lines = max_lines == 0 and -1 or max_lines
+
+  local wintop = fn.line('w0', winid)
+  local cursor = fn.line('.', winid)
+  local max_from_cursor = cursor - wintop
+
+  if config.separator and max_from_cursor > 0 then
+    max_from_cursor = max_from_cursor - 1 -- separator takes 1 line
+  end
+
+  if max_lines ~= -1 then
+    max_lines = math.min(max_lines, max_from_cursor)
+  else
+    max_lines = max_from_cursor
+  end
+
+  return max_lines
+end
+
 --- @param bufnr integer
 --- @param winid integer
---- @param max_lines integer
 --- @return Range4[]?
-local function get_parent_matches(bufnr, winid, max_lines)
+local function get_parent_matches(bufnr, winid)
+  local max_lines = calc_max_lines(winid, config.max_lines)
   if max_lines == 0 then
     return
   end
@@ -737,30 +761,6 @@ local function open(bufnr, winid, ctx_ranges)
   )
 end
 
---- @param winid integer
---- @param config_max integer
---- @return integer
-local function calc_max_lines(winid, config_max)
-  local max_lines = config_max
-  max_lines = max_lines == 0 and -1 or max_lines
-
-  local wintop = fn.line('w0', winid)
-  local cursor = fn.line('.', winid)
-  local max_from_cursor = cursor - wintop
-
-  if config.separator and max_from_cursor > 0 then
-    max_from_cursor = max_from_cursor - 1 -- separator takes 1 line
-  end
-
-  if max_lines ~= -1 then
-    max_lines = math.min(max_lines, max_from_cursor)
-  else
-    max_lines = max_from_cursor
-  end
-
-  return max_lines
-end
-
 local attached = {} --- @type table<integer,true>
 
 local update = throttle(function()
@@ -777,7 +777,7 @@ local update = throttle(function()
     return
   end
 
-  local context = get_parent_matches(bufnr, winid, calc_max_lines(winid, config.max_lines))
+  local context = get_parent_matches(bufnr, winid)
 
   if context and #context ~= 0 then
     if context == previous_nodes then
