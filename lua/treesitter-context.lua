@@ -799,6 +799,7 @@ function M.enable()
   autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
 
   autocmd('BufReadPost', function(args)
+    attached[args.buf] = nil
     if not config.on_attach or config.on_attach(args.buf) ~= false then
       attached[args.buf] = true
     end
