@@ -173,24 +173,7 @@ function M.toggle()
   end
 end
 
-local did_setup = false
-
-function M.setup(options)
-  if did_setup then
-    return
-  end
-  did_setup = true
-
-  local user_options = options or {}
-
-  config.update(user_options)
-
-  if config.enable then
-    M.enable()
-  else
-    M.disable()
-  end
-
+local function init()
   command('TSContextEnable', M.enable, {})
   command('TSContextDisable', M.disable, {})
   command('TSContextToggle', M.toggle, {})
@@ -199,6 +182,26 @@ function M.setup(options)
   api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
   api.nvim_set_hl(0, 'TreesitterContextBottom', { link = 'NONE', default = true })
   api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'FloatBorder', default = true })
+end
+
+local did_init = false
+
+---@param options? TSContext.Config
+function M.setup(options)
+  if options then
+    config.update(options)
+  end
+
+  if config.enable then
+    M.enable()
+  else
+    M.disable()
+  end
+
+  if not did_init then
+    init()
+    did_init = true
+  end
 end
 
 function M.go_to_context()
