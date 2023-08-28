@@ -488,6 +488,18 @@ local function copy_option(name, from_buf, to_buf)
   end
 end
 
+---@param bufnr integer
+---@param row integer
+---@param col integer
+---@param opts vim.api.keyset.set_extmark
+local function add_extmark(bufnr, row, col, opts)
+  local ok, err = pcall(api.nvim_buf_set_extmark, bufnr, ns, row, col, opts)
+  if not ok then
+    local range = vim.inspect({ row, col, opts.end_row, opts.end_col }) --- @type string
+    error(string.format('Could not apply exmtark to %s: %s', range, err))
+  end
+end
+
 --- @param bufnr integer
 --- @param ctx_bufnr integer
 --- @param contexts Range4[]
@@ -534,21 +546,12 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
 
           local hl = buf_query.hl_cache[capture]
           local priority = tonumber(metadata.priority) or vim.highlight.priorities.treesitter
-          local ok, err = pcall(api.nvim_buf_set_extmark, ctx_bufnr, ns, msrow, nscol, {
-            end_line = merow,
+          add_extmark(ctx_bufnr, msrow, nscol, {
+            end_row = merow,
             end_col = necol,
-            hl_group = hl,
             priority = priority + p,
+            hl_group = hl
           })
-          if not ok then
-            error(
-              string.format(
-                'Could not apply exmtark to %s: %s',
-                vim.inspect({ msrow, nscol, merow, necol }),
-                err
-              )
-            )
-          end
 
           -- TODO(lewis6991): Extmarks of equal priority appear to apply
           -- highlights differently between ephemeral and non-ephemeral:
@@ -615,7 +618,7 @@ end
 ---@param bufnr integer
 ---@param row integer
 local function highlight_bottom(bufnr, row)
-  api.nvim_buf_set_extmark(bufnr, ns, row, 0, {
+  add_extmark(bufnr, row, 0, {
     end_line = row + 1,
     hl_group = 'TreesitterContextBottom',
     hl_eol = true,
@@ -631,14 +634,13 @@ local function highlight_lno_str(buf, text, highlights)
       local col = hl.start
       local endcol = hlidx < #linehl and linehl[hlidx + 1].start or #text[line]
       if col ~= endcol then
-        api.nvim_buf_set_extmark(buf, ns, line - 1, col, {
+        add_extmark(buf, line - 1, col {
           end_col = endcol,
           hl_group = hl.group:find('LineNr') and 'TreesitterContextLineNumber' or hl.group,
         })
       end
     end
   end
-  highlight_bottom(buf, #text - 1)
 end
 
 ---@param win integer
@@ -659,6 +661,7 @@ local function render_lno(win, bufnr, contexts, gutter_width)
 
   set_lines(bufnr, lno_text)
   highlight_lno_str(bufnr, lno_text, lno_highlights)
+  highlight_bottom(bufnr, #lno_text - 1)
 end
 
 local function horizontal_scroll_contexts()
@@ -814,8 +817,7 @@ function M.enable()
   end)
 
   autocmd('OptionSet', function(args)
-    if args.match == 'number'
-      or args.match == 'relativenumber' then
+    if args.match == 'number' or args.match == 'relativenumber' then
       update()
     end
   end)
