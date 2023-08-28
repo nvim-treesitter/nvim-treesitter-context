@@ -10,19 +10,6 @@ local enabled = false
 --- @type table<integer, Range4[]>
 local all_contexts = {}
 
-local cursor_moved_vertical --- @type fun(): boolean
-do
-  local line --- @type integer?
-  cursor_moved_vertical = function()
-    local newline = api.nvim_win_get_cursor(0)[1]
-    if newline ~= line then
-      line = newline
-      return true
-    end
-    return false
-  end
-end
-
 --- @generic F: function
 --- @param f F
 --- @param ms? number
@@ -154,11 +141,7 @@ function M.enable()
     attached[args.buf] = nil
   end)
 
-  autocmd('CursorMoved', function()
-    if cursor_moved_vertical() then
-      update()
-    end
-  end)
+  autocmd('CursorMoved', update)
 
   autocmd('OptionSet', function(args)
     if args.match == 'number' or args.match == 'relativenumber' then
