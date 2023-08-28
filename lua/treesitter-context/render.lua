@@ -241,7 +241,7 @@ local function highlight_lno_str(buf, text, highlights)
       local col = hl.start
       local endcol = hlidx < #linehl and linehl[hlidx + 1].start or #text[line]
       if col ~= endcol then
-        add_extmark(buf, line - 1, col {
+        add_extmark(buf, line - 1, col, {
           end_col = endcol,
           hl_group = hl.group:find('LineNr') and 'TreesitterContextLineNumber' or hl.group,
         })
