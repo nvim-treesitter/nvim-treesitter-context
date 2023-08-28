@@ -645,7 +645,6 @@ end
 ---@param bufnr integer
 ---@param contexts Range4[]
 ---@param gutter_width integer
----@return integer
 local function render_lno(win, bufnr, contexts, gutter_width)
   local lno_text = {} --- @type string[]
   local lno_highlights = {} --- @type StatusLineHighlight[][]
@@ -660,8 +659,6 @@ local function render_lno(win, bufnr, contexts, gutter_width)
 
   set_lines(bufnr, lno_text)
   highlight_lno_str(bufnr, lno_text, lno_highlights)
-
-  return #lno_text
 end
 
 local function horizontal_scroll_contexts()
@@ -692,8 +689,6 @@ local function open(bufnr, winid, ctx_ranges, ctx_lines)
 
   local gbufnr, ctx_bufnr = get_bufs()
 
-  local lno_width = 0
-
   if config.line_numbers and (vim.wo[winid].number or vim.wo[winid].relativenumber) then
     gutter_winid = display_window(
       gbufnr,
@@ -704,7 +699,7 @@ local function open(bufnr, winid, ctx_ranges, ctx_lines)
       'treesitter_context_line_number',
       'TreesitterContextLineNumber'
     )
-    lno_width = render_lno(winid, gbufnr, ctx_ranges, gutter_width)
+    render_lno(winid, gbufnr, ctx_ranges, gutter_width)
   else
     win_close(gutter_winid)
   end
@@ -725,7 +720,7 @@ local function open(bufnr, winid, ctx_ranges, ctx_lines)
   end
 
   highlight_contexts(bufnr, ctx_bufnr, ctx_ranges)
-  highlight_bottom(ctx_bufnr, lno_width - 1)
+  highlight_bottom(ctx_bufnr, win_height - 1)
 end
 
 local attached = {} --- @type table<integer,true>
