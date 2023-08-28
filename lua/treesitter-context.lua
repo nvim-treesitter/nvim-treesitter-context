@@ -765,34 +765,23 @@ local update = throttle(function()
   end
 end)
 
---- @param group string
---- @return function
-local function autocmd_for_group(group)
-  local gid = augroup(group, {})
-  return function(event, opts)
-    ---@diagnostic disable:no-unknown
-    if opts then
-      if type(opts) == 'function' then
-        opts = { callback = opts }
-      elseif opts[1] then
-        opts.callback = opts[1]
-        opts[1] = nil
-      end
-    else
-      opts = {}
-    end
-    opts.group = gid
-    api.nvim_create_autocmd(event, opts)
-  end
-end
-
 local M = {
   config = config,
 }
 
-function M.enable()
-  local autocmd = autocmd_for_group('treesitter_context_update')
+local group = augroup('treesitter_context_update', {})
 
+---@param event string|string[]
+---@param callback fun(args: table)
+---@param opts? vim.api.keyset.create_autocmd
+local function autocmd(event, callback, opts)
+  opts = opts or {}
+  opts.callback = callback
+  opts.group = group
+  api.nvim_create_autocmd(event, opts)
+end
+
+function M.enable()
   local cbuf = api.nvim_get_current_buf()
 
   attached[cbuf] = true
@@ -824,8 +813,8 @@ function M.enable()
 
   autocmd({ 'BufLeave', 'WinLeave' }, close)
 
-  autocmd('User', { close, pattern = 'SessionSavePre' })
-  autocmd('User', { update, pattern = 'SessionSavePost' })
+  autocmd('User', close, { pattern = 'SessionSavePre' })
+  autocmd('User', update, { pattern = 'SessionSavePost' })
 
   update()
   enabled = true
@@ -863,6 +852,15 @@ function M.setup(options)
   else
     M.disable()
   end
+
+  command('TSContextEnable', M.enable, {})
+  command('TSContextDisable', M.disable, {})
+  command('TSContextToggle', M.toggle, {})
+
+  api.nvim_set_hl(0, 'TreesitterContext', { link = 'NormalFloat', default = true })
+  api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
+  api.nvim_set_hl(0, 'TreesitterContextBottom', { link = 'NONE', default = true })
+  api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'FloatBorder', default = true })
 end
 
 function M.go_to_context()
@@ -884,19 +882,5 @@ function M.go_to_context()
   vim.cmd([[ normal! m' ]]) -- add current cursor position to the jump list
   api.nvim_win_set_cursor(0, { context[1] + 1, context[2] })
 end
-
-command('TSContextEnable', M.enable, {})
-command('TSContextDisable', M.disable, {})
-command('TSContextToggle', M.toggle, {})
-
-api.nvim_set_hl(0, 'TreesitterContext', { link = 'NormalFloat', default = true })
-api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
-api.nvim_set_hl(0, 'TreesitterContextBottom', { link = 'NONE', default = true })
-api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'FloatBorder', default = true })
-
--- Setup with default options if user didn't call setup()
-autocmd_for_group('treesitter_context')('VimEnter', function()
-  M.setup()
-end)
 
 return M
