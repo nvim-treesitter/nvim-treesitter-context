@@ -29,7 +29,7 @@ local function get_parent_nodes(node)
   local ret = {} --- @type TSNode[]
   while n do
     ret[#ret + 1] = n
-    n = n:parent()
+    n = n:parent() --- @type TSNode?
   end
   return ret
 end

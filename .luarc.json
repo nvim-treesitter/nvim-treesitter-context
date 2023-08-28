@@ -10,6 +10,7 @@
     ],
     "workspace.checkThirdParty": false,
     "diagnostics": {
+      "libraryFiles": "Disable",
       "groupFileStatus": {
         "strict": "Opened",
         "strong": "Opened"

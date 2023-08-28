@@ -9,9 +9,12 @@ NEOVIM := neovim-$(NEOVIM_BRANCH)
 .PHONY: neovim
 neovim: $(NEOVIM)
 
+neovim-nightly:
+	$(MAKE) NEOVIM_BRANCH=nightly neovim-nightly
+
 $(NEOVIM):
 	git clone --depth 1 https://github.com/neovim/neovim --branch $(NEOVIM_BRANCH) $@
-	make -C $@
+	$(MAKE) -C $@
 
 nvim-treesitter:
 	git clone --depth 1 https://github.com/nvim-treesitter/nvim-treesitter
@@ -55,3 +58,29 @@ test: $(NEOVIM) nvim-treesitter \
 
 lint:
 	luacheck lua
+
+
+ARCH := $(shell uname -m | sed 's/x86_64/x64/')
+PLATFORM := $(shell uname -s)
+
+LUALS_VERSION := 3.7.0
+LUALS_BASE_URL := https://github.com/LuaLS/lua-language-server/releases/download
+LUALS_URL := $(LUALS_BASE_URL)/$(LUALS_VERSION)/lua-language-server-$(LUALS_VERSION)-$(PLATFORM)-$(ARCH).tar.gz
+
+luals:
+	wget $(LUALS_URL) -O luals.tar.gz
+	$(RM) -f luals
+	mkdir luals
+	tar -C luals -zxvf luals.tar.gz
+	$(RM) -f luals.tar.gz
+
+check-luals: luals neovim-nightly
+	@VIMRUNTIME=$(PWD)/neovim-nightly/runtime && \
+	./luals/bin/lua-language-server \
+		--logpath . \
+		--configpath $(PWD)/.luarc.json \
+		--check $(PWD)/lua \
+		| tee luals_out.log
+	@grep --silent 'no problems found' luals_out.log \
+		|| cat check.json
+
