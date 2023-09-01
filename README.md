@@ -57,6 +57,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `scss`
   - [x] `smali`
   - [x] `swift`
+  - [x] `tcl`
   - [x] `teal`
   - [x] `terraform`
   - [x] `toml`
