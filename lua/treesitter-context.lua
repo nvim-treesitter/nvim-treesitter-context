@@ -78,6 +78,10 @@ local function can_open(bufnr, winid)
     return false
   end
 
+  if vim.fn.getcmdtype() ~= '' then
+    return false
+  end
+
   if api.nvim_win_get_height(winid) < config.min_window_height then
     return false
   end
