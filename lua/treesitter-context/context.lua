@@ -177,7 +177,12 @@ local function get_text_for_range(range)
     end_row = end_row - 1
   end
 
-  return { start_row, 0, end_row, -1 }, lines
+  ctx_len = config.max_lines_for_a_context_object
+  if ctx_len == nil or ctx_len == 0 then
+    return { start_row, 0, end_row, -1 }, lines
+  end
+  return { start_row, 0, math.min(start_row + ctx_len - 1, end_row), -1 },
+    table.move(lines, 1, math.min(ctx_len, end_row), 1, {})
 end
 
 local M = {}

@@ -15,6 +15,7 @@
 local default_config = {
   enable = true,
   max_lines = 0, -- no limit
+  max_lines_for_a_context_object = 1,
   min_window_height = 0,
   line_numbers = true,
   multiline_threshold = 20, -- Maximum number of lines to show for a single context
