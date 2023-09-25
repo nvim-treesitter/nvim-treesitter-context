@@ -190,7 +190,7 @@ end
 
 local did_init = false
 
----@param options? TSContext.Config
+---@param options? TSContext.UserConfig
 function M.setup(options)
   if options then
     config.update(options)
