@@ -38,6 +38,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `java`
   - [x] `javascript`
   - [x] `json`
+  - [x] `julia`
   - [x] `latex`
   - [x] `lua`
   - [x] `markdown`
@@ -122,7 +123,6 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [ ] `jsonc`
   - [ ] `jsonnet`
   - [ ] `jsx`
-  - [ ] `julia`
   - [ ] `kdl`
   - [ ] `kotlin`
   - [ ] `lalrpop`
