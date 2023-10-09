@@ -35,6 +35,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `haskell`
   - [x] `html_tags`
   - [x] `ini`
+  - [x] `janet` (using the "janet_simple" grammar)
   - [x] `java`
   - [x] `javascript`
   - [x] `json`
