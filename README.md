@@ -28,6 +28,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `dart`
   - [x] `elixir`
   - [x] `fish`
+  - [X] `fennel`
   - [x] `fortran`
   - [x] `glimmer`
   - [x] `go`
