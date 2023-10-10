@@ -20,6 +20,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `c`
   - [x] `c_sharp`
   - [x] `capnp`
+  - [x] `clojure`
   - [x] `cmake`
   - [x] `cpp`
   - [x] `css`
