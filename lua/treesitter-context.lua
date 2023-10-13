@@ -177,6 +177,10 @@ function M.toggle()
   end
 end
 
+function M.is_enabled()
+  return enabled
+end
+
 local function init()
   command('TSContextEnable', M.enable, {})
   command('TSContextDisable', M.disable, {})
