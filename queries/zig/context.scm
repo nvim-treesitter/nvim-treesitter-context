@@ -11,7 +11,7 @@
 ) @context
 
 (VarDecl
-  (ErrorUnionExpr (_))
+  (ErrorUnionExpr (_)  @context.end)
 ) @context
 
 (IfStatement
