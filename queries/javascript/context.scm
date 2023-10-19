@@ -18,4 +18,6 @@
   (object)
   (pair)
   (while_statement)
+  (switch_statement)
+  (switch_case)
 ] @context)
