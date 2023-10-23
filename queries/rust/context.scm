@@ -1,19 +1,19 @@
 
 (if_expression
   consequence: (_ (_) @context.end)
-) @context.if
+) @context.conditional
 
 (else_clause
   (block (_)) @context.end
-) @context.if
+) @context.conditional
 
 (match_expression
   body: (_ (_) @context.end)
-) @context.switch
+) @context.conditional
 
 (match_arm
   (block (_) @context.end)
-) @context.case
+) @context.conditional
 
 (for_expression
   body: (_ (_) @context.end)
@@ -29,7 +29,7 @@
   
 (closure_expression
   body: (_ (_) @context.end)
-) @context.lambda
+) @context.closure
 
 (function_item
   body: (_ (_) @context.end)
@@ -37,20 +37,20 @@
 
 (impl_item
   body: (_ (_) @context.end)
-) @context.class
+) @context.type
 
 (trait_item
   body: (_ (_) @context.end)
-) @context.interface
+) @context.type
 
 (struct_item
   body: (_ (_) @context.end)
-) @context.struct
+) @context.type
 
 (enum_item
   body: (_ (_) @context.end)
-) @context.enum
+) @context.type
 
 (mod_item
   body: (_ (_) @context.end)
-) @context.module
+) @context.namespace

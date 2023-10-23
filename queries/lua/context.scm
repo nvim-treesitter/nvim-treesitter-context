@@ -6,6 +6,10 @@
   body: (_) @context.end
 ) @context.loop
 
+(repeat_statement
+  body: (_) @context.end
+) @context.loop
+
 (do_statement
   body: (_) @context.end
 ) @context.block
@@ -24,8 +28,8 @@
 
 (if_statement
   consequence: (_) @context.end
-) @context.if
+) @context.conditional
 
-(repeat_statement
-  body: (_) @context.end
-) @context.loop
+(elseif_statement
+  consequence: (_) @context.end
+) @context.conditional

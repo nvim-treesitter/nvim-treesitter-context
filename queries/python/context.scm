@@ -1,42 +1,42 @@
 (class_definition
   body: (_) @context.end
-) @context
+) @context.type
 
 (function_definition
   body: (_) @context.end
-) @context
+) @context.function
 
 (try_statement
   body: (_) @context.end
-) @context
-
-(with_statement
-  body: (_) @context.end
-) @context
-
-(if_statement
-  consequence: (_) @context.end
-) @context
-
-(elif_clause
-  consequence: (_) @context.end
-) @context
-
-(case_clause
-  consequence: (_) @context.end
-) @context
-
-(while_statement
-  body: (_) @context.end
-) @context
+) @context.block
 
 (except_clause
   (block) @context.end
-) @context
+) @context.block
+
+(with_statement
+  body: (_) @context.end
+) @context.block
+
+(if_statement
+  consequence: (_) @context.end
+) @context.conditional
+
+(elif_clause
+  consequence: (_) @context.end
+) @context.conditional
 
 (match_statement
   body: (_) @context.end
-) @context
+) @context.conditional
+
+(case_clause
+  consequence: (_) @context.end
+) @context.conditional
+
+(while_statement
+  body: (_) @context.end
+) @context.loop
 
 ([
   (for_statement)

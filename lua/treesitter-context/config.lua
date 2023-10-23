@@ -10,6 +10,16 @@
 --- @field mode 'cursor'|'topline'
 --- @field separator? string
 --- @field on_attach? fun(buf: integer): boolean
+--- @field categories table<string, TSContext.Config.Categories>
+
+--- @class (exact) TSContext.Config.Categories
+--- @field conditional boolean
+--- @field loop boolean
+--- @field block boolean
+--- @field closure boolean
+--- @field function boolean
+--- @field type boolean
+--- @field namespace boolean
 
 --- @class (exact) TSContext.UserConfig : TSContext.Config
 ---
@@ -41,6 +51,18 @@
 ---
 --- Callback when attaching. Return false to disable attaching
 --- @field on_attach? fun(buf: integer): boolean
+--- 
+--- Enable/disable contexts based language agnostic categories
+--- @field categories? table<string, TSContext.Config.UserCategories>
+
+--- @class (exact) TSContext.Config.UserCategories
+--- @field conditional? boolean
+--- @field loop? boolean
+--- @field block? boolean
+--- @field closure? boolean
+--- @field function? boolean
+--- @field type? boolean
+--- @field namespace? boolean
 
 --- @type TSContext.Config
 local default_config = {
@@ -54,18 +76,13 @@ local default_config = {
   mode = 'cursor',
   categories = {
     default = {
-      ['if'] = true,
-      ['switch'] = true,
-      ['case'] = true,
+      ['conditional'] = true,
       ['loop'] = true,
       ['block'] = true,
-      ['lambda'] = true,
+      ['closure'] = true,
       ['function'] = true,
-      ['class'] = true,
-      ['interface'] = true,
-      ['struct'] = true,
-      ['enum'] = true,
-      ['module'] = true,
+      ['type'] = true,
+      ['namespace'] = true,
     },
   },
 }

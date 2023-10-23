@@ -1,6 +1,6 @@
 (if_statement
   consequence: (_) @context.end
-) @context.if
+) @context.conditional
 
 (method_declaration
   body: (_) @context.end
@@ -16,6 +16,6 @@
 
 (class_declaration
   body: (_) @context.end
-) @context.class
+) @context.type
 
 (expression_statement) @context

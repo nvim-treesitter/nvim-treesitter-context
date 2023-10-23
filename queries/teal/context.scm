@@ -1,4 +1,3 @@
-
 (while_statement
   (while_body (_) @context.end)
 ) @context.loop
@@ -6,6 +5,8 @@
 (generic_for_statement
   body: (_ (_) @context.end)
 ) @context.loop
+
+(repeat_statement) @context.loop
 
 (function_statement
   body: (_) @context.end
@@ -18,13 +19,13 @@
 (if_statement
   condition: (_)
   (_) @context.end
-) @context.if
+) @context.conditional
 
 (elseif_block
   condition: (_)
   (_) @context.end
-) @context.if
+) @context.conditional
 
 (record_declaration
   record_body: (_) @context.end
-) @context.struct
+) @context.type

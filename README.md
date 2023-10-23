@@ -210,18 +210,16 @@ require'treesitter-context'.setup{
   on_attach = nil, -- (fun(buf: integer): boolean) return false to disable attaching
   categories = {
     default = { -- Enable/disable contexts based language agnostic categories
-      ['if'] = true,
-      ['switch'] = true,
-      ['case'] = true,
+      ['conditional'] = true,
       ['loop'] = true,
       ['block'] = true,
-      ['lambda'] = true,
+      ['closure'] = true,
       ['function'] = true,
-      ['class'] = true,
-      ['interface'] = true,
-      ['struct'] = true,
-      ['enum'] = true,
-      ['module'] = true,
+      ['type'] = true,
+      ['namespace'] = true,
+    },
+    zig = { -- Enable/disable context categories for specific languages
+      ['loop'] = false
     },
   },
 }

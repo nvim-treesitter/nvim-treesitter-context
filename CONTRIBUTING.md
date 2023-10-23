@@ -15,7 +15,7 @@ Here is a basic example for C:
 ```query
 (function_definition) @context
 (for_statement) @context
-(if_statement) @context.if
+(if_statement) @context.conditional
 (while_statement) @context.loop
 (do_statement) @context.loop
 ```
