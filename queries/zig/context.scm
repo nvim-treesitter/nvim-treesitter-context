@@ -11,22 +11,34 @@
 ) @context
 
 (VarDecl
-  (ErrorUnionExpr (_)  @context.end)
-) @context
+  (ErrorUnionExpr
+    (SuffixExpr
+      (ContainerDecl (ContainerDeclType) (_) @context.end)
+    )
+  )
+) @context.type
+
+(VarDecl
+  (ErrorUnionExpr
+    (SuffixExpr
+      (ErrorSetDecl (_) @context.end)
+    )
+  )
+) @context.type
 
 (IfStatement
   (BlockExpr (_) @context.end)
-) @context
-
-(LoopStatement
-  (_ (BlockExpr (_) @context.end))
-) @context
-
-(LoopExpr
-  (_ (Block (_) @context.end))
-) @context
+) @context.conditional
 
 (SwitchProng
   (AssignExpr) @context.end
-) @context
+) @context.conditional
+
+(LoopStatement
+  (_ (BlockExpr (_) @context.end))
+) @context.loop
+
+(LoopExpr
+  (_ (Block (_) @context.end))
+) @context.loop
 
