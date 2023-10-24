@@ -51,7 +51,7 @@
 ---
 --- Callback when attaching. Return false to disable attaching
 --- @field on_attach? fun(buf: integer): boolean
---- 
+---
 --- Enable/disable contexts based language agnostic categories
 --- @field categories? table<string, TSContext.Config.UserCategories>
 

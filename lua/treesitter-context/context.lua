@@ -126,7 +126,7 @@ local context_range = cache.memoize(function(node, query)
         if name == 'context' then
           r = true
         else
-          local category = name:match('^context%.(.*)$') 
+          local category = name:match('^context%.(.*)$')
           r = is_category_enabled(category)
         end
       end
