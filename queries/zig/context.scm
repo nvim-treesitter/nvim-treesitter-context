@@ -1,14 +1,16 @@
+(TestDecl) @context.function
+
+(LoopTypeExpr) @context.loop
+
 ([
-  (LoopTypeExpr)
   (IfTypeExpr)
-  (TestDecl)
   (SwitchExpr)
-] @context)
+] @context.conditional)
 
 (Decl
   (FnProto  (_))
   (Block (_) @context.end)
-) @context
+) @context.function
 
 (VarDecl
   (ErrorUnionExpr
