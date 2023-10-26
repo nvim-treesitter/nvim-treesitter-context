@@ -1,0 +1,48 @@
+foo {
+
+
+
+
+
+}
+
+[condition]
+
+
+
+
+
+[end]
+
+[condition]
+
+
+
+
+
+foo {
+
+
+
+
+
+    nested {
+
+
+
+
+
+    }
+
+
+
+
+
+
+}
+
+
+
+
+
+[global]
