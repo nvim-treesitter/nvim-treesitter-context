@@ -1,0 +1,21 @@
+0000000000000012 <engine::world::World::initialize()> (File Offset: 0x82):
+_ZN6engine5world5World10initializeEv():
+/home/selecaoone/repositories/jumpy/engine/src/lib/world.cpp:22
+  12:	55                                                    	push   rbp
+  13:	53                                                    	push   rbx
+  14:	48 83 ec 08                                           	sub    rsp,0x8
+_ZN9__gnu_cxx17__normal_iteratorIPSt10unique_ptrIN6engine7systems6SystemESt14default_deleteIS4_EESt6vectorIS7_SaIS7_EEEC4ERKS8_():
+/opt/rh/devtoolset-9/root/usr/include/c++/9/bits/stl_iterator.h:807
+  18:	48 8b 5f 60                                           	mov    rbx,QWORD PTR [rdi+0x60]
+  1c:	48 8b 6f 68                                           	mov    rbp,QWORD PTR [rdi+0x68]
+_ZN6engine5world5World10initializeEv():
+/home/selecaoone/repositories/jumpy/engine/src/lib/world.cpp:23
+  20:	48 39 eb                                              	cmp    rbx,rbp
+  23:	74 12                                                 	je     37 <engine::world::World::initialize()+0x25> (File Offset: 0xa7)
+_ZNKSt15__uniq_ptr_implIN6engine7systems6SystemESt14default_deleteIS2_EE6_M_ptrEv():
+/opt/rh/devtoolset-9/root/usr/include/c++/9/bits/unique_ptr.h:154
+  25:	48 8b 3b                                              	mov    rdi,QWORD PTR [rbx]
+_ZN6engine5world5World10initializeEv():
+/home/selecaoone/repositories/jumpy/engine/src/lib/world.cpp:25
+  28:	48 8b 07                                              	mov    rax,QWORD PTR [rdi]
+  2b:	ff 50 10                                              	call   QWORD PTR [rax+0x10]
