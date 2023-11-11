@@ -1,4 +1,3 @@
-
 ; declarations
 (const_section (variable_declaration) @context.end) @context
 (var_section (variable_declaration) @context.end) @context
@@ -10,6 +9,7 @@
 (object_declaration (field_declaration_list) @context.end) @context
 (tuple_type . (field_declaration) @context.end) @context
 (enum_declaration . (enum_field_declaration) @context.end) @context
+(concept_declaration body: (statement_list) @context.end) @context
 
 ; routines
 (proc_declaration body: (statement_list) @context.end) @context
@@ -34,6 +34,7 @@
 (while body: (statement_list) @context.end) @context
 (block body: (statement_list) @context.end) @context
 (static_statement body: (statement_list) @context.end) @context
+(pragma_statement body: (statement_list) @context.end) @context
 
 ; multi line statements
 (try body: (statement_list) @context.end) @context
