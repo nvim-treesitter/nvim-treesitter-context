@@ -39,6 +39,13 @@ type
     F1
     F2
 
+  Comparable = concept x, y
+
+
+
+
+    (x < y) is bool
+
 proc p[
     T
   ](
@@ -239,5 +246,11 @@ for x in
 
 
 
-                echo "You have climbed Mount Doom!"
+
+                {.warning.}:
+
+
+
+
+                  echo "You have climbed Mount Doom!"
 
