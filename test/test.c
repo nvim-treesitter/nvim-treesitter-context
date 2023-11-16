@@ -72,5 +72,48 @@ int main(int arg1,
       // comment
     }
 
+  } else if (arg1 == 4) {
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+
+  } else {
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+    // comment
+
   }
 }
