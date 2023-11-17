@@ -30,7 +30,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `dart`
   - [x] `elixir`
   - [x] `fish`
-  - [X] `fennel`
+  - [x] `fennel`
   - [x] `fortran`
   - [x] `glimmer`
   - [x] `go`
@@ -52,7 +52,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `nim`
   - [x] `nix`
   - [x] `norg`
-  - [x] `objdump'
+  - [x] `objdump`
   - [x] `ocaml_interface`
   - [x] `ocaml`
   - [x] `odin`
