@@ -25,6 +25,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `cpp`
   - [x] `css`
   - [x] `cuda`
+  - [x] `cue`
   - [x] `d`
   - [x] `dart`
   - [x] `elixir`
