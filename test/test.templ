@@ -1,0 +1,161 @@
+package main
+
+import (
+	"fmt"
+
+
+
+
+
+	"time"
+)
+
+templ headerTemplate(name string) {
+	<header data-testid="headerTemplate">
+		switch name {
+
+
+
+
+
+
+
+
+
+
+
+
+			case "Alice", "Bob":
+				<h1>{ name }</h1>
+
+
+
+
+
+
+
+
+
+
+
+
+			default:
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<h1>{ "Unknown" }</h1>
+		}
+		<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+		<style type="text/css">
+			p {
+				font-family: sans-serif;
+			}
+		</style>
+	</header>
+}
+
+templ posts(posts []Post) {
+	@layout("Posts") {
+
+
+
+
+
+
+
+		@postsTemplate(posts)
+		if len(posts) > 0 {
+			<div>{ "Not empty" }</div>
+
+
+
+
+
+
+
+
+
+
+
+		} else {
+
+
+
+
+
+
+
+
+
+
+			<div>{ "Empty" }</div>
+		}
+	}
+}
+
+templ postsTemplate(posts []Post) {
+	<div data-testid="postsTemplate">
+		for _, p := range posts {
+
+			<div data-testid="postsTemplatePost">
+				<div data-testid="postsTemplatePostName">{ p.Name }</div>
+				<div data-testid="postsTemplatePostAuthor">{ p.Author }</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			</div>
+		}
+	</div>
+}
+
+script withParameters(a string, b string, c int) {
+
+
+
+
+
+
+
+
+	console.log(a, b, c);
+}
+
+css red() {
+
+
+
+
+
+
+
+
+
+
+
+
+	background-color: #ff0000;
+	font-family: "Iosevka";
+}
