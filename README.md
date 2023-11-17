@@ -67,6 +67,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `swift`
   - [x] `tcl`
   - [x] `teal`
+  - [x] `templ`
   - [x] `terraform`
   - [x] `toml`
   - [x] `tsx`
