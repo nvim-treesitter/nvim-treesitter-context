@@ -84,6 +84,18 @@ func foo(a int,
 
 
 
+		default:
+
+
+
+
+
+
+
+
+
+
+			fmt.Println("Not valid")
   }
 }
 

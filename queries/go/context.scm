@@ -6,6 +6,7 @@
   (select_statement)
   (expression_switch_statement)
   (expression_case)
+  (default_case)
 ] @context)
 
 (function_declaration
