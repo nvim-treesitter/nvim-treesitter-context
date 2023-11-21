@@ -29,8 +29,8 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `d`
   - [x] `dart`
   - [x] `elixir`
-  - [x] `fish`
   - [x] `fennel`
+  - [x] `fish`
   - [x] `fortran`
   - [x] `glimmer`
   - [x] `go`
@@ -45,8 +45,8 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `jsonnet`
   - [x] `julia`
   - [x] `latex`
-  - [x] `lua`
   - [x] `liquidsoap`
+  - [x] `lua`
   - [x] `markdown`
   - [x] `matlab`
   - [x] `nim`
@@ -65,6 +65,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `scala`
   - [x] `scss`
   - [x] `smali`
+  - [x] `solidity`
   - [x] `swift`
   - [x] `tcl`
   - [x] `teal`
@@ -77,7 +78,9 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `usd`
   - [x] `verilog`
   - [x] `vim`
+  - [x] `xml`
   - [x] `yaml`
+  - [x] `yang`
   - [x] `zig`
   - [ ] `ada`
   - [ ] `agda`
@@ -164,7 +167,6 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [ ] `scheme`
   - [ ] `slint`
   - [ ] `smithy`
-  - [x] `solidity`
   - [ ] `sparql`
   - [ ] `sql`
   - [ ] `starlark`
@@ -186,8 +188,6 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [ ] `vue`
   - [ ] `wgsl`
   - [ ] `wgsl_bevy`
-  - [x] `xml`
-  - [x] `yang`
   - [ ] `yuck`
 
 </details>
