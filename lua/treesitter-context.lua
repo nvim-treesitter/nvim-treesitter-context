@@ -177,7 +177,7 @@ function M.toggle()
   end
 end
 
-function M.is_enabled()
+function M.enabled()
   return enabled
 end
 
