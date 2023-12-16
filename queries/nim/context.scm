@@ -38,12 +38,26 @@
 
 ; multi line statements
 (try body: (statement_list) @context.end) @context
-(except_branch (statement_list) @context.end) @context
-(finally_branch (statement_list) @context.end) @context
+(except_branch consequence: (statement_list) @context.end) @context
+(finally_branch body: (statement_list) @context.end) @context
 
 (if consequence: (statement_list) @context.end) @context
 (when consequence: (statement_list) @context.end) @context
-(elif_branch (statement_list) @context.end) @context
-(else_branch (statement_list) @context.end) @context
+(conditional_declaration consequence: (field_declaration_list) @context.end) @context
+(elif_branch
+  consequence: [
+    (statement_list)
+    (field_declaration_list)
+  ] @context.end) @context
+(else_branch 
+  consequence: [
+    (statement_list)
+    (field_declaration_list)
+  ] @context.end) @context
 (case value: (_) . (_) @context.end) @context
-(of_branch (statement_list) @context.end) @context
+(variant_declaration (variant_discriminator_declaration) . (_) @context.end) @context
+(of_branch 
+  consequence: [
+    (statement_list)
+    (field_declaration_list)
+  ] @context.end) @context
