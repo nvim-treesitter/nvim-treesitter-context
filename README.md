@@ -242,7 +242,7 @@ hi TreesitterContextBottom gui=underline guisp=Grey
 
 ```lua
 vim.keymap.set("n", "[c", function()
-  require("treesitter-context").go_to_context()
+  require("treesitter-context").go_to_context(vim.v.count1)
 end, { silent = true })
 ```
 
