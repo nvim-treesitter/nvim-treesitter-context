@@ -1,29 +1,12 @@
 # nvim-treesitter-context
 
 Lightweight alternative to [context.vim](https://github.com/wellle/context.vim)
-implemented with [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter).
 
 ## Requirements
 
-Neovim >= v0.8.2
+Neovim >= v0.9.0
 
 Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
-
-## Install
-
-via vim-plug
-
-```vim
-Plug 'nvim-treesitter/nvim-treesitter'
-Plug 'nvim-treesitter/nvim-treesitter-context'
-```
-
-via packer
-
-```lua
-use 'nvim-treesitter/nvim-treesitter'
-use 'nvim-treesitter/nvim-treesitter-context'
-```
 
 ## Screenshot
 
@@ -37,27 +20,42 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `c`
   - [x] `c_sharp`
   - [x] `capnp`
+  - [x] `clojure`
+  - [x] `cmake`
   - [x] `cpp`
   - [x] `css`
   - [x] `cuda`
+  - [x] `cue`
+  - [x] `d`
   - [x] `dart`
   - [x] `elixir`
+  - [x] `fennel`
   - [x] `fish`
   - [x] `fortran`
+  - [x] `glimmer`
   - [x] `go`
   - [x] `graphql`
+  - [x] `haskell`
   - [x] `html_tags`
   - [x] `ini`
+  - [x] `janet` (using the "janet_simple" grammar)
   - [x] `java`
   - [x] `javascript`
   - [x] `json`
+  - [x] `jsonnet`
+  - [x] `julia`
   - [x] `latex`
+  - [x] `liquidsoap`
   - [x] `lua`
   - [x] `markdown`
   - [x] `matlab`
+  - [x] `nim`
+  - [x] `nix`
   - [x] `norg`
+  - [x] `objdump`
   - [x] `ocaml_interface`
   - [x] `ocaml`
+  - [x] `odin`
   - [x] `php`
   - [x] `prisma`
   - [x] `python`
@@ -67,15 +65,22 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [x] `scala`
   - [x] `scss`
   - [x] `smali`
+  - [x] `solidity`
   - [x] `swift`
+  - [x] `tcl`
   - [x] `teal`
+  - [x] `templ`
   - [x] `terraform`
   - [x] `toml`
   - [x] `tsx`
   - [x] `typescript`
+  - [x] `typoscript`
+  - [x] `usd`
   - [x] `verilog`
   - [x] `vim`
+  - [x] `xml`
   - [x] `yaml`
+  - [x] `yang`
   - [x] `zig`
   - [ ] `ada`
   - [ ] `agda`
@@ -87,11 +92,9 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `blueprint`
   - [ ] `chatito`
   - [ ] `clojure`
-  - [ ] `cmake`
   - [ ] `commonlisp`
   - [ ] `cooklang`
   - [ ] `cpon`
-  - [ ] `d`
   - [ ] `devicetree`
   - [ ] `dhall`
   - [ ] `dockerfile`
@@ -112,14 +115,12 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `gdscript`
   - [ ] `git_rebase`
   - [ ] `gleam`
-  - [ ] `glimmer`
   - [ ] `glsl`
   - [ ] `godot_resource`
   - [ ] `gomod`
   - [ ] `gosum`
   - [ ] `gowork`
   - [ ] `hack`
-  - [ ] `haskell`
   - [ ] `hcl`
   - [ ] `heex`
   - [ ] `hjson`
@@ -132,9 +133,7 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `jsdoc`
   - [ ] `json5`
   - [ ] `jsonc`
-  - [ ] `jsonnet`
   - [ ] `jsx`
-  - [ ] `julia`
   - [ ] `kdl`
   - [ ] `kotlin`
   - [ ] `lalrpop`
@@ -145,7 +144,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `mermaid`
   - [ ] `meson`
   - [ ] `nickel`
-  - [ ] `nix`
   - [ ] `ocamllex`
   - [ ] `pascal`
   - [ ] `perl`
@@ -169,7 +167,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `scheme`
   - [ ] `slint`
   - [ ] `smithy`
-  - [ ] `solidity`
   - [ ] `sparql`
   - [ ] `sql`
   - [ ] `starlark`
@@ -191,7 +188,6 @@ use 'nvim-treesitter/nvim-treesitter-context'
   - [ ] `vue`
   - [ ] `wgsl`
   - [ ] `wgsl_bevy`
-  - [ ] `yang`
   - [ ] `yuck`
 
 </details>
@@ -200,13 +196,15 @@ use 'nvim-treesitter/nvim-treesitter-context'
 
 (Default values are shown below)
 
+Note: calling `setup()` is optional.
+
 ```lua
 require'treesitter-context'.setup{
   enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
   max_lines = 0, -- How many lines the window should span. Values <= 0 mean no limit.
   min_window_height = 0, -- Minimum editor window height to enable context. Values <= 0 mean no limit.
   line_numbers = true,
-  multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
+  multiline_threshold = 20, -- Maximum number of lines to show for a single context
   trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
   mode = 'cursor',  -- Line used to calculate context. Choices: 'cursor', 'topline'
   -- Separator between context and content. Should be a single character string, like '-'.
@@ -228,6 +226,9 @@ context. Per default it links to `NormalFloat`.
 
 Use the highlight group `TreesitterContextLineNumber` to change the colors of the
 context line numbers if `line_numbers` is set. Per default it links to `LineNr`.
+
+Use the highlight group `TreesitterContextSeparator` to change the colors of the
+separator if `separator` is set. By default it links to `FloatBorder`.
 
 Use the highlight group `TreesitterContextBottom` to change the highlight of the
 last line of the context window. By default it links to `NONE`.

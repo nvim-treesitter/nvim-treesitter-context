@@ -15,6 +15,14 @@
   body: (_ (_) @context.end)
 ) @context
 
+(else_clause
+  body: (_ (_) @context.end)
+) @context
+
+(else_if_clause
+  body: (_ (_) @context.end)
+) @context
+
 (do_statement
   body: (_ (_) @context.end)
 ) @context

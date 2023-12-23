@@ -35,7 +35,7 @@
 ) @context
 
 (match_statement
-  alternative: (_) @context.end
+  body: (_) @context.end
 ) @context
 
 ([
