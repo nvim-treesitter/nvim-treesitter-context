@@ -830,26 +830,30 @@ end
 ---@param depth integer? default 1
 function M.go_to_context(depth)
   depth = depth or 1
-  local line = vim.api.nvim_win_get_cursor(0)[1]
-  local context = nil
+  local linenr = vim.api.nvim_win_get_cursor(0)[1]
   local bufnr = api.nvim_get_current_buf()
   local contexts = all_contexts[bufnr] or {}
+  local target_context = nil
 
-  for v in vim.iter(contexts):rev() do
+  for idx = #contexts, 1, -1 do
+    local context = contexts[idx]
     if depth == 0 then
       break
     end
-    if v.range[1] + 1 < line then
-      context = v
+    if context.range[1] + 1 < linenr then
+      target_context = context
       depth = depth - 1
     end
   end
 
-  if context == nil then
+  if target_context == nil then
     return
   end
 
-  vim.api.nvim_win_set_cursor(0, { context.range[1] + 1, context.range[2] })
+  vim.api.nvim_win_set_cursor(0, {
+    target_context.range[1] + 1,
+    target_context.range[2],
+  })
 end
 
 command('TSContextEnable' , M.enable , {})
