@@ -62,6 +62,7 @@ local function display_window(bufnr, winid, width, height, col, ty, hl)
     })
     vim.w[winid][ty] = true
     vim.wo[winid].wrap = false
+    vim.wo[winid].signcolumn = 'no'
     vim.wo[winid].winhl = 'NormalFloat:' .. hl
 
     local fold = config.summarizer == 'fold'
