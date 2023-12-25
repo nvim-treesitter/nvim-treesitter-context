@@ -62,8 +62,22 @@ local function display_window(bufnr, winid, width, height, col, ty, hl)
     })
     vim.w[winid][ty] = true
     vim.wo[winid].wrap = false
-    vim.wo[winid].foldenable = false
     vim.wo[winid].winhl = 'NormalFloat:' .. hl
+
+    local fold = config.summarizer == 'fold'
+    vim.wo[winid].foldenable = fold
+    if fold then
+      api.nvim_set_hl(ns, "Folded", { link = "TreesitterContext" })
+      api.nvim_win_set_hl_ns(winid, ns)
+      vim.wo[winid].foldmethod = "manual"
+      if config.foldtext then
+        vim.wo[winid].foldtext = config.foldtext
+      elseif vim.treesitter.foldtext then
+        vim.wo[winid].foldtext = "v:lua.vim.treesitter.foldtext()"
+      else
+        vim.wo[winid].foldtext = "getline(v:foldstart)"
+      end
+    end
   else
     api.nvim_win_set_config(winid, {
       win = api.nvim_get_current_win(),
@@ -348,8 +362,10 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
     win_close(gutter_winid)
   end
 
+  local fold = config.summarizer == "fold"
+
   context_winid = display_window(
-    ctx_bufnr,
+    fold and bufnr or ctx_bufnr,
     context_winid,
     win_width,
     win_height,
@@ -357,6 +373,22 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
     'treesitter_context',
     'TreesitterContext'
   )
+
+  if fold then
+    vim.api.nvim_win_call(context_winid, function()
+      vim.api.nvim_win_set_cursor(context_winid, {ctx_ranges[1][1] + 1, 1})
+      vim.cmd([[normal! ztzE]])
+
+      for i, range in ipairs(ctx_ranges) do
+        if ctx_ranges[i + 1] then
+          local srow = range[1] + 1
+          local erow = ctx_ranges[i + 1][1]
+          vim.cmd(srow .. "," .. erow .. "fold")
+        end
+      end
+    end)
+    return
+  end
 
   if not set_lines(ctx_bufnr, ctx_lines) then
     -- Context didn't change, can return here

@@ -8,6 +8,8 @@
 --- @field trim_scope 'outer'|'inner'
 --- @field zindex integer
 --- @field mode 'cursor'|'topline'
+--- @field summarizer 'set_lines' | 'fold'
+--- @field foldtext? string
 --- @field separator? string
 --- @field on_attach? fun(buf: integer): boolean
 
@@ -52,6 +54,7 @@ local default_config = {
   trim_scope = 'outer',
   zindex = 20,
   mode = 'cursor',
+  summarizer = 'set_lines',
 }
 
 local config = vim.deepcopy(default_config)

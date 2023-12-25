@@ -207,6 +207,12 @@ require'treesitter-context'.setup{
   multiline_threshold = 20, -- Maximum number of lines to show for a single context
   trim_scope = 'outer', -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
   mode = 'cursor',  -- Line used to calculate context. Choices: 'cursor', 'topline'
+  -- Summarizer can be 'set_lines' or 'fold'. The latter recommends nvim >= 0.10.
+  summarizer = 'set_lines',
+  -- The 'foldtext' option for the context window when `summarizer = 'fold'`.
+  -- If `nil` (default), tries `"v:lua.vim.treesitter.foldtext()"` and fallbacks to
+  -- "getline(v:foldstart)"
+  foldtext = nil,
   -- Separator between context and content. Should be a single character string, like '-'.
   -- When separator is set, the context will only show up when there are at least 2 lines above cursorline.
   separator = nil,
