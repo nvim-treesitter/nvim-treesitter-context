@@ -19,6 +19,10 @@
   consequence: (_ (_) @context.end)
 ) @context
 
+(else_clause
+  (_) @context.end
+) @context
+
 (while_statement
   body: (_ (_) @context.end)
 ) @context

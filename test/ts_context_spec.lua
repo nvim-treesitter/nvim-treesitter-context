@@ -191,6 +191,7 @@ describe('ts_context', function()
                                       |
       ]]}
 
+      -- func -> if -> for -> do while
       feed'40<C-e>'
       screen:expect{grid=[[
         {7:int}{2: main(}{7:int}{2: arg1,            }|
@@ -208,6 +209,27 @@ describe('ts_context', function()
                                       |
               } {4:while} ({11:1});            |
               {8:// comment}              |
+                                      |
+      ]]}
+
+      -- func -> if / else if / else
+      feed'41<C-e>'
+      screen:expect{grid=[[
+        {7:int}{2: main(}{7:int}{2: arg1,            }|
+        {2:  }{1:if}{2: (arg1 == }{10:4}{2:               }|
+        {2:      && arg2 == arg3) }{13:{}{2:      }|
+        {2:  }{13:}}{2: }{1:else}{2: }{1:if}{2: (arg1 == }{10:4}{2:) }{13:{}{2:     }|
+        {2:  }{13:}}{2: }{1:else}{2: }{13:{}{2:                    }|
+        ^    {8:// comment}                |
+            {8:// comment}                |
+            {8:// comment}                |
+            {8:// comment}                |
+            {8:// comment}                |
+            {8:// comment}                |
+            {8:// comment}                |
+            {8:// comment}                |
+            {8:// comment}                |
+            {8:// comment}                |
                                       |
       ]]}
     end)
