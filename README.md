@@ -16,6 +16,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
 <details>
 <summary>click to expand</summary
 
+  - [x] `apex`
   - [x] `bash`
   - [x] `c`
   - [x] `c_sharp`
