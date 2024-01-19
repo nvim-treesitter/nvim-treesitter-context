@@ -32,12 +32,6 @@ describe('ts_context', function()
     cmd [[let $XDG_CACHE_HOME='scratch/cache']]
     cmd [[set packpath=]]
     cmd('syntax enable')
-
-    exec_lua[[
-      require'nvim-treesitter.configs'.setup {
-        highlight = { enable = true }
-      }
-    ]]
   end)
 
   it('load the plugin', function()

@@ -10,9 +10,9 @@ on:
 jobs:
   build:
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        neovim_branch: ['v0.8.2', 'v0.9.1']
+        neovim_branch: ['v0.9.5']
     runs-on: ubuntu-latest
     env:
       NEOVIM_BRANCH: ${{ matrix.neovim_branch }}
