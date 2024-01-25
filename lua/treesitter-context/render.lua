@@ -224,10 +224,11 @@ end
 
 ---@param bufnr integer
 ---@param row integer
-local function highlight_bottom(bufnr, row)
+---@param hl_group 'TreesitterContextBottom' | 'TreesitterContextLineNumberBottom'
+local function highlight_bottom(bufnr, row, hl_group)
   add_extmark(bufnr, row, 0, {
     end_line = row + 1,
-    hl_group = 'TreesitterContextBottom',
+    hl_group = hl_group,
     hl_eol = true,
   })
 end
@@ -293,7 +294,7 @@ local function render_lno(win, bufnr, contexts, gutter_width)
 
   set_lines(bufnr, lno_text)
   highlight_lno_str(bufnr, lno_text, lno_highlights)
-  highlight_bottom(bufnr, #lno_text - 1)
+  highlight_bottom(bufnr, #lno_text - 1, 'TreesitterContextLineNumberBottom')
 end
 
 ---@param winid? integer
@@ -364,7 +365,7 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
   end
 
   highlight_contexts(bufnr, ctx_bufnr, ctx_ranges)
-  highlight_bottom(ctx_bufnr, win_height - 1)
+  highlight_bottom(ctx_bufnr, win_height - 1, 'TreesitterContextBottom')
   horizontal_scroll_contexts()
 end
 
