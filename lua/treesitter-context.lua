@@ -189,6 +189,7 @@ local function init()
   api.nvim_set_hl(0, 'TreesitterContext', { link = 'NormalFloat', default = true })
   api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
   api.nvim_set_hl(0, 'TreesitterContextBottom', { link = 'NONE', default = true })
+  api.nvim_set_hl(0, 'TreesitterContextLineNumberBottom', { link = 'TreesitterContextBottom', default = true })
   api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'FloatBorder', default = true })
 end
 

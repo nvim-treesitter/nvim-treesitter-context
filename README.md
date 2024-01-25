@@ -231,12 +231,21 @@ context line numbers if `line_numbers` is set. Per default it links to `LineNr`.
 Use the highlight group `TreesitterContextSeparator` to change the colors of the
 separator if `separator` is set. By default it links to `FloatBorder`.
 
-Use the highlight group `TreesitterContextBottom` to change the highlight of the
-last line of the context window. By default it links to `NONE`.
-However, you can use this to create a border by applying an underline highlight, e.g:
+Use the highlight groups `TreesitterContextBottom` and/or
+`TreesitterContextLineNumberBottom` to change the highlight of the last line of
+the context window. By default it links to `NONE`.
+However, you can use this to create a border by applying an underline highlight, e.g,
+for an underline across the screen:
 
 ```vim
 hi TreesitterContextBottom gui=underline guisp=Grey
+hi TreesitterContextLineNumberBottom gui=underline guisp=Grey
+```
+
+Or an underline below the line numbers only:
+
+```vim
+hi TreesitterContextLineNumberBottom gui=underline guisp=Grey
 ```
 
 ## Jumping to context (upwards)
