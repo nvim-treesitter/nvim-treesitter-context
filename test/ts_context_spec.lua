@@ -40,7 +40,9 @@ describe('ts_context', function()
         "lua",
         "rust",
         "cpp",
-        "typescript"
+        "typescript",
+        "html",
+        "javascript",
       },
       sync_install = true,
     }
@@ -329,6 +331,52 @@ describe('ts_context', function()
       ]]}
     end)
 
+    it('html', function()
+      cmd('edit test/test.html')
+      exec_lua [[vim.treesitter.start()]]
+
+      feed'100<C-e>'
+      screen:expect{grid=[[
+        {14:<html}{2: }{14:lang}{1:=}{10:"en"}{14:>}{2:              }|
+        {2:  }{14:<body>}{2:                      }|
+        {2:    }{14:<ul>}{2:                      }|
+        {2:      }{14:<li>}{2:                    }|
+                                      |
+        ^                              |
+                                      |*5
+              {15:</li>}                   |
+              {15:<li></li>}               |
+            {15:</ul>}                     |
+          {15:</body>}                     |
+                                      |
+      ]]}
+
+      feed'31<C-e>'
+      screen:expect{grid=[[
+        {14:<html}{2: }{14:lang}{1:=}{10:"en"}{14:>}{2:              }|
+        {2:  }{14:<script>}{2:                    }|
+        {2:    }{1:function}{2: }{3:test}{14:()}{2: }{14:{}{2:         }|
+                                      |
+                                      |
+        ^                              |
+              {4:if} {5:test} {4:!=} {11:""} {15:{}         |
+                                      |*9
+      ]]}
+
+      feed'4<C-e>'
+      screen:expect{grid=[[
+        {14:<html}{2: }{14:lang}{1:=}{10:"en"}{14:>}{2:              }|
+        {2:  }{14:<script>}{2:                    }|
+        {2:    }{1:function}{2: }{3:test}{14:()}{2: }{14:{}{2:         }|
+        {2:      }{1:if}{2: }{3:test}{2: }{1:!=}{2: }{10:""}{2: }{14:{}{2:         }|
+                                      |
+        ^                              |
+                                      |*6
+              {15:}}                       |
+            {15:}}                         |
+                                      |*2
+      ]]}
+    end)
   end)
 
 end)
