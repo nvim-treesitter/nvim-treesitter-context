@@ -225,13 +225,13 @@ function M.get(bufnr, winid)
   for offset = 0, max_lines do
     local node_row = row + offset
     local col0 = offset == 0 and col or 0
-    local range = { node_row, col0, node_row, col0 + 1 }
+    local line_range = { node_row, col0, node_row, col0 + 1 }
 
     context_ranges = {}
     context_lines = {}
     contexts_height = 0
 
-    local parent_trees = get_parent_langtrees(bufnr, range)
+    local parent_trees = get_parent_langtrees(bufnr, line_range)
     for i = 1, #parent_trees, 1 do
       local langtree = parent_trees[i]
       local query = get_context_query(langtree:lang())
@@ -239,9 +239,9 @@ function M.get(bufnr, winid)
         return
       end
 
-      local parents = get_parent_nodes(langtree, range)
-      for i = #parents, 1, -1 do
-        local parent = parents[i]
+      local parents = get_parent_nodes(langtree, line_range)
+      for j = #parents, 1, -1 do
+        local parent = parents[j]
         local parent_start_row = parent:range()
 
         local contexts_end_row = top_row + math.min(max_lines, contexts_height)
