@@ -8,37 +8,35 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  commit_lint:
+    runs-on: ubuntu-latest
+    steps:
+      # Check commit messages
+      - uses: webiny/action-conventional-commits@v1.1.0
+
+  test:
+    runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
-        neovim_branch: ['v0.9.5']
-    runs-on: ubuntu-latest
+        neovim_version: ['0.9.5']
+
     env:
-      NEOVIM_BRANCH: ${{ matrix.neovim_branch }}
+      NEOVIM_VERSION: ${{ matrix.neovim_version }}
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup build dependencies
-        run: |
-          sudo apt-get update &&
-          sudo apt-get install -y \
-            cmake \
-            g++ \
-            gettext \
-            libtool-bin \
-            lua-bitop \
-            ninja-build \
-            unzip
-
-      - name: Cache neovim
-        uses: actions/cache@v3
+      - uses: leafo/gh-actions-lua@v10
         with:
-          path: neovim-${{env.NEOVIM_BRANCH}}
-          key: build-${{env.NEOVIM_BRANCH}}
+          luaVersion: "5.1.5"
 
-      - name: Build Neovim
-        run: make neovim NEOVIM_BRANCH=$NEOVIM_BRANCH
+      - uses: leafo/gh-actions-luarocks@v4
+
+      - name: Download nvim-test
+        run: make nvim-test
 
       - name: Run Test
-        run: make test NEOVIM_BRANCH=$NEOVIM_BRANCH
+        run: make test NEOVIM_VERSION=$NEOVIM_VERSION

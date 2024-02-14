@@ -1,57 +1,29 @@
 .DEFAULT_GOAL := test
 
-NEOVIM_BRANCH := v0.9.5
+NEOVIM_VERSION := 0.9.5
+
+NVIM_TS_SHA := 883c72cd
 
 FILTER=.*
 
-NEOVIM := neovim-$(NEOVIM_BRANCH)
-
-.PHONY: neovim
-neovim: $(NEOVIM)
-
-$(NEOVIM):
-	git clone --depth 1 https://github.com/neovim/neovim --branch $(NEOVIM_BRANCH) $@
-	make -C $@
-
 nvim-treesitter:
-	git clone --depth 1 https://github.com/nvim-treesitter/nvim-treesitter
+	git clone  \
+      	--filter=blob:none \
+		https://github.com/nvim-treesitter/nvim-treesitter
+	cd nvim-treesitter && git checkout $(NVIM_TS_SHA)
 
-nvim-treesitter/parser/%.so: nvim-treesitter $(NEOVIM)
-	$(RM) -r $@
-	VIMRUNTIME=$(NEOVIM)/runtime $(NEOVIM)/build/bin/nvim \
-			   --headless \
-			   --clean \
-			   --cmd 'set rtp+=./nvim-treesitter' \
-			   -c "TSInstallSync $*" \
-			   -c "q"
-
-export VIMRUNTIME=$(PWD)/$(NEOVIM)/runtime
-
-BUSTED = $$( [ -f $(NEOVIM)/test/busted_runner.lua ] \
-        && echo "$(NEOVIM)/build/bin/nvim -ll $(NEOVIM)/test/busted_runner.lua" \
-        || echo "$(NEOVIM)/.deps/usr/bin/busted" )
+nvim-test:
+	git clone https://github.com/lewis6991/nvim-test
+	nvim-test/bin/nvim-test --init
 
 .PHONY: test
-test: $(NEOVIM) nvim-treesitter \
-	nvim-treesitter/parser/cpp.so \
-	nvim-treesitter/parser/lua.so \
-	nvim-treesitter/parser/rust.so \
-	nvim-treesitter/parser/typescript.so
-	$(BUSTED) \
-		-v \
-		--lazy \
-		--helper=$(PWD)/test/preload.lua \
-		--output test.busted.outputHandlers.nvim \
-		--lpath=$(PWD)/$(NEOVIM)/?.lua \
-		--lpath=$(PWD)/$(NEOVIM)/build/?.lua \
-		--lpath=$(PWD)/$(NEOVIM)/runtime/lua/?.lua \
-		--lpath=$(PWD)/nvim-treesitter/lua/?.lua \
-		--lpath=$(PWD)/?.lua \
+test: nvim-test nvim-treesitter
+	nvim-test/bin/nvim-test test \
+		--runner_version $(NEOVIM_VERSION) \
+		--target_version $(NEOVIM_VERSION) \
 		--lpath=$(PWD)/lua/?.lua \
 		--filter=$(FILTER) \
-		$(PWD)/test
-
-	-@stty sane
+		--verbose
 
 lint:
 	luacheck lua

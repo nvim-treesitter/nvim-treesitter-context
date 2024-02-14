@@ -184,6 +184,7 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
             end_col = necol,
             priority = priority + p,
             hl_group = hl_from_capture(query, capture, lang),
+            conceal = metadata.conceal,
           })
 
           -- TODO(lewis6991): Extmarks of equal priority appear to apply
