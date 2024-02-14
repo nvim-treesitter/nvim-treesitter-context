@@ -182,8 +182,16 @@ local function get_parent_langtrees(bufnr, range)
   local parent_langtrees = {root_tree}
 
   while true do
-    child_langtree = parent_langtrees[#parent_langtrees]:language_for_range(range)
-    if child_langtree == parent_langtrees[#parent_langtrees] then
+    local child_langtree = nil
+
+    for _, langtree in pairs(parent_langtrees[#parent_langtrees]:children()) do
+      if langtree:contains(range) then
+        child_langtree = langtree
+        break
+      end
+    end
+
+    if child_langtree == nil then
       break
     end
     parent_langtrees[#parent_langtrees + 1] = child_langtree
