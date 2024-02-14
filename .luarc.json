@@ -6,7 +6,8 @@
     "workspace.library": [
       "$VIMRUNTIME",
       "${3rd}/busted/library",
-      "${3rd}/luv/library"
+      "${3rd}/luv/library",
+      "nvim-test"
     ],
     "workspace.checkThirdParty": false,
     "diagnostics": {
