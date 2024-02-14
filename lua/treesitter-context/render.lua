@@ -1,8 +1,8 @@
 local api, fn = vim.api, vim.fn
-local highlighter = vim.treesitter.highlighter
 
 local util = require('treesitter-context.util')
 local config = require('treesitter-context.config')
+local memoize = require('treesitter-context.cache').memoize
 
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 
@@ -107,27 +107,54 @@ local function add_extmark(bufnr, row, col, opts)
   end
 end
 
+--- @param query vim.treesitter.Query
+--- @param capture integer
+--- @return integer
+local hl_from_capture = memoize(function(query, capture, lang)
+  local name = query.captures[capture]
+  local hl = 0
+  if not vim.startswith(name, '_') then
+    hl = api.nvim_get_hl_id_by_name('@' .. name .. '.' .. lang)
+  end
+  return hl
+end, function(_, capture, lang)
+  return lang..tostring(capture)
+end)
+
+--- @param contexts Range4[]
+--- @return integer start_row, integer end_row
+local function get_contexts_range(contexts)
+  --- @type integer, integer
+  local srow, erow
+  for i, context in ipairs(contexts) do
+    local csrow, cerow = context[1], context[3]
+    if i == 1 or csrow < srow then
+      srow = csrow
+    end
+
+    if i == 1 or cerow > erow then
+      erow = cerow
+    end
+  end
+  return srow, erow
+end
+
 --- @param bufnr integer
 --- @param ctx_bufnr integer
 --- @param contexts Range4[]
 local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   api.nvim_buf_clear_namespace(ctx_bufnr, ns, 0, -1)
 
-  local buf_highlighter = highlighter.active[bufnr]
-
   copy_option('tabstop', bufnr, ctx_bufnr)
 
-  if not buf_highlighter then
-    -- Use standard highlighting when TS highlighting is not available
-    copy_option('filetype', bufnr, ctx_bufnr)
-    return
-  end
-
-  local parser = buf_highlighter.tree
+  local parser = vim.treesitter.get_parser(bufnr)
+  local srow, erow = get_contexts_range(contexts)
+  parser:parse({srow, erow})
 
   parser:for_each_tree(function(tstree, ltree)
-    local buf_query = buf_highlighter:get_query(ltree:lang())
-    local query = buf_query:query()
+    local lang = ltree:lang()
+    local query = vim.treesitter.query.get(lang, 'highlights')
+
     if not query then
       return
     end
@@ -151,13 +178,12 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
           local msrow = offset + (nsrow - start_row)
           local merow = offset + (nerow - start_row)
 
-          local hl = buf_query.hl_cache[capture]
           local priority = tonumber(metadata.priority) or vim.highlight.priorities.treesitter
           add_extmark(ctx_bufnr, msrow, nscol, {
             end_row = merow,
             end_col = necol,
             priority = priority + p,
-            hl_group = hl
+            hl_group = hl_from_capture(query, capture, lang),
           })
 
           -- TODO(lewis6991): Extmarks of equal priority appear to apply
