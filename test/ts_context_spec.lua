@@ -49,7 +49,7 @@ describe('ts_context', function()
     }
     ]]
     -- Required for the proper Markdown support
-    exec_lua [[require'nvim-treesitter.query_predicates']]
+    exec_lua [[require'nvim-treesitter'.setup()]]
 
     cmd [[let $XDG_CACHE_HOME='scratch/cache']]
     cmd [[set packpath=]]
