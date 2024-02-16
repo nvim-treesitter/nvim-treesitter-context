@@ -1,29 +1,27 @@
 ```html
 <html>
-    <body>
-
-        
+  <body>
 
 
 
 
 
 
-
-        <script>
-
+    <script>
 
 
 
 
 
-            function test() {
 
 
 
-              if test != "" {
 
 
+
+
+      function test() {
+        if test != "" {
 
 
 
@@ -37,13 +35,11 @@
 
 
 
-              }
-            }
-
-        </script>
 
 
-
-    </body>
+        }
+      }
+    </script>
+  </body>
 </html>
 ```
