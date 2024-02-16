@@ -42,6 +42,8 @@ describe('ts_context', function()
         "cpp",
         "typescript",
         "markdown",
+        "html",
+        "javascript",
       },
       sync_install = true,
     }
