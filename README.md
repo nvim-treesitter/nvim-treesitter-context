@@ -36,6 +36,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `glimmer`
   - [x] `go`
   - [x] `graphql`
+  - [x] `groovy`
   - [x] `haskell`
   - [x] `html_tags`
   - [x] `ini`
