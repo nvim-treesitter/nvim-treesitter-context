@@ -40,11 +40,17 @@ describe('ts_context', function()
         "lua",
         "rust",
         "cpp",
-        "typescript"
+        "typescript",
+        "markdown",
+        "html",
+        "javascript",
       },
       sync_install = true,
     }
     ]]
+    -- Required for the proper Markdown support
+    exec_lua [[require'nvim-treesitter'.setup()]]
+
     cmd [[let $XDG_CACHE_HOME='scratch/cache']]
     cmd [[set packpath=]]
     cmd('syntax enable')
@@ -329,6 +335,43 @@ describe('ts_context', function()
       ]]}
     end)
 
+    it('markdown', function()
+      cmd('edit test/test.md')
+      exec_lua [[vim.treesitter.start()]]
+
+      feed'3<C-e>'
+      screen:expect{grid=[[
+        {14:<html>}{2:                        }|
+        {2:  }{14:<body>}{2:                      }|
+                                      |*3
+        ^                              |
+            {15:<script>}                  |
+                                      |*9
+      ]]}
+
+      feed'5<C-e>'
+      screen:expect{grid=[[
+        {14:<html>}{2:                        }|
+        {2:  }{14:<body>}{2:                      }|
+        {2:    }{14:<script>}{2:                  }|
+                                      |*2
+        ^                              |
+                                      |*8
+              {4:function} {5:test}{15:()} {15:{}       |
+                                      |
+      ]]}
+
+      feed'12<C-e>'
+      screen:expect{grid=[[
+        {14:<html>}{2:                        }|
+        {2:  }{14:<body>}{2:                      }|
+        {2:    }{14:<script>}{2:                  }|
+        {2:      }{1:function}{2: }{3:test}{14:()}{2: }{14:{}{2:       }|
+        {2:        }{1:if}{2: }{3:test}{2: }{1:!=}{2: }{10:""}{2: }{14:{}{2:       }|
+        ^                              |
+                                      |*10
+      ]]}
+    end)
   end)
 
 end)
