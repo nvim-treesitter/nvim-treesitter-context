@@ -14,6 +14,10 @@ local get_query = vim.treesitter.query.get or vim.treesitter.query.get_query
 --- @return TSNode[]?
 local function get_parent_nodes(langtree, range)
   local tree = langtree:tree_for_range(range, { ignore_injections = true })
+  if tree == nil then
+    return
+  end
+
   local n = tree:root():named_descendant_for_range(unpack(range))
 
   local ret = {} --- @type TSNode[]
@@ -248,6 +252,10 @@ function M.get(bufnr, winid)
       end
 
       local parents = get_parent_nodes(langtree, line_range)
+      if parents == nil then
+        return
+      end
+
       for j = #parents, 1, -1 do
         local parent = parents[j]
         local parent_start_row = parent:range()
