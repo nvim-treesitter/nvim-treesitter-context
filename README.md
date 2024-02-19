@@ -69,6 +69,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `scss`
   - [x] `smali`
   - [x] `solidity`
+  - [x] `svelte`
   - [x] `swift`
   - [x] `tcl`
   - [x] `teal`
@@ -175,7 +176,6 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [ ] `starlark`
   - [ ] `supercollider`
   - [ ] `surface`
-  - [x] `svelte`
   - [ ] `sxhkdrc`
   - [ ] `t32`
   - [ ] `thrift`
