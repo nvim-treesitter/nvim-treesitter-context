@@ -188,7 +188,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [ ] `v`
   - [ ] `vala`
   - [ ] `vhs`
-  - [ ] `vue`
+  - [x] `vue`
   - [ ] `wgsl`
   - [ ] `wgsl_bevy`
   - [ ] `yuck`
