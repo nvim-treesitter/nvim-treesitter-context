@@ -261,4 +261,3 @@ end, { silent = true })
 ## Adding support for other languages
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
-
