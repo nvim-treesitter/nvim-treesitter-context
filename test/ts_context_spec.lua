@@ -42,6 +42,7 @@ describe('ts_context', function()
         "cpp",
         "typescript",
         "markdown",
+        "markdown_inline",
         "html",
         "javascript",
       },
@@ -369,6 +370,22 @@ describe('ts_context', function()
         {2:      }{1:function}{2: }{3:test}{14:()}{2: }{14:{}{2:       }|
         {2:        }{1:if}{2: }{3:test}{2: }{1:!=}{2: }{10:""}{2: }{14:{}{2:       }|
         ^                              |
+                                      |*10
+      ]]}
+    end)
+
+    -- Separate Markdown testcase to test plugin behavior with
+    -- unsupported injected languages (markdown_inline does not
+    -- have queries specified)
+    it('markdown_inline', function()
+      cmd('edit test/test.md')
+      exec_lua [[vim.treesitter.start()]]
+
+      feed'47<C-e>'
+      screen:expect{grid=[[
+        {2:# Title                       }|
+                                      |*4
+        ^Test                          |
                                       |*10
       ]]}
     end)
