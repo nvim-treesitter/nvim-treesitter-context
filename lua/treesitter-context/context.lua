@@ -247,13 +247,19 @@ function M.get(bufnr, winid)
     for i = 1, #parent_trees, 1 do
       local langtree = parent_trees[i]
       local query = get_context_query(langtree:lang())
-      if not query then
-        return
-      end
-
       local parents = get_parent_nodes(langtree, line_range)
       if parents == nil then
         return
+      end
+
+      if not query then
+        -- If the language is not supported we ignore it and continue
+        -- with remaining languages. This way we can get as much context
+        -- as possible, even if some injected languages are not supported.
+        --
+        -- There's no continue statement in Lua, so we need to get a
+        -- little creative to skip to the next iteration.
+        parents = {}
       end
 
       for j = #parents, 1, -1 do
