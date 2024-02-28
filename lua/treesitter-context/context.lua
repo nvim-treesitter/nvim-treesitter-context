@@ -31,7 +31,52 @@ end
 --- @param winid integer
 --- @return integer
 local function calc_max_lines(winid)
+  --- @param percentage string
+  --- @return integer?
+  local function calc_window_lines(percentage)
+    if not percentage:match('^%d+%%$') then
+      return nil
+    end
+    local lines_percentage = tonumber(percentage:match('(%d+)'))
+    if lines_percentage == nil or lines_percentage > 100 then
+      return nil
+    end
+    return math.floor((lines_percentage * api.nvim_win_get_height(winid)) / 100)
+  end
+
   local max_lines = config.max_lines == 0 and -1 or config.max_lines
+
+  if type(max_lines) == 'function' then
+    local user_lines = max_lines()
+    local user_lines_type = type(user_lines)
+    if user_lines == nil or (user_lines_type ~= 'string' and user_lines_type ~= 'number') then
+      vim.notify_once(
+        'Max_lines function should return a "number" or a percentage "string" with the format "number%"',
+        vim.log.levels.ERROR,
+        { title = 'nvim-treesitter-context' }
+      )
+      max_lines = -1
+    else
+      max_lines = user_lines
+    end
+  end
+
+  if type(max_lines) == 'string' then
+    local window_lines = calc_window_lines(max_lines)
+    if window_lines == nil then
+      vim.notify_once(
+        string.format(
+          'Window percentage "%s" should have the format: "number%%" and should be between 0%% and 100%%',
+          max_lines
+        ),
+        vim.log.levels.ERROR,
+        { title = 'nvim-treesitter-context' }
+      )
+      max_lines = -1
+    else
+      max_lines = window_lines
+    end
+  end
 
   local wintop = fn.line('w0', winid)
   local cursor = fn.line('.', winid)
@@ -183,7 +228,7 @@ local function get_parent_langtrees(bufnr, range)
     return {}
   end
 
-  local parent_langtrees = {root_tree}
+  local parent_langtrees = { root_tree }
 
   while true do
     local child_langtree = nil
