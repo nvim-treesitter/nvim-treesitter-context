@@ -10,7 +10,7 @@
 
 
 
- ** a subheading
+** a subheading
 
 
 
@@ -26,14 +26,14 @@
 
 
 
- ** a subheading
+** a subheading
 
 
 
 
 
 
-  *** a subsubheading
+*** a subsubheading
 
 
 
