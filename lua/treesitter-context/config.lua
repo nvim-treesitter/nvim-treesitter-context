@@ -1,7 +1,6 @@
-
 --- @class (exact) TSContext.Config
 --- @field enable boolean
---- @field max_lines integer
+--- @field max_lines integer | string | fun(): integer|string
 --- @field min_window_height integer
 --- @field line_numbers boolean
 --- @field multiline_threshold integer
@@ -16,8 +15,9 @@
 --- Enable this plugin (Can be enabled/disabled later via commands)
 --- @field enable? boolean
 ---
---- How many lines the window should span. Values <= 0 mean no limit.
---- @field max_lines? integer
+--- How many lines the window should span. It can be a number, a string percentage
+--- e.g., "5%" or a function that can return both. Numbers <= 0 mean no limit."
+--- @field max_lines? integer | string | fun(): integer|string
 ---
 --- Minimum editor window height to enable context. Values <= 0 mean no limit.
 --- @field min_window_height? integer
@@ -67,7 +67,7 @@ end
 setmetatable(M, {
   __index = function(_, k)
     return config[k]
-  end
+  end,
 })
 
 return M
