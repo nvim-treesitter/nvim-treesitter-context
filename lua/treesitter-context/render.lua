@@ -122,6 +122,7 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
     buf_highlighter = highlighter.active[bufnr]
     if not buf_highlighter then
       -- Use standard highlighting when TS highlighting is not available
+      copy_option('filetype', bufnr, ctx_bufnr)
       return
     end
   end
