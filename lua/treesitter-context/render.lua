@@ -118,9 +118,12 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   copy_option('tabstop', bufnr, ctx_bufnr)
 
   if not buf_highlighter then
-    -- Use standard highlighting when TS highlighting is not available
-    copy_option('filetype', bufnr, ctx_bufnr)
-    return
+    vim.treesitter.start(bufnr)
+    buf_highlighter = highlighter.active[bufnr]
+    if not buf_highlighter then
+      -- Use standard highlighting when TS highlighting is not available
+      return
+    end
   end
 
   local parser = buf_highlighter.tree
@@ -151,7 +154,7 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
           local msrow = offset + (nsrow - start_row)
           local merow = offset + (nerow - start_row)
 
-          local hl = buf_query.hl_cache[capture]
+          local hl = buf_query:get_hl_from_capture(capture)
           local priority = tonumber(metadata.priority) or vim.highlight.priorities.treesitter
           add_extmark(ctx_bufnr, msrow, nscol, {
             end_row = merow,
