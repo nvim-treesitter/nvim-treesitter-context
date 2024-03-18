@@ -4,17 +4,14 @@ local config = require('treesitter-context.config')
 local util = require('treesitter-context.util')
 local cache = require('treesitter-context.cache')
 
-local get_lang = vim.treesitter.language.get_lang or require('nvim-treesitter.parsers').ft_to_lang
-
---- @diagnostic disable-next-line:deprecated
 local get_query = vim.treesitter.query.get or vim.treesitter.query.get_query
 
---- @param langtree LanguageTree
+--- @param langtree vim.treesitter.LanguageTree
 --- @param range Range4
 --- @return TSNode[]?
 local function get_parent_nodes(langtree, range)
   local tree = langtree:tree_for_range(range, { ignore_injections = true })
-  if tree == nil then
+  if not tree then
     return
   end
 
@@ -65,7 +62,7 @@ end
 --- Run the context query on a node and return the range if it is a valid
 --- context node.
 --- @param node TSNode
---- @param query Query
+--- @param query vim.treesitter.Query
 --- @return Range4?
 local context_range = cache.memoize(function(node, query)
   local bufnr = api.nvim_get_current_buf()
@@ -77,6 +74,8 @@ local context_range = cache.memoize(function(node, query)
   -- versions 0.9 or less. It is only needed to improve performance
   for _, match in query:iter_matches(node, bufnr, 0, -1, { max_start_depth = 0 }) do
     local r = false
+
+    --- @cast match table<integer,TSNode>
 
     for id, node0 in pairs(match) do
       local srow, scol, erow, ecol = node0:range()
@@ -103,7 +102,7 @@ local context_range = cache.memoize(function(node, query)
 end, hash_node)
 
 ---@param lang string
----@return Query?
+---@return vim.treesitter.Query?
 local function get_context_query(lang)
   local ok, query = pcall(get_query, lang, 'context')
 
@@ -174,49 +173,67 @@ end
 local M = {}
 
 ---@param bufnr integer
----@param row integer
----@param col integer
----@return LanguageTree[]
+---@param range Range4
+---@return vim.treesitter.LanguageTree[]
 local function get_parent_langtrees(bufnr, range)
   local root_tree = vim.treesitter.get_parser(bufnr)
   if not root_tree then
     return {}
   end
 
-  local parent_langtrees = {root_tree}
+  local ret = { root_tree }
 
   while true do
     local child_langtree = nil
 
-    for _, langtree in pairs(parent_langtrees[#parent_langtrees]:children()) do
+    for _, langtree in pairs(ret[#ret]:children()) do
       if langtree:contains(range) then
         child_langtree = langtree
         break
       end
     end
 
-    if child_langtree == nil then
+    if not child_langtree then
       break
     end
-    parent_langtrees[#parent_langtrees + 1] = child_langtree
+    ret[#ret + 1] = child_langtree
   end
 
-  return parent_langtrees
+  return ret
+end
+
+--- Iterate Parent nodes of a range of LanguageTree's with a context query
+--- @param bufnr integer
+--- @param line_range Range4
+--- @return fun(): TSNode[]?, vim.treesitter.Query?
+local function iter_context_parents(bufnr, line_range)
+  local i = 0
+  local trees = get_parent_langtrees(bufnr, line_range)
+  return function()
+    --- @type TSNode[]?, vim.treesitter.Query?
+    local parents, query
+    repeat
+      i = i + 1
+      local tree = trees[i]
+      if not tree then
+        return
+      end
+      parents = get_parent_nodes(tree, line_range)
+      query = get_context_query(tree:lang())
+    until parents and query
+    return parents, query
+  end
 end
 
 --- @param bufnr integer
 --- @param winid integer
 --- @return Range4[]?, string[]?
 function M.get(bufnr, winid)
-  local max_lines = calc_max_lines(winid)
-
-  if max_lines == 0 then
-    return
-  end
-
   if not pcall(vim.treesitter.get_parser, bufnr) then
     return
   end
+
+  local max_lines = calc_max_lines(winid)
 
   local top_row = fn.line('w0', winid) - 1
 
@@ -243,30 +260,13 @@ function M.get(bufnr, winid)
     context_lines = {}
     contexts_height = 0
 
-    local parent_trees = get_parent_langtrees(bufnr, line_range)
-    for i = 1, #parent_trees, 1 do
-      local langtree = parent_trees[i]
-      local query = get_context_query(langtree:lang())
-      local parents = get_parent_nodes(langtree, line_range)
-      if parents == nil then
-        return
-      end
-
-      if not query then
-        -- If the language is not supported we ignore it and continue
-        -- with remaining languages. This way we can get as much context
-        -- as possible, even if some injected languages are not supported.
-        --
-        -- There's no continue statement in Lua, so we need to get a
-        -- little creative to skip to the next iteration.
-        parents = {}
-      end
-
+    for parents, query in iter_context_parents(bufnr, line_range) do
       for j = #parents, 1, -1 do
         local parent = parents[j]
-        local parent_start_row = parent:range()
 
+        local parent_start_row = parent:range()
         local contexts_end_row = top_row + math.min(max_lines, contexts_height)
+
         -- Only process the parent if it is not in view.
         if parent_start_row < contexts_end_row then
           local range0 = context_range(parent, query)
