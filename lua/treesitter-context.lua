@@ -33,12 +33,8 @@ local function throttle(f, ms)
   end
 end
 
-local had_open = false
-
-local function close()
-  if had_open then
-    require('treesitter-context.render').close()
-  end
+local function close(winid)
+  require('treesitter-context.render').close(winid)
 end
 
 --- @param bufnr integer
@@ -46,7 +42,6 @@ end
 --- @param ctx_ranges Range4[]
 --- @param ctx_lines string[]
 local function open(bufnr, winid, ctx_ranges, ctx_lines)
-  had_open = true
   require('treesitter-context.render').open(bufnr, winid, ctx_ranges, ctx_lines)
 end
 
@@ -89,12 +84,12 @@ local function can_open(bufnr, winid)
   return true
 end
 
-local update = throttle(function()
-  local bufnr = api.nvim_get_current_buf()
-  local winid = api.nvim_get_current_win()
+local update = throttle(function(bufnr, winid)
+  bufnr = bufnr or api.nvim_get_current_buf()
+  winid = winid or api.nvim_get_current_win()
 
   if not can_open(bufnr, winid) then
-    close()
+    close(winid)
     return
   end
 
@@ -102,7 +97,7 @@ local update = throttle(function()
   all_contexts[bufnr] = context
 
   if not context or #context == 0 then
-    close()
+    close(winid)
     return
   end
 
@@ -132,7 +127,13 @@ function M.enable()
 
   attached[cbuf] = true
 
-  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
+  autocmd({ 'BufEnter', 'WinEnter', 'VimResized' }, update)
+
+  autocmd({ 'WinScrolled' }, function()
+    for winid, bufnr_map in pairs(require('treesitter-context.render').get_bufnr_maps()) do
+      update(bufnr_map.bufnr, winid)
+    end
+  end)
 
   autocmd('BufReadPost', function(args)
     attached[args.buf] = nil
@@ -155,7 +156,20 @@ function M.enable()
 
   autocmd({ 'BufLeave', 'WinLeave' }, close)
 
-  autocmd('User', close, { pattern = 'SessionSavePre' })
+  autocmd({ 'WinClosed' }, function(args)
+    local winid = args.match
+    for stored_winid, _ in pairs(require('treesitter-context.render').get_bufnr_maps()) do
+      if tonumber(winid) == stored_winid then
+        close(stored_winid)
+      end
+    end
+  end)
+
+  autocmd('User', function()
+    for stored_winid, _ in pairs(require('treesitter-context.render').get_bufnr_maps()) do
+      close(stored_winid)
+    end
+  end, { pattern = 'SessionSavePre' })
   autocmd('User', update, { pattern = 'SessionSavePost' })
 
   update()
@@ -189,7 +203,11 @@ local function init()
   api.nvim_set_hl(0, 'TreesitterContext', { link = 'NormalFloat', default = true })
   api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
   api.nvim_set_hl(0, 'TreesitterContextBottom', { link = 'NONE', default = true })
-  api.nvim_set_hl(0, 'TreesitterContextLineNumberBottom', { link = 'TreesitterContextBottom', default = true })
+  api.nvim_set_hl(
+    0,
+    'TreesitterContextLineNumberBottom',
+    { link = 'TreesitterContextBottom', default = true }
+  )
   api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'FloatBorder', default = true })
 end
 

@@ -7,48 +7,49 @@ local config = require('treesitter-context.config')
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 
 -- Don't access directly, use get_bufs()
-local gutter_bufnr --- @type integer?
-local context_bufnr --- @type integer?
+local bufnr_maps = {} --- @type table<integer, {bufnr:integer?,gut_bufnr: integer?, context_bufnr: integer?,gutter_winid:integer?,context_winid:integer?}>
 
-local gutter_winid --- @type integer?
-local context_winid --- @type integer?
-
---- @param buf integer?
---- @return integer buf
-local function create_buf(buf)
-  if buf and api.nvim_buf_is_valid(buf) then
-    return buf
+--- @param winid integer?
+--- @return {bufnr:integer,gut_bufnr: integer, context_bufnr: integer,gutter_winid:integer?,context_winid:integer?} buf
+local function create_buf(winid)
+  local bufnr_map = bufnr_maps[winid]
+  if bufnr_map then
+    return bufnr_map
   end
+  local context_bufnr = api.nvim_create_buf(false, true)
+  local gutter_bufnr = api.nvim_create_buf(false, true)
 
-  buf = api.nvim_create_buf(false, true)
+  vim.bo[context_bufnr].undolevels = -1
+  vim.bo[context_bufnr].bufhidden = 'wipe'
 
-  vim.bo[buf].undolevels = -1
-  vim.bo[buf].bufhidden = 'wipe'
-
-  return buf
+  vim.bo[gutter_bufnr].undolevels = -1
+  vim.bo[gutter_bufnr].bufhidden = 'wipe'
+  bufnr_maps[winid] = { bufnr = bufnr, context_bufnr = context_bufnr, gutter_bufnr = gutter_bufnr }
+  return bufnr_maps[winid]
 end
 
---- @return integer gutter_bufnr
---- @return integer context_bufnr
-local function get_bufs()
-  context_bufnr = create_buf(context_bufnr)
-  gutter_bufnr = create_buf(gutter_bufnr)
-
-  return gutter_bufnr, context_bufnr
-end
+-- --- @return integer gutter_bufnr
+-- --- @return integer context_bufnr
+-- local function get_bufs()
+--   context_bufnr = create_buf(context_bufnr)
+--   gutter_bufnr = create_buf(gutter_bufnr)
+--
+--   return gutter_bufnr, context_bufnr
+-- end
 
 --- @param bufnr integer
---- @param winid integer?
+--- @param float_winid integer?
+--- @param winid integer
 --- @param width integer
 --- @param height integer
 --- @param col integer
 --- @param ty string
 --- @param hl string
 --- @return integer
-local function display_window(bufnr, winid, width, height, col, ty, hl)
-  if not winid or not api.nvim_win_is_valid(winid) then
+local function display_window(bufnr, winid, float_winid, width, height, col, ty, hl)
+  if not float_winid or not api.nvim_win_is_valid(float_winid) then
     local sep = config.separator and { config.separator, 'TreesitterContextSeparator' } or nil
-    winid = api.nvim_open_win(bufnr, false, {
+    float_winid = api.nvim_open_win(bufnr, false, {
       relative = 'win',
       width = width,
       height = height,
@@ -60,13 +61,13 @@ local function display_window(bufnr, winid, width, height, col, ty, hl)
       zindex = config.zindex,
       border = sep and { '', '', '', '', sep, sep, sep, '' } or nil,
     })
-    vim.w[winid][ty] = true
-    vim.wo[winid].wrap = false
-    vim.wo[winid].foldenable = false
-    vim.wo[winid].winhl = 'NormalFloat:' .. hl
+    vim.w[float_winid][ty] = true
+    vim.wo[float_winid].wrap = false
+    vim.wo[float_winid].foldenable = false
+    vim.wo[float_winid].winhl = 'NormalFloat:' .. hl
   else
-    api.nvim_win_set_config(winid, {
-      win = api.nvim_get_current_win(),
+    api.nvim_win_set_config(float_winid, {
+      win = winid,
       relative = 'win',
       width = width,
       height = height,
@@ -74,7 +75,7 @@ local function display_window(bufnr, winid, width, height, col, ty, hl)
       col = col,
     })
   end
-  return winid
+  return float_winid
 end
 
 --- @param winid integer
@@ -211,7 +212,7 @@ local function build_lno_str(win, lnum, width)
       winid = win,
       use_statuscol_lnum = lnum,
       highlights = true,
-      fillchar = ' ',  -- Fixed in Neovim 0.10 (#396)
+      fillchar = ' ', -- Fixed in Neovim 0.10 (#396)
     })
     if ok then
       return data.str, data.highlights
@@ -308,7 +309,8 @@ local function win_close(winid)
   end)
 end
 
-local function horizontal_scroll_contexts()
+---@param context_winid? integer
+local function horizontal_scroll_contexts(context_winid)
   if context_winid == nil then
     return
   end
@@ -323,6 +325,9 @@ local function horizontal_scroll_contexts()
 end
 
 local M = {}
+function M.get_bufnr_maps()
+  return bufnr_maps
+end
 
 --- @param bufnr integer
 --- @param winid integer
@@ -334,12 +339,14 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
 
   local win_height = #ctx_lines
 
-  local gbufnr, ctx_bufnr = get_bufs()
+  local bufnr_map = create_buf(winid)
+  local gbufnr, ctx_bufnr = bufnr_map.gutter_bufnr, bufnr_map.context_bufnr
 
   if config.line_numbers and (vim.wo[winid].number or vim.wo[winid].relativenumber) then
-    gutter_winid = display_window(
+    bufnr_map.gutter_winid = display_window(
       gbufnr,
-      gutter_winid,
+      winid,
+      bufnr_map.gutter_winid,
       gutter_width,
       win_height,
       0,
@@ -348,12 +355,13 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
     )
     render_lno(winid, gbufnr, ctx_ranges, gutter_width)
   else
-    win_close(gutter_winid)
+    win_close(bufnr_map.gutter_winid)
   end
 
-  context_winid = display_window(
+  bufnr_map.context_winid = display_window(
     ctx_bufnr,
-    context_winid,
+    winid,
+    bufnr_map.context_winid,
     win_width,
     win_height,
     gutter_width,
@@ -368,20 +376,26 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
 
   highlight_contexts(bufnr, ctx_bufnr, ctx_ranges)
   highlight_bottom(ctx_bufnr, win_height - 1, 'TreesitterContextBottom')
-  horizontal_scroll_contexts()
+  horizontal_scroll_contexts(bufnr_map.context_winid)
 end
 
-function M.close()
+function M.close(winid)
   -- Can't close other windows when the command-line window is open
   if fn.getcmdwintype() ~= '' then
     return
   end
 
+  local bufnr_map = bufnr_maps[winid]
+  if bufnr_map == nil then
+    return
+  end
+  local context_winid, gutter_winid = bufnr_map.context_winid, bufnr_map.gutter_winid
+
   win_close(context_winid)
-  context_winid = nil
 
   win_close(gutter_winid)
-  gutter_winid = nil
+
+  bufnr_maps[winid] = nil
 end
 
 return M
