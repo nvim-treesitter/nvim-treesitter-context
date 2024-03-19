@@ -7,7 +7,7 @@ local config = require('treesitter-context.config')
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 
 -- Don't access directly, use get_bufs()
-local bufnr_maps = {} --- @type table<integer, {bufnr:integer?,gut_bufnr: integer?, context_bufnr: integer?,gutter_winid:integer?,context_winid:integer?}>
+local bufnr_maps = {} --- @type table<integer, {bufnr:integer?,gutter_bufnr: integer?, context_bufnr: integer?,gutter_winid:integer?,context_winid:integer?}>
 
 --- @param winid integer?
 --- @return {bufnr:integer,gut_bufnr: integer, context_bufnr: integer,gutter_winid:integer?,context_winid:integer?} buf
