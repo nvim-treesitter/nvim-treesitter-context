@@ -250,7 +250,7 @@ function M.get(bufnr, winid)
   end
 
   local context_ranges = {} --- @type Range4[]
-  local context_lines = {}  --- @type string[][]
+  local context_lines = {} --- @type string[][]
   local contexts_height = 0
 
   for offset = 0, max_lines do
