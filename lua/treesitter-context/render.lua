@@ -17,6 +17,15 @@ WindowContext.__index = WindowContext
 
 local windowContexts = {} --- @type table<integer, WindowContext>
 
+--- @param winid integer?
+local function win_close(winid)
+  vim.schedule(function()
+    if winid ~= nil and api.nvim_win_is_valid(winid) then
+      api.nvim_win_close(winid, true)
+    end
+  end)
+end
+
 --- @param bufnr integer
 --- @param winid integer
 --- @return WindowContext
@@ -27,19 +36,8 @@ local function store_context(bufnr, winid)
       return window_ctx
     else
       -- Unserline buffer have changed, close it
-      vim.schedule(function()
-        local close_winid = window_ctx.context_winid
-        if close_winid ~= nil and api.nvim_win_is_valid(close_winid) then
-          api.nvim_win_close(close_winid, true)
-        end
-      end)
-
-      vim.schedule(function()
-        local close_winid = window_ctx.gutter_winid
-        if close_winid ~= nil and api.nvim_win_is_valid(close_winid) then
-          api.nvim_win_close(close_winid, true)
-        end
-      end)
+      win_close(window_ctx.context_winid)
+      win_close(window_ctx.gutter_winid)
     end
   end
 
@@ -320,15 +318,6 @@ local function render_lno(win, bufnr, contexts, gutter_width)
   set_lines(bufnr, lno_text)
   highlight_lno_str(bufnr, lno_text, lno_highlights)
   highlight_bottom(bufnr, #lno_text - 1, 'TreesitterContextLineNumberBottom')
-end
-
---- @param winid integer
-local function win_close(winid)
-  vim.schedule(function()
-    if winid ~= nil and api.nvim_win_is_valid(winid) then
-      api.nvim_win_close(winid, true)
-    end
-  end)
 end
 
 --- @param context_winid integer
