@@ -151,6 +151,23 @@ function M.enable()
           end
           open(bufnr, winid, context, context_lines)
         end
+        if stored_winid == window_id then
+          local bufnr = window_context.bufnr
+          local winid = stored_winid
+          if not can_open(bufnr, winid) then
+            close(winid)
+            return
+          end
+
+          local context, context_lines = get_context(bufnr, winid)
+          all_contexts[bufnr] = context
+
+          if not context or #context == 0 then
+            close(winid)
+            return
+          end
+          open(bufnr, winid, context, context_lines)
+        end
       end
     end
   end)
@@ -221,7 +238,11 @@ local function init()
   api.nvim_set_hl(0, 'TreesitterContext', { link = 'NormalFloat', default = true })
   api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
   api.nvim_set_hl(0, 'TreesitterContextBottom', { link = 'NONE', default = true })
-  api.nvim_set_hl(0, 'TreesitterContextLineNumberBottom', { link = 'TreesitterContextBottom', default = true })
+  api.nvim_set_hl(
+    0,
+    'TreesitterContextLineNumberBottom',
+    { link = 'TreesitterContextBottom', default = true }
+  )
   api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'FloatBorder', default = true })
 end
 
