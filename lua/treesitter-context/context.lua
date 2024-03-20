@@ -66,7 +66,6 @@ end
 --- @param bufnr integer
 --- @return Range4?
 local context_range = cache.memoize(function(node, query, bufnr)
-  local bufnr = api.nvim_get_current_buf()
   local range = { node:range() } --- @type Range4
   range[3] = range[1]
   range[4] = -1
