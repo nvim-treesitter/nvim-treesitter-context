@@ -33,7 +33,6 @@ local function store_context(bufnr, winid)
     context_winid = nil,
   }, WindowContext)
 
-  -- Setup buffers
   vim.bo[self.context_bufnr].undolevels = -1
   vim.bo[self.context_bufnr].bufhidden = 'wipe'
   vim.bo[self.gutter_bufnr].undolevels = -1
@@ -43,8 +42,8 @@ local function store_context(bufnr, winid)
 end
 
 --- @param bufnr integer
---- @param float_winid integer?
 --- @param winid integer
+--- @param float_winid integer
 --- @param width integer
 --- @param height integer
 --- @param col integer
@@ -305,7 +304,7 @@ local function render_lno(win, bufnr, contexts, gutter_width)
   highlight_bottom(bufnr, #lno_text - 1, 'TreesitterContextLineNumberBottom')
 end
 
----@param winid? integer
+--- @param winid integer
 local function win_close(winid)
   vim.schedule(function()
     if winid ~= nil and api.nvim_win_is_valid(winid) then
@@ -314,7 +313,7 @@ local function win_close(winid)
   end)
 end
 
---- @param context_winid? integer
+--- @param context_winid integer
 local function horizontal_scroll_contexts(context_winid)
   if context_winid == nil then
     return

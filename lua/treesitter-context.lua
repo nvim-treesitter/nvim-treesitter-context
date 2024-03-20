@@ -33,6 +33,7 @@ local function throttle(f, ms)
   end
 end
 
+--- @param winid integer
 local function close(winid)
   require('treesitter-context.render').close(winid)
 end
@@ -130,7 +131,7 @@ function M.enable()
     local event = vim.api.nvim_get_vvar('event')
     local window_ids = event.windows
     for stored_winid, window_context in
-      pairs(require('treesitter-context.render').get_window_contexts())
+    pairs(require('treesitter-context.render').get_window_contexts())
     do
       for _, window_id in pairs(window_ids) do
         if stored_winid == window_id then

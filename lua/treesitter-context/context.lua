@@ -66,6 +66,7 @@ end
 --- @param bufnr integer
 --- @return Range4?
 local context_range = cache.memoize(function(node, query, bufnr)
+  local bufnr = api.nvim_get_current_buf()
   local range = { node:range() } --- @type Range4
   range[3] = range[1]
   range[4] = -1
@@ -249,7 +250,7 @@ function M.get(bufnr, winid)
   end
 
   local context_ranges = {} --- @type Range4[]
-  local context_lines = {} --- @type string[][]
+  local context_lines = {}  --- @type string[][]
   local contexts_height = 0
 
   for offset = 0, max_lines do
