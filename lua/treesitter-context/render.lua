@@ -28,16 +28,16 @@ local function store_context(bufnr, winid)
     else
       -- Unserline buffer have changed, close it
       vim.schedule(function()
-        winid = window_ctx.context_winid
-        if winid ~= nil and api.nvim_win_is_valid(winid) then
-          api.nvim_win_close(winid, true)
+        local close_winid = window_ctx.context_winid
+        if close_winid ~= nil and api.nvim_win_is_valid(close_winid) then
+          api.nvim_win_close(close_winid, true)
         end
       end)
 
       vim.schedule(function()
-        winid = window_ctx.gutter_winid
-        if winid ~= nil and api.nvim_win_is_valid(winid) then
-          api.nvim_win_close(winid, true)
+        local close_winid = window_ctx.gutter_winid
+        if close_winid ~= nil and api.nvim_win_is_valid(close_winid) then
+          api.nvim_win_close(close_winid, true)
         end
       end)
     end
