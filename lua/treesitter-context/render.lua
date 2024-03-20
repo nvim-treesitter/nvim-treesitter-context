@@ -6,36 +6,41 @@ local config = require('treesitter-context.config')
 
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 
--- Don't access directly, use get_bufs()
-local bufnr_maps = {} --- @type table<integer, {bufnr:integer?,gut_bufnr: integer?, context_bufnr: integer?,gutter_winid:integer?,context_winid:integer?}>
+--- @class WindowContext
+--- @field bufnr integer The buffer number
+--- @field gutter_bufnr integer The gutter buffer number
+--- @field context_bufnr integer The context buffer number
+--- @field gutter_winid integer? The window ID of the gutter
+--- @field context_winid integer? The window ID of the context
+local WindowContext = {}
+WindowContext.__index = WindowContext
 
---- @param winid integer?
---- @return {bufnr:integer,gut_bufnr: integer, context_bufnr: integer,gutter_winid:integer?,context_winid:integer?} buf
-local function create_buf(winid)
-  local bufnr_map = bufnr_maps[winid]
-  if bufnr_map then
-    return bufnr_map
+local windowContexts = {} --- @type table<integer, WindowContext>
+
+--- @param bufnr integer
+--- @param winid integer
+--- @return WindowContext
+local function store_context(bufnr, winid)
+  if windowContexts[winid] then
+    return windowContexts[winid]
   end
-  local context_bufnr = api.nvim_create_buf(false, true)
-  local gutter_bufnr = api.nvim_create_buf(false, true)
 
-  vim.bo[context_bufnr].undolevels = -1
-  vim.bo[context_bufnr].bufhidden = 'wipe'
+  local self = setmetatable({
+    bufnr = bufnr,
+    gutter_bufnr = api.nvim_create_buf(false, true),
+    context_bufnr = api.nvim_create_buf(false, true),
+    gutter_winid = nil,
+    context_winid = nil,
+  }, WindowContext)
 
-  vim.bo[gutter_bufnr].undolevels = -1
-  vim.bo[gutter_bufnr].bufhidden = 'wipe'
-  bufnr_maps[winid] = { bufnr = bufnr, context_bufnr = context_bufnr, gutter_bufnr = gutter_bufnr }
-  return bufnr_maps[winid]
+  -- Setup buffers
+  vim.bo[self.context_bufnr].undolevels = -1
+  vim.bo[self.context_bufnr].bufhidden = 'wipe'
+  vim.bo[self.gutter_bufnr].undolevels = -1
+  vim.bo[self.gutter_bufnr].bufhidden = 'wipe'
+  windowContexts[winid] = self
+  return self
 end
-
--- --- @return integer gutter_bufnr
--- --- @return integer context_bufnr
--- local function get_bufs()
---   context_bufnr = create_buf(context_bufnr)
---   gutter_bufnr = create_buf(gutter_bufnr)
---
---   return gutter_bufnr, context_bufnr
--- end
 
 --- @param bufnr integer
 --- @param float_winid integer?
@@ -212,7 +217,7 @@ local function build_lno_str(win, lnum, width)
       winid = win,
       use_statuscol_lnum = lnum,
       highlights = true,
-      fillchar = ' ', -- Fixed in Neovim 0.10 (#396)
+      fillchar = ' ',  -- Fixed in Neovim 0.10 (#396)
     })
     if ok then
       return data.str, data.highlights
@@ -309,7 +314,7 @@ local function win_close(winid)
   end)
 end
 
----@param context_winid? integer
+--- @param context_winid? integer
 local function horizontal_scroll_contexts(context_winid)
   if context_winid == nil then
     return
@@ -325,8 +330,9 @@ local function horizontal_scroll_contexts(context_winid)
 end
 
 local M = {}
-function M.get_bufnr_maps()
-  return bufnr_maps
+
+function M.get_window_contexts()
+  return windowContexts
 end
 
 --- @param bufnr integer
@@ -336,17 +342,16 @@ end
 function M.open(bufnr, winid, ctx_ranges, ctx_lines)
   local gutter_width = get_gutter_width(winid)
   local win_width = math.max(1, api.nvim_win_get_width(winid) - gutter_width)
-
   local win_height = #ctx_lines
 
-  local bufnr_map = create_buf(winid)
-  local gbufnr, ctx_bufnr = bufnr_map.gutter_bufnr, bufnr_map.context_bufnr
+  local window_context = store_context(bufnr, winid)
+  local gbufnr, ctx_bufnr = window_context.gutter_bufnr, window_context.context_bufnr
 
   if config.line_numbers and (vim.wo[winid].number or vim.wo[winid].relativenumber) then
-    bufnr_map.gutter_winid = display_window(
+    window_context.gutter_winid = display_window(
       gbufnr,
       winid,
-      bufnr_map.gutter_winid,
+      window_context.gutter_winid,
       gutter_width,
       win_height,
       0,
@@ -355,13 +360,13 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
     )
     render_lno(winid, gbufnr, ctx_ranges, gutter_width)
   else
-    win_close(bufnr_map.gutter_winid)
+    win_close(window_context.gutter_winid)
   end
 
-  bufnr_map.context_winid = display_window(
+  window_context.context_winid = display_window(
     ctx_bufnr,
     winid,
-    bufnr_map.context_winid,
+    window_context.context_winid,
     win_width,
     win_height,
     gutter_width,
@@ -376,26 +381,27 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
 
   highlight_contexts(bufnr, ctx_bufnr, ctx_ranges)
   highlight_bottom(ctx_bufnr, win_height - 1, 'TreesitterContextBottom')
-  horizontal_scroll_contexts(bufnr_map.context_winid)
+  horizontal_scroll_contexts(window_context.context_winid)
 end
 
+--- @param winid integer
 function M.close(winid)
   -- Can't close other windows when the command-line window is open
   if fn.getcmdwintype() ~= '' then
     return
   end
 
-  local bufnr_map = bufnr_maps[winid]
-  if bufnr_map == nil then
+  local window_context = windowContexts[winid]
+  if window_context == nil then
     return
   end
-  local context_winid, gutter_winid = bufnr_map.context_winid, bufnr_map.gutter_winid
+  local context_winid, gutter_winid = window_context.context_winid, window_context.gutter_winid
 
   win_close(context_winid)
 
   win_close(gutter_winid)
 
-  bufnr_maps[winid] = nil
+  windowContexts[winid] = nil
 end
 
 return M

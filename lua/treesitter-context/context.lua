@@ -63,9 +63,9 @@ end
 --- context node.
 --- @param node TSNode
 --- @param query vim.treesitter.Query
+--- @param bufnr integer
 --- @return Range4?
-local context_range = cache.memoize(function(node, query)
-  local bufnr = api.nvim_get_current_buf()
+local context_range = cache.memoize(function(node, query, bufnr)
   local range = { node:range() } --- @type Range4
   range[3] = range[1]
   range[4] = -1
@@ -144,9 +144,10 @@ local function trim_contexts(context_ranges, context_lines, trim, top)
   end
 end
 
+--- @param bufnr integer
 --- @param range Range4
 --- @return Range4, string[]
-local function get_text_for_range(range)
+local function get_text_for_range(bufnr, range)
   local start_row, end_row, end_col = range[1], range[3], range[4]
 
   if end_col == 0 then
@@ -154,7 +155,7 @@ local function get_text_for_range(range)
     end_col = -1
   end
 
-  local lines = api.nvim_buf_get_text(0, start_row, 0, end_row, -1, {})
+  local lines = api.nvim_buf_get_text(bufnr, start_row, 0, end_row, -1, {})
 
   -- Strip any empty lines from the node
   while #lines > 0 do
@@ -269,9 +270,9 @@ function M.get(bufnr, winid)
 
         -- Only process the parent if it is not in view.
         if parent_start_row < contexts_end_row then
-          local range0 = context_range(parent, query)
+          local range0 = context_range(parent, query, bufnr)
           if range0 then
-            local range, lines = get_text_for_range(range0)
+            local range, lines = get_text_for_range(bufnr, range0)
 
             local last_context = context_ranges[#context_ranges]
             if last_context and parent_start_row == last_context[1] then

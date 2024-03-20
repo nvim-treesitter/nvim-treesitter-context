@@ -37,6 +37,13 @@ local function close(winid)
   require('treesitter-context.render').close(winid)
 end
 
+local function close_all()
+  local window_contexts = require('treesitter-context.render').get_window_contexts()
+  for winid, _ in pairs(window_contexts) do
+    close(winid)
+  end
+end
+
 --- @param bufnr integer
 --- @param winid integer
 --- @param ctx_ranges Range4[]
@@ -52,15 +59,9 @@ local function get_context(bufnr, winid)
   return require('treesitter-context.context').get(bufnr, winid)
 end
 
-local attached = {} --- @type table<integer,true>
-
 ---@param bufnr integer
 ---@param winid integer
 local function can_open(bufnr, winid)
-  if not attached[bufnr] then
-    return false
-  end
-
   if vim.bo[bufnr].filetype == '' then
     return false
   end
@@ -84,9 +85,9 @@ local function can_open(bufnr, winid)
   return true
 end
 
-local update = throttle(function(bufnr, winid)
-  bufnr = bufnr or api.nvim_get_current_buf()
-  winid = winid or api.nvim_get_current_win()
+local update = throttle(function()
+  local bufnr = api.nvim_get_current_buf()
+  local winid = api.nvim_get_current_win()
 
   if not can_open(bufnr, winid) then
     close(winid)
@@ -123,28 +124,47 @@ local function autocmd(event, callback, opts)
 end
 
 function M.enable()
-  local cbuf = api.nvim_get_current_buf()
+  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
 
-  attached[cbuf] = true
+  autocmd({ 'WinResized' }, function()
+    local event = vim.api.nvim_get_vvar('event')
+    local window_ids = event.windows
+    for stored_winid, window_context in
+      pairs(require('treesitter-context.render').get_window_contexts())
+    do
+      for _, window_id in pairs(window_ids) do
+        if stored_winid == window_id then
+          local bufnr = window_context.bufnr
+          local winid = stored_winid
+          if not can_open(bufnr, winid) then
+            close(winid)
+            return
+          end
 
-  autocmd({ 'BufEnter', 'WinEnter', 'VimResized' }, update)
+          local context, context_lines = get_context(bufnr, winid)
+          all_contexts[bufnr] = context
 
-  autocmd({ 'WinScrolled' }, function()
-    for winid, bufnr_map in pairs(require('treesitter-context.render').get_bufnr_maps()) do
-      update(bufnr_map.bufnr, winid)
+          if not context or #context == 0 then
+            close(winid)
+            return
+          end
+          open(bufnr, winid, context, context_lines)
+        end
+      end
     end
   end)
 
-  autocmd('BufReadPost', function(args)
-    attached[args.buf] = nil
-    if not config.on_attach or config.on_attach(args.buf) ~= false then
-      attached[args.buf] = true
-    end
-  end)
-
-  autocmd('BufDelete', function(args)
-    attached[args.buf] = nil
-  end)
+  -- not sure what to do with this attached?
+  -- autocmd('BufReadPost', function(args)
+  --   attached[args.buf] = nil
+  --   if not config.on_attach or config.on_attach(args.buf) ~= false then
+  --     attached[args.buf] = true
+  --   end
+  -- end)
+  --
+  -- autocmd('BufDelete', function(args)
+  --   attached[args.buf] = nil
+  -- end)
 
   autocmd('CursorMoved', update)
 
@@ -157,18 +177,16 @@ function M.enable()
   autocmd({ 'BufLeave', 'WinLeave' }, close)
 
   autocmd({ 'WinClosed' }, function(args)
-    local winid = args.match
-    for stored_winid, _ in pairs(require('treesitter-context.render').get_bufnr_maps()) do
-      if tonumber(winid) == stored_winid then
+    local winid = tonumber(args.match)
+    for stored_winid, _ in pairs(require('treesitter-context.render').get_window_contexts()) do
+      if winid == stored_winid then
         close(stored_winid)
       end
     end
   end)
 
   autocmd('User', function()
-    for stored_winid, _ in pairs(require('treesitter-context.render').get_bufnr_maps()) do
-      close(stored_winid)
-    end
+    close_all()
   end, { pattern = 'SessionSavePre' })
   autocmd('User', update, { pattern = 'SessionSavePost' })
 
@@ -178,8 +196,7 @@ end
 
 function M.disable()
   augroup('treesitter_context_update', {})
-  attached = {}
-  close()
+  close_all()
   enabled = false
 end
 
@@ -203,11 +220,7 @@ local function init()
   api.nvim_set_hl(0, 'TreesitterContext', { link = 'NormalFloat', default = true })
   api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
   api.nvim_set_hl(0, 'TreesitterContextBottom', { link = 'NONE', default = true })
-  api.nvim_set_hl(
-    0,
-    'TreesitterContextLineNumberBottom',
-    { link = 'TreesitterContextBottom', default = true }
-  )
+  api.nvim_set_hl(0, 'TreesitterContextLineNumberBottom', { link = 'TreesitterContextBottom', default = true })
   api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'FloatBorder', default = true })
 end
 
