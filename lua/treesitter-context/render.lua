@@ -58,8 +58,8 @@ local function store_context(bufnr, winid)
 end
 
 --- @param bufnr integer
---- @param winid integer?
---- @param float_winid integer
+--- @param winid integer
+--- @param float_winid integer?
 --- @param width integer
 --- @param height integer
 --- @param col integer
