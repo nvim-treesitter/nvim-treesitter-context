@@ -21,8 +21,26 @@ local windowContexts = {} --- @type table<integer, WindowContext>
 --- @param winid integer
 --- @return WindowContext
 local function store_context(bufnr, winid)
-  if windowContexts[winid] then
-    return windowContexts[winid]
+  local window_ctx = windowContexts[winid]
+  if window_ctx then
+    if window_ctx.bufnr == bufnr then
+      return window_ctx
+    else
+      -- Unserline buffer have changed, close it
+      vim.schedule(function()
+        winid = window_ctx.context_winid
+        if winid ~= nil and api.nvim_win_is_valid(winid) then
+          api.nvim_win_close(winid, true)
+        end
+      end)
+
+      vim.schedule(function()
+        winid = window_ctx.gutter_winid
+        if winid ~= nil and api.nvim_win_is_valid(winid) then
+          api.nvim_win_close(winid, true)
+        end
+      end)
+    end
   end
 
   local self = setmetatable({

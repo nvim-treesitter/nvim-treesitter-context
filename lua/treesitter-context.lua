@@ -134,23 +134,25 @@ function M.enable()
       pairs(require('treesitter-context.render').get_window_contexts())
     do
       for _, window_id in pairs(window_ids) do
-        if stored_winid == window_id then
-          local bufnr = window_context.bufnr
-          local winid = stored_winid
-          if not can_open(bufnr, winid) then
-            close(winid)
-            return
-          end
+        throttle(function()
+          if stored_winid == window_id then
+            local bufnr = window_context.bufnr
+            local winid = stored_winid
+            if not can_open(bufnr, winid) then
+              close(winid)
+              return
+            end
 
-          local context, context_lines = get_context(bufnr, winid)
-          all_contexts[bufnr] = context
+            local context, context_lines = get_context(bufnr, winid)
+            all_contexts[bufnr] = context
 
-          if not context or #context == 0 then
-            close(winid)
-            return
+            if not context or #context == 0 then
+              close(winid)
+              return
+            end
+            open(bufnr, winid, context, context_lines)
           end
-          open(bufnr, winid, context, context_lines)
-        end
+        end)()
       end
     end
   end)
