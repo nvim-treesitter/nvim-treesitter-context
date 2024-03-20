@@ -175,8 +175,7 @@ function M.enable()
     end
   end)
 
-  -- should we close context in winleave and bufleave?
-  -- autocmd({ 'BufLeave', 'WinLeave' }, close)
+  autocmd({ 'BufLeave', 'WinLeave' }, close)
 
   autocmd({ 'WinClosed' }, function(args)
     local winid = tonumber(args.match)
