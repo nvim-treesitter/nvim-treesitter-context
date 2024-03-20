@@ -216,7 +216,7 @@ local function build_lno_str(win, lnum, width)
       winid = win,
       use_statuscol_lnum = lnum,
       highlights = true,
-      fillchar = ' ', -- Fixed in Neovim 0.10 (#396)
+      fillchar = ' ',  -- Fixed in Neovim 0.10 (#396)
     })
     if ok then
       return data.str, data.highlights
