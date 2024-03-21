@@ -70,6 +70,7 @@ local function display_window(bufnr, winid, float_winid, width, height, col, ty,
   if not float_winid or not api.nvim_win_is_valid(float_winid) then
     local sep = config.separator and { config.separator, 'TreesitterContextSeparator' } or nil
     float_winid = api.nvim_open_win(bufnr, false, {
+      win = winid,
       relative = 'win',
       width = width,
       height = height,
@@ -232,7 +233,7 @@ local function build_lno_str(win, lnum, width)
       winid = win,
       use_statuscol_lnum = lnum,
       highlights = true,
-      fillchar = ' ',  -- Fixed in Neovim 0.10 (#396)
+      fillchar =  ' ', -- Fixed in Neovim 0.10 (#396)
     })
     if ok then
       return data.str, data.highlights
