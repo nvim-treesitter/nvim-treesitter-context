@@ -63,6 +63,14 @@ end
 ---@param bufnr integer
 ---@param winid integer
 local function can_open(bufnr, winid)
+  if not api.nvim_win_is_valid(winid) then
+    return false
+  end
+  
+  if not api.nvim_buf_is_valid(bufnr) then
+    return false
+  end
+
   if vim.bo[bufnr].filetype == '' then
     return false
   end
