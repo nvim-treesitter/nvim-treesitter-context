@@ -4,6 +4,10 @@
   body: (_ (_) @context.end)
 ) @context
 
+(namespace_definition
+  body: (_ (_) @context.end)
+) @context
+
 (class_specifier
   body: (_ (_) @context.end)
 ) @context
