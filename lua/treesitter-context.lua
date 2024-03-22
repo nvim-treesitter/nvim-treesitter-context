@@ -143,7 +143,10 @@ function M.enable()
 
   attached[cbuf] = true
 
-  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
+  autocmd({ 'BufEnter', 'WinScrolled', 'VimResized' }, update)
+  autocmd({ 'WinEnter' }, function()
+    vim.schedule(update)
+  end)
 
   autocmd({ 'WinResized' }, function()
     local event = vim.api.nvim_get_vvar('event')
