@@ -72,7 +72,7 @@ local function can_open(bufnr, winid)
   if not api.nvim_win_is_valid(winid) then
     return false
   end
-  
+
   if not api.nvim_buf_is_valid(bufnr) then
     return false
   end
@@ -159,14 +159,14 @@ function M.enable()
           throttle(function()
             local bufnr = window_context.bufnr
             close(stored_winid)
-                
+
             if not can_open(bufnr, stored_winid) then
               return
             end
 
             local context, context_lines = get_context(bufnr, stored_winid)
             all_contexts[bufnr] = context
-                
+
             if not context or #context == 0 then
               return
             end
@@ -187,7 +187,6 @@ function M.enable()
   autocmd('BufDelete', function(args)
     attached[args.buf] = nil
   end)
-
 
   autocmd('CursorMoved', update)
 
