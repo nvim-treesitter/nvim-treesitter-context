@@ -60,9 +60,15 @@ local function get_context(bufnr, winid)
   return require('treesitter-context.context').get(bufnr, winid)
 end
 
+local attached = {} --- @type table<integer,true>
+
 ---@param bufnr integer
 ---@param winid integer
 local function can_open(bufnr, winid)
+  if not attached[bufnr] then
+    return false
+  end
+
   if not api.nvim_win_is_valid(winid) then
     return false
   end
@@ -133,6 +139,10 @@ local function autocmd(event, callback, opts)
 end
 
 function M.enable()
+  local cbuf = api.nvim_get_current_buf()
+
+  attached[cbuf] = true
+
   autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
 
   autocmd({ 'WinResized' }, function()
@@ -146,9 +156,14 @@ function M.enable()
           throttle(function()
             local bufnr = window_context.bufnr
             close(stored_winid)
+                
+            if not can_open(bufnr, stored_winid) then
+              return
+            end
+
             local context, context_lines = get_context(bufnr, stored_winid)
             all_contexts[bufnr] = context
-            -- --
+                
             if not context or #context == 0 then
               return
             end
@@ -159,17 +174,17 @@ function M.enable()
     end
   end)
 
-  -- not sure what to do with this attached?
-  -- autocmd('BufReadPost', function(args)
-  --   attached[args.buf] = nil
-  --   if not config.on_attach or config.on_attach(args.buf) ~= false then
-  --     attached[args.buf] = true
-  --   end
-  -- end)
-  --
-  -- autocmd('BufDelete', function(args)
-  --   attached[args.buf] = nil
-  -- end)
+  autocmd('BufReadPost', function(args)
+    attached[args.buf] = nil
+    if not config.on_attach or config.on_attach(args.buf) ~= false then
+      attached[args.buf] = true
+    end
+  end)
+
+  autocmd('BufDelete', function(args)
+    attached[args.buf] = nil
+  end)
+
 
   autocmd('CursorMoved', update)
 
@@ -201,6 +216,7 @@ end
 
 function M.disable()
   augroup('treesitter_context_update', {})
+  attached = {}
   close_all()
   enabled = false
 end
