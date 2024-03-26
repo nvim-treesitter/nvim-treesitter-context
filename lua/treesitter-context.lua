@@ -33,11 +33,15 @@ local function throttle(f, ms)
   end
 end
 
-local had_open = false
+--- @param winid integer
+local function close(winid)
+  require('treesitter-context.render').close(winid)
+end
 
-local function close()
-  if had_open then
-    require('treesitter-context.render').close()
+local function close_all()
+  local window_contexts = require('treesitter-context.render').get_window_contexts()
+  for winid, _ in pairs(window_contexts) do
+    close(winid)
   end
 end
 
@@ -46,7 +50,6 @@ end
 --- @param ctx_ranges Range4[]
 --- @param ctx_lines string[]
 local function open(bufnr, winid, ctx_ranges, ctx_lines)
-  had_open = true
   require('treesitter-context.render').open(bufnr, winid, ctx_ranges, ctx_lines)
 end
 
@@ -63,6 +66,14 @@ local attached = {} --- @type table<integer,true>
 ---@param winid integer
 local function can_open(bufnr, winid)
   if not attached[bufnr] then
+    return false
+  end
+
+  if not api.nvim_win_is_valid(winid) then
+    return false
+  end
+
+  if not api.nvim_buf_is_valid(bufnr) then
     return false
   end
 
@@ -89,12 +100,14 @@ local function can_open(bufnr, winid)
   return true
 end
 
-local update = throttle(function()
-  local bufnr = api.nvim_get_current_buf()
-  local winid = api.nvim_get_current_win()
+--- @param bufnr integer
+--- @param winid integer
+local update_instantly = function(bufnr, winid)
+  bufnr = bufnr or api.nvim_get_current_buf()
+  winid = winid or api.nvim_get_current_win()
 
   if not can_open(bufnr, winid) then
-    close()
+    close(winid)
     return
   end
 
@@ -102,7 +115,29 @@ local update = throttle(function()
   all_contexts[bufnr] = context
 
   if not context or #context == 0 then
-    close()
+    close(winid)
+    return
+  end
+
+  assert(context_lines)
+
+  open(bufnr, winid, context, context_lines)
+end
+
+local update = throttle(function()
+  local bufnr = api.nvim_get_current_buf()
+  local winid = api.nvim_get_current_win()
+
+  if not can_open(bufnr, winid) then
+    close(winid)
+    return
+  end
+
+  local context, context_lines = get_context(bufnr, winid)
+  all_contexts[bufnr] = context
+
+  if not context or #context == 0 then
+    close(winid)
     return
   end
 
@@ -132,7 +167,41 @@ function M.enable()
 
   attached[cbuf] = true
 
-  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
+  autocmd({ 'BufEnter', 'WinScrolled', 'VimResized' }, update)
+  autocmd({ 'WinEnter' }, function(args)
+    local bufnr = tonumber(args.buf)
+    local winid = api.nvim_get_current_win()
+    vim.schedule(function()
+      update_instantly(bufnr, winid)
+    end)
+  end)
+
+  autocmd({ 'WinResized' }, function()
+    local event = vim.api.nvim_get_vvar('event')
+    local window_ids = event.windows
+    for stored_winid, window_context in
+      pairs(require('treesitter-context.render').get_window_contexts())
+    do
+      for _, window_id in pairs(window_ids) do
+        if stored_winid == window_id then
+          local bufnr = window_context.bufnr
+          close(stored_winid)
+
+          if not can_open(bufnr, stored_winid) then
+            return
+          end
+
+          local context, context_lines = get_context(bufnr, stored_winid)
+          all_contexts[bufnr] = context
+
+          if not context or #context == 0 then
+            return
+          end
+          open(bufnr, stored_winid, context, context_lines)
+        end
+      end
+    end
+  end)
 
   autocmd('BufReadPost', function(args)
     attached[args.buf] = nil
@@ -153,9 +222,18 @@ function M.enable()
     end
   end)
 
-  autocmd({ 'BufLeave', 'WinLeave' }, close)
+  autocmd({ 'WinClosed' }, function(args)
+    local winid = tonumber(args.match)
+    for stored_winid, _ in pairs(require('treesitter-context.render').get_window_contexts()) do
+      if winid == stored_winid then
+        close(stored_winid)
+      end
+    end
+  end)
 
-  autocmd('User', close, { pattern = 'SessionSavePre' })
+  autocmd('User', function()
+    close_all()
+  end, { pattern = 'SessionSavePre' })
   autocmd('User', update, { pattern = 'SessionSavePost' })
 
   update()
@@ -165,7 +243,7 @@ end
 function M.disable()
   augroup('treesitter_context_update', {})
   attached = {}
-  close()
+  close_all()
   enabled = false
 end
 
