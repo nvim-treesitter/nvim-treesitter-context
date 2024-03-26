@@ -100,6 +100,30 @@ local function can_open(bufnr, winid)
   return true
 end
 
+--- @param bufnr integer
+--- @param winid integer
+local update_instantly = function(bufnr, winid)
+  bufnr = bufnr or api.nvim_get_current_buf()
+  winid = winid or api.nvim_get_current_win()
+
+  if not can_open(bufnr, winid) then
+    close(winid)
+    return
+  end
+
+  local context, context_lines = get_context(bufnr, winid)
+  all_contexts[bufnr] = context
+
+  if not context or #context == 0 then
+    close(winid)
+    return
+  end
+
+  assert(context_lines)
+
+  open(bufnr, winid, context, context_lines)
+end
+
 local update = throttle(function()
   local bufnr = api.nvim_get_current_buf()
   local winid = api.nvim_get_current_win()
@@ -144,8 +168,12 @@ function M.enable()
   attached[cbuf] = true
 
   autocmd({ 'BufEnter', 'WinScrolled', 'VimResized' }, update)
-  autocmd({ 'WinEnter' }, function()
-    vim.schedule(update)
+  autocmd({ 'WinEnter' }, function(args)
+    local bufnr = tonumber(args.buf)
+    local winid = api.nvim_get_current_win()
+    vim.schedule(function()
+      update_instantly(bufnr, winid)
+    end)
   end)
 
   autocmd({ 'WinResized' }, function()
@@ -156,22 +184,20 @@ function M.enable()
     do
       for _, window_id in pairs(window_ids) do
         if stored_winid == window_id then
-          throttle(function()
-            local bufnr = window_context.bufnr
-            close(stored_winid)
+          local bufnr = window_context.bufnr
+          close(stored_winid)
 
-            if not can_open(bufnr, stored_winid) then
-              return
-            end
+          if not can_open(bufnr, stored_winid) then
+            return
+          end
 
-            local context, context_lines = get_context(bufnr, stored_winid)
-            all_contexts[bufnr] = context
+          local context, context_lines = get_context(bufnr, stored_winid)
+          all_contexts[bufnr] = context
 
-            if not context or #context == 0 then
-              return
-            end
-            open(bufnr, stored_winid, context, context_lines)
-          end)()
+          if not context or #context == 0 then
+            return
+          end
+          open(bufnr, stored_winid, context, context_lines)
         end
       end
     end
@@ -195,8 +221,6 @@ function M.enable()
       update()
     end
   end)
-
-  autocmd({ 'BufLeave', 'WinLeave' }, close)
 
   autocmd({ 'WinClosed' }, function(args)
     local winid = tonumber(args.match)
