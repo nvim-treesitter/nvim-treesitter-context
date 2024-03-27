@@ -77,6 +77,16 @@ class Fruit {
 
 
 
+    #[ReturnTypeWillChange]
+    public function rot(): void
+    {
+
+
+        return;
+    }
+
+
+
  // comment
 
 
