@@ -1,5 +1,6 @@
 
 (function_definition
+  name: (_) @context.start
   body: (_ (_) @context.end)
 ) @context
 
