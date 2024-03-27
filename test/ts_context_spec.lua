@@ -45,6 +45,7 @@ describe('ts_context', function()
         "markdown_inline",
         "html",
         "javascript",
+        "php",
       },
       sync_install = true,
     }
@@ -292,6 +293,72 @@ describe('ts_context', function()
           {15:}} {4:while} {15:(}{11:1}{15:);}                |
         {15:}}                             |
         {6:~                             }|*6
+                                      |
+      ]]}
+    end)
+
+    it('php', function()
+      cmd('edit test/test.php')
+      exec_lua [[vim.treesitter.start()]]
+
+      feed'7<C-e>'
+      screen:expect{grid=[[
+        {1:function}{2: }{3:foo}{14:(}{3:$a}{14:,}{2: }{3:$b}{14:)}{2: }{14:{}{2:        }|
+        {2:  }{1:while}{2: }{14:(}{3:$a}{2: }{1:<=}{2: }{3:$b}{14:)}{2: }{14:{}{2:          }|
+            {5:$index} {4:=} {5:$low} {4:+} {5:floor}{15:((}{5:$hi}|
+            {8:// comment}                |
+            {5:$indexValue} {4:=} {5:$a}{15:;}         |
+        ^    {4:if} {15:(}{5:$indexValue} {4:===} {5:$a}{15:)} {15:{} |
+              {8:// comment}              |
+                                      |
+                                      |
+              {5:$position} {4:=} {5:$index}{15:;}     |
+              {4:return} {15:(}{9:int}{15:)} {5:$position}{15:;} |
+            {15:}}                         |
+            {4:if} {15:(}{5:$indexValue} {4:<} {5:$key}{15:)} {15:{} |
+              {8:// comment}              |
+                                      |
+                                      |
+      ]]}
+
+      feed'67<C-e>'
+      screen:expect{grid=[[
+        {1:class}{2: }{7:Fruit}{2: }{14:{}{2:                 }|
+                                      |
+                                      |
+                                      |
+                                      |
+        ^    {15:#[}ReturnTypeWillChange{15:]}   |
+            {9:public} {4:function} {5:rot}{15:():} {9:voi}|
+            {15:{}                         |
+                                      |
+                                      |
+                {4:return}{15:;}               |
+            {15:}}                         |
+                                      |
+                                      |
+                                      |
+                                      |
+
+      ]]}
+
+      feed'5<C-e>'
+      screen:expect{grid=[[
+        {1:class}{2: }{7:Fruit}{2: }{14:{}{2:                 }|
+        {2:    }{7:public}{2: }{1:function}{2: }{3:rot}{14:():}{2: }{7:voi}|
+        {2:    }{14:{}{2:                         }|
+                                      |
+                                      |
+        ^        {4:return}{15:;}               |
+            {15:}}                         |
+                                      |
+                                      |
+                                      |
+         {8:// comment}                   |
+                                      |
+                                      |
+                                      |
+                                      |
                                       |
       ]]}
     end)
