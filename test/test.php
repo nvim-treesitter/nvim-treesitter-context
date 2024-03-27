@@ -2,6 +2,7 @@
 /*
  * comment
  */
+#[ReturnTypeWillChange]
 function foo($a, $b) {
   //loop, between low & high
   while ($a <= $b) {
@@ -70,6 +71,7 @@ function foo($a, $b) {
   return null;
 }
 
+#[Attribute]
 class Fruit {
 
 
