@@ -32,6 +32,7 @@
 ) @context
 
 (class_declaration
+  name: (_) @context.start
   body: (_ (_) @context.end)
 ) @context
 
