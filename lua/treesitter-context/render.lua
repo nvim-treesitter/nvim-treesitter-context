@@ -35,7 +35,7 @@ local function store_context(bufnr, winid)
     if window_ctx.bufnr == bufnr then
       return window_ctx
     else
-      -- Unserline buffer have changed, close it
+      -- Underline buffer have changed, close it
       win_close(window_ctx.context_winid)
       win_close(window_ctx.gutter_winid)
     end
