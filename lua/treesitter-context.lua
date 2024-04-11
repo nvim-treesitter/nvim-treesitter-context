@@ -100,30 +100,6 @@ local function can_open(bufnr, winid)
   return true
 end
 
---- @param bufnr integer
---- @param winid integer
-local update_instantly = function(bufnr, winid)
-  bufnr = bufnr or api.nvim_get_current_buf()
-  winid = winid or api.nvim_get_current_win()
-
-  if not can_open(bufnr, winid) then
-    close(winid)
-    return
-  end
-
-  local context, context_lines = get_context(bufnr, winid)
-  all_contexts[bufnr] = context
-
-  if not context or #context == 0 then
-    close(winid)
-    return
-  end
-
-  assert(context_lines)
-
-  open(bufnr, winid, context, context_lines)
-end
-
 local update = throttle(function()
   local bufnr = api.nvim_get_current_buf()
   local winid = api.nvim_get_current_win()
@@ -167,14 +143,7 @@ function M.enable()
 
   attached[cbuf] = true
 
-  autocmd({ 'BufEnter', 'WinScrolled', 'VimResized' }, update)
-  autocmd({ 'WinEnter' }, function(args)
-    local winid = api.nvim_get_current_win()
-    vim.schedule(function()
-      local bufnr = api.nvim_get_current_buf()
-      update_instantly(bufnr, winid)
-    end)
-  end)
+  autocmd({ 'BufEnter', 'BufWinEnter', 'WinScrolled', 'VimResized' }, update)
 
   autocmd({ 'WinResized' }, function()
     local event = vim.api.nvim_get_vvar('event')
