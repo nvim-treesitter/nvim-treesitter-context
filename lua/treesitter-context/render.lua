@@ -15,7 +15,7 @@ local ns = api.nvim_create_namespace('nvim-treesitter-context')
 local WindowContext = {}
 WindowContext.__index = WindowContext
 
-local windowContexts = {} --- @type table<integer, WindowContext>
+local window_contexts = {} --- @type table<integer, WindowContext>
 
 --- @param winid integer?
 local function win_close(winid)
@@ -30,7 +30,7 @@ end
 --- @param winid integer
 --- @return WindowContext
 local function store_context(bufnr, winid)
-  local window_ctx = windowContexts[winid]
+  local window_ctx = window_contexts[winid]
   if window_ctx then
     if window_ctx.bufnr == bufnr then
       return window_ctx
@@ -53,7 +53,7 @@ local function store_context(bufnr, winid)
   vim.bo[self.context_bufnr].bufhidden = 'wipe'
   vim.bo[self.gutter_bufnr].undolevels = -1
   vim.bo[self.gutter_bufnr].bufhidden = 'wipe'
-  windowContexts[winid] = self
+  window_contexts[winid] = self
   return self
 end
 
@@ -339,7 +339,7 @@ end
 local M = {}
 
 function M.get_window_contexts()
-  return windowContexts
+  return window_contexts
 end
 
 --- @param bufnr integer
@@ -398,7 +398,7 @@ function M.close(winid)
     return
   end
 
-  local window_context = windowContexts[winid]
+  local window_context = window_contexts[winid]
   if window_context == nil then
     return
   end
@@ -408,7 +408,7 @@ function M.close(winid)
 
   win_close(gutter_winid)
 
-  windowContexts[winid] = nil
+  window_contexts[winid] = nil
 end
 
 return M
