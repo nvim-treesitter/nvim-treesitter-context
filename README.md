@@ -64,7 +64,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `prisma`
   - [x] `python`
   - [x] `r`
-  - [x] `ruby`
+  - [x] `ruby` (and `rspec`)
   - [x] `rust`
   - [x] `scala`
   - [x] `scss`
@@ -263,4 +263,3 @@ end, { silent = true })
 ## Adding support for other languages
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
-

@@ -33,3 +33,17 @@
 (_
   (do_block (body_statement) @context.end)
 ) @context
+
+(call
+  method: (identifier) @context.identifier
+  block: (do_block body: (body_statement) @context.end)
+  (#any-of? @context.identifier
+   "it"
+   "it_behaves_like"
+   "include_examples"
+   "include_context"
+   "context"
+   "description"
+   "shared_context"
+   "shared_examples")
+) @context
