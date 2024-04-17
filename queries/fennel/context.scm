@@ -1,10 +1,6 @@
-(
-  [
-    ;; Functions
-    (list
-      .
-      (symbol) @_fn
-      (#any-of? @_fn "fn" "lambda" "λ" "hashfn"))
-    (table)
-  ] @context
-)
+[
+  (fn_form)
+  (lambda_form)
+  (hashfn_form)
+  (table)
+] @context
