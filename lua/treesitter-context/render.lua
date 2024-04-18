@@ -150,8 +150,12 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
         if nsrow >= start_row then
           local msrow = offset + (nsrow - start_row)
           local merow = offset + (nerow - start_row)
-
-          local hl = buf_query.hl_cache[capture]
+          local hl --- @type integer
+          if buf_query.get_hl_from_capture then
+            hl = buf_query:get_hl_from_capture(capture)
+          else
+            hl = buf_query.hl_cache[capture]
+          end
           local priority = tonumber(metadata.priority) or vim.highlight.priorities.treesitter
           add_extmark(ctx_bufnr, msrow, nscol, {
             end_row = merow,
