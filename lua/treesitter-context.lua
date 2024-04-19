@@ -122,6 +122,42 @@ local update = throttle(function()
   open(bufnr, winid, context, context_lines)
 end)
 
+local function update_at_resize()
+  local event = vim.api.nvim_get_vvar('event')
+  local window_ids = event.windows
+  for stored_winid, window_context in
+    pairs(require('treesitter-context.render').get_window_contexts())
+  do
+    for _, window_id in pairs(window_ids) do
+      if stored_winid == window_id then
+        local bufnr = window_context.bufnr
+        close(stored_winid)
+
+        if not can_open(bufnr, stored_winid) then
+          return
+        end
+
+        local context, context_lines = get_context(bufnr, stored_winid)
+        all_contexts[bufnr] = context
+
+        if not context or #context == 0 then
+          return
+        end
+        open(bufnr, stored_winid, context, context_lines)
+      end
+    end
+  end
+end
+
+---@param winid integer
+local function close_stored_win(winid)
+  for stored_winid, _ in pairs(require('treesitter-context.render').get_window_contexts()) do
+    if winid == stored_winid then
+      close(stored_winid)
+    end
+  end
+end
+
 local M = {
   config = config,
 }
@@ -144,34 +180,11 @@ function M.enable()
   attached[cbuf] = true
 
   autocmd({ 'BufEnter', 'BufWinEnter', 'WinScrolled', 'VimResized' }, update)
-
-  autocmd({ 'WinResized' }, function()
-    local event = vim.api.nvim_get_vvar('event')
-    local window_ids = event.windows
-    for stored_winid, window_context in
-      pairs(require('treesitter-context.render').get_window_contexts())
-    do
-      for _, window_id in pairs(window_ids) do
-        if stored_winid == window_id then
-          local bufnr = window_context.bufnr
-          close(stored_winid)
-
-          if not can_open(bufnr, stored_winid) then
-            return
-          end
-
-          local context, context_lines = get_context(bufnr, stored_winid)
-          all_contexts[bufnr] = context
-
-          if not context or #context == 0 then
-            return
-          end
-          open(bufnr, stored_winid, context, context_lines)
-        end
-      end
-    end
-  end)
-
+  
+  autocmd({ 'WinEnter' }, vim.schedule_wrap(update))
+  
+  autocmd({ 'WinResized' }, update_at_resize)
+  
   autocmd('BufReadPost', function(args)
     attached[args.buf] = nil
     if not config.on_attach or config.on_attach(args.buf) ~= false then
@@ -193,16 +206,10 @@ function M.enable()
 
   autocmd({ 'WinClosed' }, function(args)
     local winid = tonumber(args.match)
-    for stored_winid, _ in pairs(require('treesitter-context.render').get_window_contexts()) do
-      if winid == stored_winid then
-        close(stored_winid)
-      end
-    end
+    close_stored_win(winid)
   end)
 
-  autocmd('User', function()
-    close_all()
-  end, { pattern = 'SessionSavePre' })
+  autocmd('User', close_all, { pattern = 'SessionSavePre' })
   autocmd('User', update, { pattern = 'SessionSavePost' })
 
   update()
