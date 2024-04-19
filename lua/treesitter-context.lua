@@ -106,7 +106,10 @@ local update = throttle(function()
     return
   end
 
-  assert(context_lines)
+  if not context_lines or #context_lines == 0 then
+    close()
+    return
+  end
 
   open(bufnr, winid, context, context_lines)
 end)
