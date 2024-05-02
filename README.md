@@ -72,6 +72,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `solidity`
   - [x] `svelte`
   - [x] `swift`
+  - [x] `tact`
   - [x] `tcl`
   - [x] `teal`
   - [x] `templ`
