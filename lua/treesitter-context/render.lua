@@ -355,6 +355,12 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
   local gbufnr, ctx_bufnr = window_context.gutter_bufnr, window_context.context_bufnr
 
   if config.line_numbers and (vim.wo[winid].number or vim.wo[winid].relativenumber) then
+    -- Recreate buffer if user turn off line number and show it again
+    if not api.nvim_buf_is_valid(gbufnr) then
+      window_contexts[winid].gutter_bufnr = api.nvim_create_buf(false, true)
+      gbufnr = window_contexts[winid].gutter_bufnr
+    end
+    
     window_context.gutter_winid = display_window(
       gbufnr,
       winid,
@@ -368,6 +374,12 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
     render_lno(winid, gbufnr, ctx_ranges, gutter_width)
   else
     win_close(window_context.gutter_winid)
+  end
+  
+  -- Recreate buffer if user manually close ctx buffer
+  if not api.nvim_buf_is_valid(ctx_bufnr) then
+    window_contexts[winid].context_bufnr = api.nvim_create_buf(false, true)
+    ctx_bufnr = window_contexts[winid].context_bufnr
   end
 
   window_context.context_winid = display_window(
