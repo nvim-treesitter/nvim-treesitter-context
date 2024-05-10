@@ -1,5 +1,10 @@
 name: Bug report
-description: Report a problem with nvim-treesitter-context
+description: >-
+  Report a problem with nvim-treesitter-context.
+
+  Notes:
+    - This tracker is reporting bugs and **NOT** for general user support.
+    - Issue reports that don't provide adequate context and information will be closed without notice.
 labels: [bug]
 body:
   - type: markdown
