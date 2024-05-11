@@ -336,7 +336,7 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
   local gutter_width = get_gutter_width(winid)
   local win_width = math.max(1, api.nvim_win_get_width(winid) - gutter_width)
 
-  local win_height = #ctx_lines
+  local win_height = math.max(1, #ctx_lines)
 
   local gbufnr, ctx_bufnr = get_bufs()
 
