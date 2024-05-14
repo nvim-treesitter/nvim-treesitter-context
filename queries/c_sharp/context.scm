@@ -18,10 +18,6 @@
   body: (_) @context.end
 ) @context
 
-(record_struct_declaration
-  body: (_) @context.end
-) @context
-
 (namespace_declaration
   body: (_) @context.end
 ) @context
@@ -42,7 +38,7 @@
   body: (_) @context.end
 ) @context
 
-(for_each_statement
+(foreach_statement
   body: (_) @context.end
 ) @context
 
