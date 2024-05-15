@@ -30,6 +30,7 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [x] `d`
   - [x] `dart`
   - [x] `elixir`
+  - [x] `elm`
   - [x] `fennel`
   - [x] `fish`
   - [x] `fortran`
@@ -109,7 +110,6 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
   - [ ] `ebnf`
   - [ ] `ecma`
   - [ ] `eex`
-  - [ ] `elm`
   - [ ] `elsa`
   - [ ] `elvish`
   - [ ] `embedded_template`
