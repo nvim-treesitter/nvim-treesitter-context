@@ -2,6 +2,10 @@
   (body_statement) @context.end
 ) @context
 
+(singleton_class
+  (body_statement) @context.end
+) @context
+
 (module
   (body_statement) @context.end
 ) @context
