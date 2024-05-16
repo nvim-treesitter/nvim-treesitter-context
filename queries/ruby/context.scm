@@ -47,7 +47,7 @@
    "include_examples"
    "include_context"
    "context"
-   "description"
+   "describe"
    "shared_context"
    "shared_examples")
 ) @context
