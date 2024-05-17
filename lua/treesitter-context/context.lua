@@ -225,6 +225,30 @@ local function iter_context_parents(bufnr, line_range)
   end
 end
 
+--- Creates a copy of a list-like table such that any nested tables are
+--- "unrolled" and appended to the result.
+---
+---@see From https://github.com/premake/premake-core/blob/master/src/base/table.lua
+---
+---@param t table List-like table
+---@return table Flattened copy of the given list-like table
+local function tbl_flatten(t)
+  local result = {}
+  --- @param _t table<any,any>
+  local function _tbl_flatten(_t)
+    for i = 1, #_t do
+      local v = _t[i]
+      if type(v) == 'table' then
+        _tbl_flatten(v)
+      elseif v then
+        table.insert(result, v)
+      end
+    end
+  end
+  _tbl_flatten(t)
+  return result
+end
+
 --- @param bufnr integer
 --- @param winid integer
 --- @return Range4[]?, string[]?
@@ -301,7 +325,7 @@ function M.get(bufnr, winid)
     trim_contexts(context_ranges, context_lines, trim, config.trim_scope == 'outer')
   end
 
-  return context_ranges, vim.tbl_flatten(context_lines)
+  return context_ranges, tbl_flatten(context_lines)
 end
 
 return M
