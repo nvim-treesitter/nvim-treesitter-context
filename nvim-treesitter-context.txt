@@ -1,0 +1,139 @@
+*nvim-treesitter-context*
+
+Authors:  Rom Grk <romgrk.cc@gmail.com>,
+          Lewis Russell <lewis6991@gmail.com>
+Version:  NA
+Homepage: <https://github.com/nvim-treesitter/nvim-treesitter-context>
+
+==============================================================================
+INTRODUCTION                                     *nvim-treesitter-context-intro*
+
+A plugin that shows the semantic context of the currently visible buffer
+region. Typically this context will be: the current function, if statement
+blocks, loops, etc.
+
+==============================================================================
+CONFIGURATION                                   *nvim-treesitter-context-config*
+
+Fields with default values are shown below. Note: calling `setup()` is
+not required.
+
+>lua
+    require'treesitter-context'.setup({
+      -- Enable this plugin (Can be enabled/disabled later via commands)
+      enable = true,
+
+      -- How many lines the window should span. Values <= 0 mean no limit.
+      max_lines = 0,
+
+      -- Minimum editor window height to enable context. Values <= 0 mean no
+      -- limit.
+      min_window_height = 0,
+
+      -- Whether to show line numbers
+      line_numbers = true,
+
+      -- Maximum number of lines to show for a single context
+      multiline_threshold = 20,
+
+      -- Which context lines to discard if `max_lines` is exceeded.
+      -- Choices: 'inner', 'outer'
+      trim_scope = 'outer',
+
+      -- Line used to calculate context.
+      -- Choices: 'cursor', 'topline'
+      mode = 'cursor',
+
+      -- Separator between context and content. Should be a single character
+      -- string, like '-'. When separator is set, the context will only show
+      -- up when there are at least 2 lines above cursorline.
+      separator = nil,
+
+      -- The Z-index of the context window
+      zindex = 20,
+
+      -- (fun(buf: integer): boolean) return false to disable attaching
+      on_attach = nil,
+    })
+<
+
+==============================================================================
+COMMANDS                                      *nvim-treesitter-context-commands*
+
+`TSContextEnable`, `TSContextDisable` and `TSContextToggle`.
+
+==============================================================================
+HIGHLIGHTS                                  *nvim-treesitter-context-highlights*
+
+
+`TreesitterContext`                                         *hl-TreesitterContext*
+    (default: links to `NormalFloat`)
+
+    Colors of the context.
+
+`TreesitterContextLineNumber`                     *hl-TreesitterContextLineNumber*
+    (default: links to `LineNr`)
+
+    Used for the context line numbers if `line_numbers` is set.
+
+`TreesitterContextSeparator`                       *hl-TreesitterContextSeparator*
+    (default: links to `FloatBorder`)
+
+    Used for the colors of the separator if `separator` is set.
+
+`TreesitterContextBottom`                             *hl-TreesitterContextBottom*
+    (default: links to `NONE`)
+
+    Use for the last line of of the context.
+
+`TreesitterContextLineNumberBottom`         *hl-TreesitterContextLineNumberBottom*
+    (default: links to `NONE`)
+
+    Use for the last line of of the context line number.
+
+A border can be created by applying an underline highlight, e.g, for an
+underline across the screen:
+>vim
+    :highlight TreesitterContextBottom gui=underline guisp=Grey
+    :highlight TreesitterContextLineNumberBottom gui=underline guisp=Grey
+<
+
+==============================================================================
+FUNCTIONS                                    *nvim-treesitter-context-functions*
+
+disable()                                    *nvim-treesitter-context-disable()*
+
+enabled()                                    *nvim-treesitter-context-enabled()*
+
+    Returns: ~
+        `boolean` indication whether the context is enabled for this buffer.
+
+enable()                                      *nvim-treesitter-context-enable()*
+
+go_to_context({depth})                 *nvim-treesitter-context-go_to_context()*
+
+    Jump to the context at {depth}.
+
+    Example use in a keymap:
+>lua
+        vim.keymap.set("n", "[c", function()
+          require("treesitter-context").go_to_context(vim.v.count1)
+        end, { silent = true })
+<
+
+    Parameters: ~
+        {depth} (`integer`, default: `1`) Depth to jump to.
+
+
+setup({config})                                *nvim-treesitter-context-setup()*
+
+    See |nvim-treesitter-context-config|.
+
+    Parameters: ~
+        {config} (`table`) Configuration table.
+
+toggle()                                      *nvim-treesitter-context-toggle()*
+    Toggle the context.
+
+------------------------------------------------------------------------------
+vim:tw=78:ts=8:ft=help:norl:
