@@ -203,9 +203,10 @@ end
 --- @field start integer
 
 --- @param ctx_node_line_num integer
+--- @param winid integer
 --- @return integer
-local function get_relative_line_num(ctx_node_line_num)
-  local cursor_line_num = fn.line('.')
+local function get_relative_line_num(ctx_node_line_num, winid)
+  local cursor_line_num = fn.line('.', winid)
   local num_folded_lines = 0
   -- Find all folds between the context node and the cursor
   local current_line = ctx_node_line_num
