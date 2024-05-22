@@ -1,5 +1,12 @@
+(haskell (header
+  module: (module) @context)) @context.end
+
 ([
-  (alt)
-  (exp_case)
+  (alternative)
+  (expression/case)
+  (signature)
+  (bind)
   (function)
+  (class)
+  (data_type)
 ] @context)
