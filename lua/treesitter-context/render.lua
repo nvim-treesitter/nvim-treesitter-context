@@ -298,6 +298,11 @@ local function render_lno(win, bufnr, contexts, gutter_width)
     end
   end
 
+  -- in case highlight row cannnot be found, return early.
+  if next(lno_text) == nil then
+    return
+  end
+
   set_lines(bufnr, lno_text)
   highlight_lno_str(bufnr, lno_text, lno_highlights)
   highlight_bottom(bufnr, #lno_text - 1, 'TreesitterContextLineNumberBottom')
