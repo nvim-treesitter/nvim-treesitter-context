@@ -40,3 +40,8 @@
 (guard_statement
   (statements) @context.end
 ) @context
+
+(lambda_literal
+  (statements) @context.end
+) @context
+
