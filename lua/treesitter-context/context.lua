@@ -268,6 +268,14 @@ end
 --- @param winid integer
 --- @return Range4[]?, string[]?
 function M.get(bufnr, winid)
+  -- vim.treesitter.get_parser() calls bufload(), but we don't actually want to load the buffer:
+  -- this method is called during plugin init, before other plugins or the user's config
+  -- have a chance to initialize.
+  -- They may want to register autocmds, and this would prevent them from firing.
+  if not api.nvim_buf_is_loaded(bufnr) then
+    return
+  end
+
   if not pcall(vim.treesitter.get_parser, bufnr) then
     return
   end
