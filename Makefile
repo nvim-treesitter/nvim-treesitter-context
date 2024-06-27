@@ -30,7 +30,7 @@ test: nvim-test nvim-treesitter
 		--verbose
 
 .PHONY: parsers
-parsers: nvim-test
+parsers: nvim-test nvim-treesitter
 	$(XDG_DATA_HOME)/nvim-test/nvim-test-$(NEOVIM_VERSION)/bin/nvim \
 		--clean -u NONE -c 'source install_parsers.lua'
 
