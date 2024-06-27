@@ -1,0 +1,36 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    env:
+      NVIM_TS_SHA: master
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.1.5"
+
+      - uses: leafo/gh-actions-luarocks@v4
+
+      - name: Download nvim-test
+        run: make nvim-test
+
+      - name: Run Test
+        run: make test NVIM_TS_SHA=$NVIM_TS_SHA
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: Update README.md"
+          file_pattern: README.md
