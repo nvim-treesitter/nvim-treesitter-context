@@ -6,6 +6,8 @@ NVIM_TS_SHA := 98460428
 
 FILTER=.*
 
+export XDG_DATA_HOME ?= $(HOME)/.data
+
 nvim-treesitter:
 	git clone  \
       	--filter=blob:none \
