@@ -36,4 +36,3 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "docs: Update README.md"
-          file_pattern: README.md
