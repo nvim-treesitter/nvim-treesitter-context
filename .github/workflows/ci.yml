@@ -38,5 +38,8 @@ jobs:
       - name: Download nvim-test
         run: make nvim-test
 
+      - name: Install parsers
+        run: make parsers NEOVIM_VERSION=$NEOVIM_VERSION
+
       - name: Run Test
         run: make test NEOVIM_VERSION=$NEOVIM_VERSION

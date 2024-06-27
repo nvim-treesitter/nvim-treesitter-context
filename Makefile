@@ -15,6 +15,8 @@ nvim-treesitter:
 nvim-test:
 	git clone https://github.com/lewis6991/nvim-test
 	nvim-test/bin/nvim-test --init
+		--runner_version $(NEOVIM_VERSION) \
+		--target_version $(NEOVIM_VERSION)
 
 .PHONY: test
 test: nvim-test nvim-treesitter
@@ -24,6 +26,11 @@ test: nvim-test nvim-treesitter
 		--lpath=$(PWD)/lua/?.lua \
 		--filter=$(FILTER) \
 		--verbose
+
+.PHONY: parsers
+parsers: nvim-test
+	$(XDG_DATA_HOME)/nvim-test/nvim-test-$(NEOVIM_VERSION)/bin/nvim \
+		--clean -u NONE -c 'source install_parsers.lua'
 
 lint:
 	luacheck lua
