@@ -2,12 +2,10 @@
 
 ([
   (if_statement)
-  (else_if_block)
-  (else_block)
+  (else_statement)
   (each_statement)
   (await_statement)
-  (then_block)
-  (catch_block)
+  (then_statement)
+  (catch_statement)
   (key_statement)
-  (snippet_statement)
 ] @context)
