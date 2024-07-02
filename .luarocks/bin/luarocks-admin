@@ -1,0 +1,21 @@
+#!/home/runner/work/nvim-treesitter-context/nvim-treesitter-context/.lua/bin/lua
+package.loaded["luarocks.core.hardcoded"] = { SYSCONFDIR = [[/home/runner/work/nvim-treesitter-context/nvim-treesitter-context/.luarocks/etc/luarocks]] }
+package.path=[[/home/runner/work/nvim-treesitter-context/nvim-treesitter-context/.luarocks/share/lua/5.1/?.lua;]] .. package.path
+local list = package.searchers or package.loaders; table.insert(list, 1, function(name) if name:match("^luarocks%.") then return loadfile([[/home/runner/work/nvim-treesitter-context/nvim-treesitter-context/.luarocks/share/lua/5.1/]] .. name:gsub([[%.]], [[/]]) .. [[.lua]]) end end)
+
+-- Load cfg first so that luarocks.loader knows it is running inside LuaRocks
+local cfg = require("luarocks.core.cfg")
+
+local loader = require("luarocks.loader")
+local cmd = require("luarocks.cmd")
+
+local description = "LuaRocks repository administration interface"
+
+local commands = {
+   make_manifest = "luarocks.admin.cmd.make_manifest",
+   add = "luarocks.admin.cmd.add",
+   remove = "luarocks.admin.cmd.remove",
+   refresh_cache = "luarocks.admin.cmd.refresh_cache",
+}
+
+cmd.run_command(description, commands, "luarocks.admin.cmd.external", ...)
