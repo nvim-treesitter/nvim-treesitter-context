@@ -16,7 +16,6 @@ jobs:
 
     env:
       NVIM_TS_SHA: master
-      IS_CI: 1
 
     steps:
       - name: Checkout
@@ -28,14 +27,28 @@ jobs:
 
       - uses: leafo/gh-actions-luarocks@v4
 
+      - uses: tree-sitter/setup-action/cli@v1
+
       - name: Download nvim-test
         run: make nvim-test
+
+      - name: Download nvim-treesitter
+        run: make nvim-treesitter
+
+      - name: Parsers Cache
+        uses: actions/cache@v4
+        with:
+          path: ./nvim-treesitter/parser/
+          key: parsers-${{ join(matrix.*, '-') }}-${{ hashFiles(
+            './nvim-treesitter/lockfile.json',
+            './nvim-treesitter/lua/nvim-treesitter/install.lua',
+            './nvim-treesitter/lua/nvim-treesitter/parsers.lua') }}
 
       - name: Install parsers
         run: make parsers
 
       - name: Run Test
-        run: make test NVIM_TS_SHA=$NVIM_TS_SHA
+        run: make test
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:

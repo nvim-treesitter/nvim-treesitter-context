@@ -7,11 +7,6 @@ local cmd      = helpers.api.nvim_command
 local feed     = helpers.feed
 
 local function install_langs(langs)
-  -- Shouldn't need to do this, but CI seems to hang on some languages
-  if os.getenv('IS_CI') then
-    return
-  end
-
   if type(langs) == 'string' then
     langs = {langs}
   end
