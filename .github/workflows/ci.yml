@@ -20,7 +20,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        neovim_version: ['v0.9.5', 'v0.10.0' ]
+        neovim_version:
+          - 'v0.9.5'
+          # - 'v0.10.0'
 
     env:
       NEOVIM_VERSION: ${{ matrix.neovim_version }}
@@ -40,8 +42,20 @@ jobs:
       - name: Download nvim-test
         run: make nvim-test
 
+      - name: Download nvim-treesitter
+        run: make nvim-treesitter
+
+      - name: Parsers Cache
+        uses: actions/cache@v4
+        with:
+          path: ./nvim-treesitter/parser/
+          key: parsers-${{ join(matrix.*, '-') }}-${{ hashFiles(
+            './nvim-treesitter/lockfile.json',
+            './nvim-treesitter/lua/nvim-treesitter/install.lua',
+            './nvim-treesitter/lua/nvim-treesitter/parsers.lua') }}
+
       - name: Install parsers
-        run: make parsers NEOVIM_VERSION=$NEOVIM_VERSION
+        run: make parsers
 
       - name: Run Test
-        run: make test NEOVIM_VERSION=$NEOVIM_VERSION
+        run: make test

@@ -35,12 +35,10 @@ jobs:
       - name: Download nvim-treesitter
         run: make nvim-treesitter
 
-      - name: Setup Parsers Cache
-        id: parsers-cache
+      - name: Parsers Cache
         uses: actions/cache@v4
         with:
-          path: |
-            ./nvim-treesitter/parser/
+          path: ./nvim-treesitter/parser/
           key: parsers-${{ join(matrix.*, '-') }}-${{ hashFiles(
             './nvim-treesitter/lockfile.json',
             './nvim-treesitter/lua/nvim-treesitter/install.lua',
