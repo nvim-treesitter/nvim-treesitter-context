@@ -6,6 +6,22 @@ local exec_lua = helpers.exec_lua
 local cmd      = helpers.api.nvim_command
 local feed     = helpers.feed
 
+local function install_langs(langs)
+  if type(langs) == 'string' then
+    langs = {langs}
+  end
+  exec_lua([[
+  local langs = ...
+  require'nvim-treesitter.configs'.setup {
+    ensure_installed = langs,
+    sync_install = true,
+  }
+
+  -- Clear the message "<lang> has been installed".
+  print(' ')
+  ]], langs)
+end
+
 local function get_langs()
   local f = assert(io.open('README.md', 'r'))
   local readme_langs = {} --- @type table<string,true>
@@ -35,22 +51,6 @@ end
 
 describe('ts_context', function()
   local screen --- @type test.screen
-  local langs --- @type string[]
-
-  setup(function()
-    clear()
-    cmd [[set runtimepath+=.,./nvim-treesitter]]
-
-    langs = get_langs()
-
-    exec_lua([[
-    local langs = ...
-    require'nvim-treesitter.configs'.setup {
-      ensure_installed = langs,
-      sync_install = true,
-    }
-    ]], langs)
-  end)
 
   before_each(function()
     clear()
@@ -76,11 +76,7 @@ describe('ts_context', function()
 
     cmd [[set runtimepath+=.,./nvim-treesitter]]
 
-    exec_lua([[
-    require'nvim-treesitter.configs'.setup {}
-    ]])
-
-    -- Required for the proper Markdown support
+    -- Required to load custom predicates
     exec_lua [[require'nvim-treesitter'.setup()]]
 
     cmd [[let $XDG_CACHE_HOME='scratch/cache']]
@@ -93,6 +89,7 @@ describe('ts_context', function()
   end)
 
   it('edit a file', function()
+    install_langs('lua')
     exec_lua[[require'treesitter-context'.setup{}]]
     cmd('edit test/test_file.lua')
     exec_lua [[vim.treesitter.start()]]
@@ -144,8 +141,10 @@ describe('ts_context', function()
       f:close()
     end)
 
-    for _, lang in ipairs(langs) do
+    for _, lang in ipairs(get_langs()) do
       it(lang, function()
+        install_langs(lang)
+
         local index --- @type integer
         local line_orig --- @type string
 
@@ -193,6 +192,7 @@ describe('ts_context', function()
     end)
 
     it('rust', function()
+      install_langs('rust')
       cmd('edit test/test.rs')
       exec_lua [[vim.treesitter.start()]]
       feed'20<C-e>'
@@ -239,6 +239,7 @@ describe('ts_context', function()
     end)
 
     it('c', function()
+      install_langs('c')
       cmd('edit test/test.c')
       exec_lua [[vim.treesitter.start()]]
       feed'<C-e>'
@@ -312,6 +313,7 @@ describe('ts_context', function()
     end)
 
     it('cpp', function()
+      install_langs('cpp')
       cmd('edit test/test.cpp')
       exec_lua [[vim.treesitter.start()]]
       feed'<C-e>'
@@ -378,6 +380,7 @@ describe('ts_context', function()
     end)
 
     it('php', function()
+      install_langs('php')
       cmd('edit test/test.php')
       exec_lua [[vim.treesitter.start()]]
 
@@ -409,7 +412,7 @@ describe('ts_context', function()
                                       |
                                       |
         ^    {15:#[}ReturnTypeWillChange{15:]}   |
-            {9:public} {4:function} {5:rot}{15:():} {9:voi}|
+            {4:public} {4:function} {5:rot}{15:():} {9:voi}|
             {15:{}                         |
                                       |
                                       |
@@ -425,7 +428,7 @@ describe('ts_context', function()
       feed'5<C-e>'
       screen:expect{grid=[[
         {1:class}{2: }{7:Fruit}{2: }{14:{}{2:                 }|
-        {2:    }{7:public}{2: }{1:function}{2: }{3:rot}{14:():}{2: }{7:voi}|
+        {2:    }{1:public}{2: }{1:function}{2: }{3:rot}{14:():}{2: }{7:voi}|
         {2:    }{14:{}{2:                         }|
                                       |
                                       |
@@ -444,6 +447,7 @@ describe('ts_context', function()
     end)
 
     it('typescript', function()
+      install_langs('typescript')
       cmd('edit test/test.ts')
       exec_lua [[vim.treesitter.start()]]
       feed'<C-e>'
@@ -491,6 +495,7 @@ describe('ts_context', function()
     end)
 
     it('markdown', function()
+      install_langs({'markdown', 'markdown_inline', 'html'})
       cmd('edit test/test.md')
       exec_lua [[vim.treesitter.start()]]
 
@@ -532,6 +537,7 @@ describe('ts_context', function()
     -- unsupported injected languages (markdown_inline does not
     -- have queries specified)
     it('markdown_inline', function()
+      install_langs({'markdown', 'markdown_inline'})
       cmd('edit test/test.md')
       exec_lua [[vim.treesitter.start()]]
 

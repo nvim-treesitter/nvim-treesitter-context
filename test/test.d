@@ -144,6 +144,10 @@ class Foo : Bar
 
         case 3:     // valid: ends with 'break' (break out of the 'switch' only)
             message ~= "three";
+
+
+
+
             break;
 
         case 4:     // valid: ends with 'continue' (continue the enclosing loop)

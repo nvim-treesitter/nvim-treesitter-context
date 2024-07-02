@@ -26,7 +26,7 @@ test: nvim-test nvim-treesitter
 		--runner_version $(NEOVIM_VERSION) \
 		--target_version $(NEOVIM_VERSION) \
 		--lpath=$(PWD)/lua/?.lua \
-		--filter=$(FILTER) \
+		--filter="$(FILTER)" \
 		--verbose
 
 .PHONY: parsers

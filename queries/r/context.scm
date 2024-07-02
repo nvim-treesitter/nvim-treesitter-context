@@ -1,31 +1,23 @@
 ([
 (call)
-(binary)
+(binary_operator)
 ]) @context
 
-(left_assignment
-  value: (_) @context.end
-) @context
-
-(equals_assignment
-  value: (_) @context.end
-) @context
-
-(super_assignment
-  value: (_) @context.end
-) @context
-
-(for
+(for_statement
   body: (_) @context.end
 ) @context
 
-(while
+(while_statement
   body: (_) @context.end
 ) @context
 
-(if
+(if_statement
+  consequence: (_) @context.end
+) @context
+
+(if_statement
   consequence: (_) @context.end
 ) @context
 
 (function_definition
-  (brace_list) @context.end) @context
+  (braced_expression) @context.end) @context
