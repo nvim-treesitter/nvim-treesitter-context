@@ -24,7 +24,6 @@ jobs:
 
     env:
       NEOVIM_VERSION: ${{ matrix.neovim_version }}
-      IS_CI: 1
 
     steps:
       - name: Checkout
@@ -35,6 +34,8 @@ jobs:
           luaVersion: "5.1.5"
 
       - uses: leafo/gh-actions-luarocks@v4
+
+      - uses: tree-sitter/setup-action/cli@v1
 
       - name: Download nvim-test
         run: make nvim-test
