@@ -31,7 +31,7 @@ jobs:
         run: make nvim-test
 
       - name: Install parsers
-        run: make parsers NEOVIM_VERSION=$NEOVIM_VERSION
+        run: make parsers
 
       - name: Run Test
         run: make test NVIM_TS_SHA=$NVIM_TS_SHA
