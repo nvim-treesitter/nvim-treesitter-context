@@ -24,6 +24,7 @@ jobs:
 
     env:
       NEOVIM_VERSION: ${{ matrix.neovim_version }}
+      IS_CI: 1
 
     steps:
       - name: Checkout
