@@ -91,7 +91,7 @@ describe('ts_context', function()
   it('edit a file', function()
     install_langs('lua')
     exec_lua[[require'treesitter-context'.setup{}]]
-    cmd('edit test/test_file.lua')
+    cmd('edit test/lang/test_file.lua')
     exec_lua [[vim.treesitter.start()]]
     feed'<C-e>'
     feed'jj'
@@ -193,7 +193,7 @@ describe('ts_context', function()
 
     it('rust', function()
       install_langs('rust')
-      cmd('edit test/test.rs')
+      cmd('edit test/lang/test.rs')
       exec_lua [[vim.treesitter.start()]]
       feed'20<C-e>'
 
@@ -240,7 +240,7 @@ describe('ts_context', function()
 
     it('c', function()
       install_langs('c')
-      cmd('edit test/test.c')
+      cmd('edit test/lang/test.c')
       exec_lua [[vim.treesitter.start()]]
       feed'<C-e>'
 
@@ -314,7 +314,7 @@ describe('ts_context', function()
 
     it('cpp', function()
       install_langs('cpp')
-      cmd('edit test/test.cpp')
+      cmd('edit test/lang/test.cpp')
       exec_lua [[vim.treesitter.start()]]
       feed'<C-e>'
 
@@ -381,7 +381,7 @@ describe('ts_context', function()
 
     it('php', function()
       install_langs('php')
-      cmd('edit test/test.php')
+      cmd('edit test/lang/test.php')
       exec_lua [[vim.treesitter.start()]]
 
       feed'7<C-e>'
@@ -448,7 +448,7 @@ describe('ts_context', function()
 
     it('typescript', function()
       install_langs('typescript')
-      cmd('edit test/test.ts')
+      cmd('edit test/lang/test.ts')
       exec_lua [[vim.treesitter.start()]]
       feed'<C-e>'
 
@@ -496,7 +496,7 @@ describe('ts_context', function()
 
     it('markdown', function()
       install_langs({'markdown', 'markdown_inline', 'html'})
-      cmd('edit test/test.md')
+      cmd('edit test/lang/test.md')
       exec_lua [[vim.treesitter.start()]]
 
       feed'3<C-e>'
@@ -538,7 +538,7 @@ describe('ts_context', function()
     -- have queries specified)
     it('markdown_inline', function()
       install_langs({'markdown', 'markdown_inline'})
-      cmd('edit test/test.md')
+      cmd('edit test/lang/test.md')
       exec_lua [[vim.treesitter.start()]]
 
       feed'47<C-e>'
