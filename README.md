@@ -66,6 +66,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `php`
   - [x] `php_only`
   - [x] `prisma`
+  - [x] `proto`
   - [x] `python`
   - [x] `r`
   - [x] `ruby` (and `rspec`)
@@ -162,7 +163,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `pioasm`
   - [ ] `po`
   - [ ] `poe_filter`
-  - [ ] `proto`
   - [ ] `prql`
   - [ ] `pug`
   - [ ] `ql`
