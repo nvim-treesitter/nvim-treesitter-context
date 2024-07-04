@@ -67,8 +67,8 @@ end
 local context_range = cache.memoize(function(node, query)
   local bufnr = api.nvim_get_current_buf()
   local range = { node:range() } --- @type Range4
-  range[3] = range[1]
-  range[4] = -1
+  range[3] = range[1] + 1
+  range[4] = 0
 
   -- max_start_depth depth is only supported in nvim 0.10. It is ignored on
   -- versions 0.9 or less. It is only needed to improve performance
@@ -133,8 +133,8 @@ local function trim_contexts(context_ranges, context_lines, trim, top)
       table.remove(context_ranges, idx)
       table.remove(context_lines, idx)
     else
-      context_to_trim[3] = context_to_trim[3] - trim
-      context_to_trim[4] = -1
+      context_to_trim[3] = context_to_trim[3] - trim + (context_to_trim[4] == 0 and 0 or 1)
+      context_to_trim[4] = 0
       local context_lines_to_trim = context_lines[idx]
       for _ = 1, trim do
         context_lines_to_trim[#context_lines_to_trim] = nil
@@ -167,7 +167,12 @@ local function get_text_for_range(range)
     end_row = end_row - 1
   end
 
-  return { start_row, 0, end_row, -1 }, lines
+  if end_col == -1 then
+    end_col = 0
+    end_row = end_row + 1
+  end
+
+  return { start_row, 0, end_row, end_col }, lines
 end
 
 local M = {}

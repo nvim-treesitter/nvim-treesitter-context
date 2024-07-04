@@ -143,7 +143,7 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
         local range = vim.treesitter.get_range(node, bufnr, metadata[capture])
         local nsrow, nscol, nerow, necol = range[1], range[2], range[4], range[5]
 
-        if nerow > end_row or (nerow == end_row and necol > end_col and end_col ~= -1) then
+        if nerow > end_row or (nerow == end_row and necol > end_col) then
           break
         end
 
