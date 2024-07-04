@@ -1,148 +1,90 @@
-struct Bert {
+// {{TEST}}
+
+struct Bert { // {{CONTEXT}}
     int *f1;
-    // comment
     int *f2;
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
+
+    // {{CURSOR}}
 };
 
-typedef enum {
+
+// {{TEST}}
+
+typedef enum { // {{CONTEXT}}
   E1,
   E2,
   E3
-  // comment
-  // comment
-  // comment
-  // comment
-  // comment
-  // comment
+  // {{CURSOR}}
 } Myenum;
 
-int main(int arg1,
+
+// {{TEST}}
+
+int main(int arg1, // {{CONTEXT}}
          char **arg2,
-         char **arg3
-         )
+         char **arg3)
 {
 
-  if (arg1 == 4
+  if (arg1 == 4 // {{CONTEXT}}
       && arg2 == arg3) {
 
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    for (int i = 0; i < arg1; i++) {
-      // comment
-      // comment
-      // comment
-      // comment
-      while (1) {
-        // comment
-        // comment
-        // comment
-        // comment
-        // comment
+    // {{CURSOR}}
+
+    for (int i = 0; i < arg1; i++) { // {{CONTEXT}}
+
+      // {{CURSOR}}
+      while (1) { // {{CONTEXT}}
+
+
+        // {{CURSOR}}
       }
 
-      do {
-        // comment
-        // comment
-        // comment
-        // comment
-        // comment
-
-      } while (1);
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
     }
-
-  } else if (arg1 == 4) {
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-
-  } else {
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-    // comment
-
   }
+}
 
-  switch (arg1) {
+
+// {{TEST}}
+
+void foo(int a) { // {{CONTEXT}}
+  if (a) { // {{CONTEXT}}
+      do { // {{CONTEXT}}
+
+
+
+        // {{CURSOR}}
+      } while (1);
+  }
+}
+
+
+// {{TEST}}
+
+void bar(int a) { // {{CONTEXT}}
+  if (a) { // {{CONTEXT}}
+
+  } else if (a == 4) { // {{CONTEXT}}
     // comment
-    // comment
+  } else { // {{CONTEXT}}
+
+
+
+    // {{CURSOR}}
+  }
+}
+
+
+// {{TEST}}
+
+void baz(int a) { // {{CONTEXT}}
+  switch (a) { // {{CONTEXT}}
     case 0:
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
       break;
-    case 1: {
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
-      // comment
+    case 1: { // {{CONTEXT}}
+
+
+
+      // {{CURSOR}}
     } break;
   }
 }

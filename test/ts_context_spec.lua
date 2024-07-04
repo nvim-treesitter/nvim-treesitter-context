@@ -5,6 +5,7 @@ local clear    = helpers.clear
 local exec_lua = helpers.exec_lua
 local cmd      = helpers.api.nvim_command
 local feed     = helpers.feed
+local api      = helpers.api
 
 local function install_langs(langs)
   if type(langs) == 'string' then
@@ -22,7 +23,52 @@ local function install_langs(langs)
   ]], langs)
 end
 
-local function get_langs()
+---@param line string
+---@return string?
+local function parse_directive(line)
+  --- @type string?
+  local directive = line:match('{{([A-Z]+)}}')
+  return directive
+end
+
+--- @param filename string
+--- @return table<integer, integer[]>? contexts
+local function parse_directives(filename)
+  local f = io.open(filename, 'r')
+  if not f then
+    return
+  end
+
+  local context = {} --- @type table<integer,integer[]>
+  local contexts = {} --- @type table<integer,integer[]>
+
+  local i = 0
+  for l in f:lines() do
+    local directive = parse_directive(l)
+    if directive then
+      if directive == 'TEST' then
+        context = {}
+      elseif directive == 'CURSOR' then
+        contexts[i] = vim.deepcopy(context)
+      elseif directive == 'CONTEXT' then
+        table.insert(context, i)
+      elseif directive == 'POPCONTEXT' then
+        table.remove(context, #context)
+      end
+    end
+    i = i + 1
+  end
+  f:close()
+
+  for _, c in pairs(contexts) do
+    table.sort(c)
+  end
+
+  return contexts
+end
+
+local langs = {} --- @type string[]
+do
   local f = assert(io.open('README.md', 'r'))
   local readme_langs = {} --- @type table<string,true>
   for l in f:lines() do
@@ -35,18 +81,16 @@ local function get_langs()
   f:close()
 
   f = assert(io.open('nvim-treesitter/lockfile.json', 'r'))
-  local txt = f:read('*a')
-  local j = vim.json.decode(txt)
 
-  local langs = {} --- @type string[]
-  for k in pairs(j) do
+  for k in pairs(vim.json.decode(f:read('*a'))) do
     if readme_langs[k] then
       langs[#langs+1] = k
       readme_langs[k] = nil
     end
   end
-  print('Invalid languages:', table.concat(vim.tbl_keys(readme_langs), ', '))
-  return langs
+  if next(readme_langs) then
+    print('Invalid languages:', table.concat(vim.tbl_keys(readme_langs), ', '))
+  end
 end
 
 describe('ts_context', function()
@@ -91,7 +135,7 @@ describe('ts_context', function()
   it('edit a file', function()
     install_langs('lua')
     exec_lua[[require'treesitter-context'.setup{}]]
-    cmd('edit test/lang/test_file.lua')
+    cmd('edit test/test_file.lua')
     exec_lua [[vim.treesitter.start()]]
     feed'<C-e>'
     feed'jj'
@@ -141,7 +185,7 @@ describe('ts_context', function()
       f:close()
     end)
 
-    for _, lang in ipairs(get_langs()) do
+    for _, lang in ipairs(langs) do
       it(lang, function()
         install_langs(lang)
 
@@ -179,6 +223,51 @@ describe('ts_context', function()
       end
       f:close()
     end)
+
+  end)
+
+  describe('contexts:', function()
+    for _, lang in ipairs(langs) do
+      it(lang, function()
+        install_langs(lang)
+
+        local test_file = 'test/lang/test.'..lang
+        if not vim.uv.fs_stat(test_file) then
+          pending('No test file')
+          return
+        end
+
+        local contexts = parse_directives(test_file)
+
+        if not contexts or not next(contexts) then
+          pending('No tests')
+          return
+        end
+
+        cmd('edit '..test_file)
+
+        for cursor_row, context_rows in pairs(contexts) do
+          local bufnr = api.nvim_get_current_buf()
+          local winid = api.nvim_get_current_win()
+          api.nvim_win_set_cursor(winid, {cursor_row + 1, 0})
+          assert(helpers.fn.getline('.'):match('{{CURSOR}}'))
+          feed(string.format('zt%d<C-y>', #context_rows + 2))
+
+          --- @type [integer,integer,integer,integer][]
+          local ranges = exec_lua([[
+            return require('treesitter-context.context').get(...)
+          ]], bufnr, winid)
+
+          local act_context_rows = {} --- @type integer[]
+          for _, r in ipairs(ranges) do
+            table.insert(act_context_rows, r[1])
+          end
+
+          helpers.eq(context_rows, act_context_rows, string.format('test for cursor %d failed', cursor_row))
+        end
+
+      end)
+    end
 
   end)
 
@@ -240,7 +329,7 @@ describe('ts_context', function()
 
     it('c', function()
       install_langs('c')
-      cmd('edit test/lang/test.c')
+      cmd('edit test/test.c')
       exec_lua [[vim.treesitter.start()]]
       feed'<C-e>'
 
