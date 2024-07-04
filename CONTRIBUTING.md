@@ -41,5 +41,21 @@ if-statement spans multiple lines.
 A pull request for supporting a new language requires:
 
 1. Adding `queries/[LANG]/context.scm` as explained in the previous section.
-2. Adding `test/test.[LANG EXT]` with code examples the `context.scm` is designed to support.
+
+2. Adding `test/lang/test.[LANG]` or `test/lang/test.[LANG].[EXT]` with code examples the `context.scm` is designed to support.
+  - These test files use custom comment directives to annotate what lines should be a context. It has the format.
+
+    ```c
+    // {{TEST}} -- mark start of test
+
+    int main() { // {{CONTEXT}} -- mark line as a context
+
+
+    // {{CURSOR}}  -- where cursor needs to be for contexts to be shown.
+
+    }
+    ```
+
+    See `test/lang/test.c` for examples.
+
 3. Updating `README.md` to mark `[LANG]` as supported.
