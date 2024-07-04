@@ -249,6 +249,16 @@ local function tbl_flatten(t)
   return result
 end
 
+--- @param range Range4
+local function range_is_valid(range)
+  -- Zero width
+  if range[1] == range[3] and range[2] == range[4] then
+    return false
+  end
+
+  return true
+end
+
 --- @param bufnr integer
 --- @param winid integer
 --- @return Range4[]?, string[]?
@@ -294,7 +304,7 @@ function M.get(bufnr, winid)
         -- Only process the parent if it is not in view.
         if parent_start_row < contexts_end_row then
           local range0 = context_range(parent, query)
-          if range0 then
+          if range0 and range_is_valid(range0) then
             local range, lines = get_text_for_range(range0)
 
             local last_context = context_ranges[#context_ranges]
