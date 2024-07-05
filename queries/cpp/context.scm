@@ -15,3 +15,7 @@
 (linkage_specification
   body: (declaration_list (_) @context.end)
 ) @context
+
+(lambda_expression
+  body: (_ (_) @context.end)
+) @context
