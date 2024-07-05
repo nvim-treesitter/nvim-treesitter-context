@@ -413,7 +413,7 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
     return
   end
 
-  api.nvim_buf_clear_namespace(ctx_bufnr, ns, 0, -1)
+  api.nvim_buf_clear_namespace(ctx_bufnr, -1, 0, -1)
   highlight_contexts(bufnr, ctx_bufnr, ctx_ranges)
   copy_extmarks(bufnr, ctx_bufnr, ctx_ranges)
   highlight_bottom(ctx_bufnr, win_height - 1, 'TreesitterContextBottom')
