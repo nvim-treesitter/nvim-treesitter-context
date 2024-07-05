@@ -51,3 +51,37 @@
    "shared_context"
    "shared_examples")
 ) @context
+
+(case
+  (when (_) @context.end)*
+  (else (_) @context.end)?
+) @context
+
+(for
+  (_) @context.end
+) @context
+
+(while
+  (_) @context.end
+) @context
+
+(until
+  (_) @context.end
+) @context
+
+(begin
+  (_) @context.end
+) @context
+
+(rescue
+  (_) @context.end
+) @context
+
+(ensure
+  (_) @context.end
+) @context
+
+(lambda
+  (_) @context.end
+) @context
+
