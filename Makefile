@@ -1,10 +1,13 @@
 .DEFAULT_GOAL := test
 
-NEOVIM_VERSION := 0.9.5
+NEOVIM_VERSION ?= v0.9.5
+NEOVIM_RUNNER_VERSION ?= v0.10.0
 
-NVIM_TS_SHA := 883c72cd
+NVIM_TS_SHA ?= 98460428
 
 FILTER=.*
+
+export XDG_DATA_HOME ?= $(HOME)/.data
 
 nvim-treesitter:
 	git clone  \
@@ -14,16 +17,23 @@ nvim-treesitter:
 
 nvim-test:
 	git clone https://github.com/lewis6991/nvim-test
-	nvim-test/bin/nvim-test --init
+	nvim-test/bin/nvim-test --init \
+		--runner_version $(NEOVIM_RUNNER_VERSION) \
+		--target_version $(NEOVIM_VERSION)
 
 .PHONY: test
 test: nvim-test nvim-treesitter
 	nvim-test/bin/nvim-test test \
-		--runner_version $(NEOVIM_VERSION) \
+		--runner_version $(NEOVIM_RUNNER_VERSION) \
 		--target_version $(NEOVIM_VERSION) \
 		--lpath=$(PWD)/lua/?.lua \
-		--filter=$(FILTER) \
+		--filter="$(FILTER)" \
 		--verbose
+
+.PHONY: parsers
+parsers: nvim-test nvim-treesitter
+	$(XDG_DATA_HOME)/nvim-test/nvim-runner-$(NEOVIM_RUNNER_VERSION)/bin/nvim \
+		--clean -u NONE -c 'source install_parsers.lua'
 
 lint:
 	luacheck lua

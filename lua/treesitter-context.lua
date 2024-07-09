@@ -53,13 +53,6 @@ local function open(bufnr, winid, ctx_ranges, ctx_lines)
   require('treesitter-context.render').open(bufnr, winid, ctx_ranges, ctx_lines)
 end
 
----@param bufnr integer
----@param winid integer
----@return Range4[]?, string[]?
-local function get_context(bufnr, winid)
-  return require('treesitter-context.context').get(bufnr, winid)
-end
-
 local attached = {} --- @type table<integer,true>
 
 ---@param bufnr integer
@@ -109,7 +102,7 @@ local update = throttle(function()
     return
   end
 
-  local context, context_lines = get_context(bufnr, winid)
+  local context, context_lines = require('treesitter-context.context').get(bufnr, winid)
   all_contexts[bufnr] = context
 
   if not context or #context == 0 then

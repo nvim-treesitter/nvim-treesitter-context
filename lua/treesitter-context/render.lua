@@ -121,8 +121,9 @@ end
 ---@param row integer
 ---@param col integer
 ---@param opts vim.api.keyset.set_extmark
-local function add_extmark(bufnr, row, col, opts)
-  local ok, err = pcall(api.nvim_buf_set_extmark, bufnr, ns, row, col, opts)
+---@param ns0? integer
+local function add_extmark(bufnr, row, col, opts, ns0)
+  local ok, err = pcall(api.nvim_buf_set_extmark, bufnr, ns0 or ns, row, col, opts)
   if not ok then
     local range = vim.inspect({ row, col, opts.end_row, opts.end_col }) --- @type string
     error(string.format('Could not apply exmtark to %s: %s', range, err))
@@ -133,8 +134,6 @@ end
 --- @param ctx_bufnr integer
 --- @param contexts Range4[]
 local function highlight_contexts(bufnr, ctx_bufnr, contexts)
-  api.nvim_buf_clear_namespace(ctx_bufnr, ns, 0, -1)
-
   local buf_highlighter = highlighter.active[bufnr]
 
   copy_option('tabstop', bufnr, ctx_bufnr)
@@ -154,9 +153,9 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
       return
     end
 
-    local p = 0
     local offset = 0
     for _, context in ipairs(contexts) do
+      local pri_offset = 0
       local start_row, end_row, end_col = context[1], context[3], context[4]
 
       for capture, node, metadata in
@@ -165,20 +164,24 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
         local range = vim.treesitter.get_range(node, bufnr, metadata[capture])
         local nsrow, nscol, nerow, necol = range[1], range[2], range[4], range[5]
 
-        if nerow > end_row or (nerow == end_row and necol > end_col and end_col ~= -1) then
+        if nerow > end_row or (nerow == end_row and necol > end_col) then
           break
         end
 
         if nsrow >= start_row then
           local msrow = offset + (nsrow - start_row)
           local merow = offset + (nerow - start_row)
-
-          local hl = buf_query.hl_cache[capture]
+          local hl --- @type integer
+          if buf_query.get_hl_from_capture then
+            hl = buf_query:get_hl_from_capture(capture)
+          else
+            hl = buf_query.hl_cache[capture]
+          end
           local priority = tonumber(metadata.priority) or vim.highlight.priorities.treesitter
           add_extmark(ctx_bufnr, msrow, nscol, {
             end_row = merow,
             end_col = necol,
-            priority = priority + p,
+            priority = priority + pri_offset,
             hl_group = hl,
             conceal = metadata.conceal,
           })
@@ -190,7 +193,7 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
           --
           -- In order the match the behaviour of main highlighter which uses
           -- ephemeral marks, make sure increase the priority as we apply marks.
-          p = p + 1
+          pri_offset = pri_offset + 1
         end
       end
       offset = offset + util.get_range_height(context)
@@ -337,6 +340,50 @@ local function horizontal_scroll_contexts(context_winid)
   end
 end
 
+---@param bufnr integer
+---@param ctx_bufnr integer
+---@param contexts Range4[]
+local function copy_extmarks(bufnr, ctx_bufnr, contexts)
+  local offset = 0
+  for _, context in ipairs(contexts) do
+    local ctx_srow, ctx_scol, ctx_erow, ctx_ecol = context[1], context[2], context[3], context[4]
+    local extmarks = api.nvim_buf_get_extmarks(bufnr, -1, {ctx_srow, ctx_scol}, {ctx_erow, ctx_ecol}, { details = true })
+
+    for _, m in ipairs(extmarks) do
+      --- @type integer, integer, integer, vim.api.keyset.extmark_details
+      local id, row, col, opts = m[1], m[2], m[3], m[4]
+
+      local start_row = offset + (row - ctx_srow)
+
+      local end_row --- @type integer?
+      if opts.end_row then
+        end_row = offset + (opts.end_row - ctx_srow)
+      end
+
+      -- Use pcall incase fields from opts are inconsistent with opts in
+      -- nvim_buf_set_extmark
+      pcall(add_extmark, ctx_bufnr, start_row, col, {
+        id = id,
+        end_row = end_row,
+        end_col = opts.end_col,
+        priority = opts.priority,
+        hl_group = opts.hl_group,
+        end_right_gravity = opts.end_right_gravity,
+        right_gravity = opts.right_gravity,
+        hl_eol = opts.hl_eol,
+        virt_text = opts.virt_text,
+        virt_text_pos = opts.virt_text_pos,
+        virt_text_win_col = opts.virt_text_win_col,
+        hl_mode = opts.hl_mode,
+        line_hl_group = opts.line_hl_group,
+        spell = opts.spell,
+        url = opts.url,
+      }, opts.ns_id)
+    end
+    offset = offset + util.get_range_height(context)
+  end
+end
+
 local M = {}
 
 function M.get_window_contexts()
@@ -400,7 +447,9 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
     return
   end
 
+  api.nvim_buf_clear_namespace(ctx_bufnr, -1, 0, -1)
   highlight_contexts(bufnr, ctx_bufnr, ctx_ranges)
+  copy_extmarks(bufnr, ctx_bufnr, ctx_ranges)
   highlight_bottom(ctx_bufnr, win_height - 1, 'TreesitterContextBottom')
   horizontal_scroll_contexts(window_context.context_winid)
 end

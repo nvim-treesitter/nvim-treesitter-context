@@ -1,7 +1,7 @@
 (struct_definition) @context
 
 (function_definition
-  parameters: (_) @context.final
+  (signature) @context.final
 ) @context
 
 (for_statement) @context

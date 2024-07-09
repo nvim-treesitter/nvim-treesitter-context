@@ -6,8 +6,8 @@
   (aggregate_body (_) @context.end)
 ) @context
 
-(func_declaration
-  (specified_function_body (block_statement (_) @context.end))
+(function_declaration
+  (function_body (block_statement (_) @context.end))
 ) @context
 
 (template_declaration
@@ -21,35 +21,35 @@
 ) @context
 
 (enum_declaration
-  (enum_body (_) @context.end)
+  (enum_member) @context.end
 ) @context
 
 (struct_declaration
   (aggregate_body (_) @context.end)
 ) @context
 
-(unit_test
+(unittest_declaration
   (block_statement (_) @context.end)
 ) @context
 
 (try_statement
-  (block_statement (_) @context.end)
+  body: (scope_statement (_) @context.end)
 ) @context
 
-(catch
-  (block_statement (_) @context.end)
+(catch_statement
+  body: (scope_statement (_) @context.end)
 ) @context
 
 (asm_statement
-  (asm_instruction_list (_) @context.end)
+  (asm_inline (_) @context.end)
 ) @context
 
 (with_statement
-  (block_statement (_) @context.end)
+  (scope_statement (_) @context.end)
 ) @context
 
 (while_statement
-  (block_statement (_) @context.end)
+  (scope_statement (_) @context.end)
 ) @context
 
 (for_statement
@@ -57,20 +57,31 @@
 ) @context
 
 (foreach_statement
-  (block_statement (_) @context.end)
+  (scope_statement (_) @context.end)
 ) @context
 
 (if_statement
-  (then_statement (
+  consequence: (scope_statement
     (block_statement (_) @context.end)
-  ))
+  )
 ) @context
 
-(else_statement
-  (block_statement (_) @context.end)
-) @context
+(if_statement
+  (else) @context
+  .
+  (_) @context.end
+  ; (scope_statement
+  ;   (block_statement (_) @context.end)
+  ; )
+)
 
 (switch_statement
-  (block_statement (_) @context.end)
+  (scope_statement (_) @context.end)
+) @context
+
+(case_statement
+  (case)
+  .
+  (expression_list) @context.end
 ) @context
 

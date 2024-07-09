@@ -1,31 +1,21 @@
-name: CI
+name: Nightly
 
 on:
+  schedule:
+    - cron: "0 0 * * *"
   push:
-    branches: [ master ]
-  pull_request:
     branches: [ master ]
   workflow_dispatch:
 
 jobs:
-  commit_lint:
-    runs-on: ubuntu-latest
-    steps:
-      # Check commit messages
-      - uses: webiny/action-conventional-commits@v1.1.0
-
   test:
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        neovim_version:
-          - 'v0.9.5'
-          # - 'v0.10.0'
+    permissions:
+      contents: write
 
     env:
-      NEOVIM_VERSION: ${{ matrix.neovim_version }}
+      NVIM_TS_SHA: master
 
     steps:
       - name: Checkout
@@ -59,3 +49,7 @@ jobs:
 
       - name: Run Test
         run: make test
+
+      # - uses: stefanzweifel/git-auto-commit-action@v5
+      #   with:
+      #     commit_message: "docs: Update README.md"
