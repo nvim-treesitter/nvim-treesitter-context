@@ -43,11 +43,14 @@
   block: (do_block body: (body_statement) @context.end)
   (#any-of? @context.identifier
    "it"
+   "fit"
    "it_behaves_like"
    "include_examples"
    "include_context"
    "context"
+   "fcontext"
    "describe"
+   "fdescribe"
    "shared_context"
    "shared_examples")
 ) @context
