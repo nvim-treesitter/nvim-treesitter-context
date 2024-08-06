@@ -32,6 +32,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `cue`
   - [x] `d`
   - [x] `dart`
+  - [x] `devicetree`
   - [x] `elixir`
   - [x] `elm`
   - [x] `fennel`
@@ -107,7 +108,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `commonlisp`
   - [ ] `cooklang`
   - [ ] `cpon`
-  - [ ] `devicetree`
   - [ ] `dhall`
   - [ ] `dockerfile`
   - [ ] `dot`

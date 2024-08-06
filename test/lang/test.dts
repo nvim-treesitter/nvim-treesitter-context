@@ -1,0 +1,18 @@
+/dts-v1/;
+
+// {{TEST}}
+
+/ { // {{CONTEXT}}
+    compatible = "test";
+    #address-cells = <2>;
+    #size-cells = <2>;
+
+    soc { // {{CONTEXT}}
+        compatible = "simple-bus";
+        ranges;
+        #address-cells = <2>;
+        #size-cells = <2>;
+
+        // {{CURSOR}}
+    };
+};
