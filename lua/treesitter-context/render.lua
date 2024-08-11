@@ -281,6 +281,29 @@ local function set_lines(bufnr, lines)
   return redraw
 end
 
+---@param bufnr integer
+---@param contexts Range4[]
+local function set_depth_sign(bufnr, contexts)
+  local contexts_height = 0
+  local ranges_height = {} --- @type number[]
+  for _, range in ipairs(contexts) do
+    local range_height = util.get_range_height(range)
+    table.insert(ranges_height, range_height)
+    contexts_height = contexts_height + range_height
+  end
+  ranges_height = vim.fn.reverse(ranges_height)
+
+  local line = contexts_height + 1
+  for depth, height in ipairs(ranges_height) do
+    line = line - height
+    local opts = {
+      virt_text = { { tostring(depth), 'TreesitterContextSignDepth' } },
+      virt_text_win_col = 0,
+    }
+    add_extmark(bufnr, line - 1, 0, opts)
+  end
+end
+
 ---@param win integer
 ---@param bufnr integer
 ---@param contexts Range4[]
@@ -300,6 +323,7 @@ local function render_lno(win, bufnr, contexts, gutter_width)
   set_lines(bufnr, lno_text)
   highlight_lno_str(bufnr, lno_text, lno_highlights)
   highlight_bottom(bufnr, #lno_text - 1, 'TreesitterContextLineNumberBottom')
+  set_depth_sign(bufnr, contexts)
 end
 
 ---@param winid? integer
