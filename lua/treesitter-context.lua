@@ -10,47 +10,14 @@ local enabled = false
 --- @type table<integer, Range4[]>
 local all_contexts = {}
 
---- @generic F: function
---- @param f F
---- @param ms? number
---- @return F
-local function throttle(f, ms)
-  ms = ms or 200
-  local timer = assert(vim.loop.new_timer())
-  local waiting = 0
-  return function()
-    if timer:is_active() then
-      waiting = waiting + 1
-      return
-    end
-    waiting = 0
-    f() -- first call, execute immediately
-    timer:start(ms, 0, function()
-      if waiting > 1 then
-        vim.schedule(f) -- only execute if there are calls waiting
-      end
-    end)
-  end
-end
-
-local had_open = false
-
-local function close()
-  if had_open then
-    require('treesitter-context.render').close()
-  end
-end
-
---- @param bufnr integer
---- @param winid integer
---- @param ctx_ranges Range4[]
---- @param ctx_lines string[]
-local function open(bufnr, winid, ctx_ranges, ctx_lines)
-  had_open = true
-  require('treesitter-context.render').open(bufnr, winid, ctx_ranges, ctx_lines)
-end
+--- @type table<integer, boolean>
+local win_update_scheduled = {}
 
 local attached = {} --- @type table<integer,true>
+
+local function close()
+  require('treesitter-context.render').close()
+end
 
 ---@param bufnr integer
 ---@param winid integer
@@ -82,27 +49,48 @@ local function can_open(bufnr, winid)
   return true
 end
 
-local update = throttle(function()
-  local bufnr = api.nvim_get_current_buf()
-  local winid = api.nvim_get_current_win()
+---@param winid integer
+local function update_single_context(winid)
+  -- Since the update is performed asynchronously, the window may be closed at this moment.
+  -- Therefore, we need to check if it is still valid.
+  if not api.nvim_win_is_valid(winid) then
+    return
+  end
+
+  local bufnr = api.nvim_win_get_buf(winid)
 
   if not can_open(bufnr, winid) then
     close()
     return
   end
 
-  local context, context_lines = require('treesitter-context.context').get(bufnr, winid)
-  all_contexts[bufnr] = context
+  local context_ranges, context_lines = require('treesitter-context.context').get(bufnr, winid)
+  all_contexts[bufnr] = context_ranges
 
-  if not context or #context == 0 then
+  if not context_ranges or #context_ranges == 0 then
     close()
     return
   end
 
   assert(context_lines)
 
-  open(bufnr, winid, context, context_lines)
-end)
+  require('treesitter-context.render').open(bufnr, winid, context_ranges, context_lines)
+end
+
+---@param winid integer
+local function schedule_context_update(winid)
+  if not win_update_scheduled[winid] then
+    win_update_scheduled[winid] = true
+    vim.schedule(function()
+      win_update_scheduled[winid] = nil
+      update_single_context(winid)
+    end)
+  end
+end
+
+local function update()
+  schedule_context_update(api.nvim_get_current_win())
+end
 
 local M = {
   config = config,
@@ -151,7 +139,7 @@ function M.enable()
   autocmd('User', close, { pattern = 'SessionSavePre' })
   autocmd('User', update, { pattern = 'SessionSavePost' })
 
-  update()
+  update_single_context(api.nvim_get_current_win())
   enabled = true
 end
 
