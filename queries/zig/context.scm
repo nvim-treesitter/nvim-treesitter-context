@@ -1,32 +1,25 @@
 ([
-  (LoopTypeExpr)
-  (IfTypeExpr)
-  (TestDecl)
-  (SwitchExpr)
+  (for_statement)
+  (while_statement)
+  (if_expression)
+  (if_type_expression)
+  (test_declaration)
+  (comptime_declaration)
+  (using_namespace_declaration)
 ] @context)
 
-(Decl
-  (FnProto  (_))
-  (Block (_) @context.end)
+(function_declaration
+  (block (_) @context.end)
 ) @context
 
-(VarDecl
-  (ErrorUnionExpr (_)  @context.end)
+(variable_declaration
+  type: (_)? @context.end
 ) @context
 
-(IfStatement
-  (BlockExpr (_) @context.end)
+(if_statement
+  (block (_) @context.end)
 ) @context
 
-(LoopStatement
-  (_ (BlockExpr (_) @context.end))
+(switch_expression
+  "{" @context.end
 ) @context
-
-(LoopExpr
-  (_ (Block (_) @context.end))
-) @context
-
-(SwitchProng
-  (AssignExpr) @context.end
-) @context
-
