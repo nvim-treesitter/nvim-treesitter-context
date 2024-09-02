@@ -72,7 +72,7 @@ local context_range = cache.memoize(function(node, query)
 
   -- max_start_depth depth is only supported in nvim 0.10. It is ignored on
   -- versions 0.9 or less. It is only needed to improve performance
-  for _, match in query:iter_matches(node, bufnr, 0, -1, { max_start_depth = 0 }) do
+  for _, match in query:iter_matches(node, bufnr, 0, -1, { max_start_depth = 0, all = false }) do
     local r = false
 
     --- @cast match table<integer,TSNode>
