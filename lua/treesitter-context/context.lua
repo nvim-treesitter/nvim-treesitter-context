@@ -75,9 +75,14 @@ local context_range = cache.memoize(function(node, query)
   for _, match in query:iter_matches(node, bufnr, 0, -1, { max_start_depth = 0, all = false }) do
     local r = false
 
-    --- @cast match table<integer,TSNode>
+    --- @cast match table<integer,table<TSNode>>
 
     for id, node0 in pairs(match) do
+      -- default type is a table starting in nvim 0.11
+      if type(node0) == 'table' then
+        node0 = node0[#node0]
+      end
+        
       local srow, scol, erow, ecol = node0:range()
 
       local name = query.captures[id] -- name of the capture in the query
