@@ -35,6 +35,23 @@ This query specifies that everything from the `if` keyword up-to the first
 statement (exclusive) should be used for the context. This is useful when an
 if-statement spans multiple lines.
 
+### Committing your changes
+
+Your commit messages should follow the [Conventional Commits specification](https://conventionalcommits.org).
+
+Good:
+
+```
+feat(lua): added lua support
+```
+
+Bad:
+
+```
+added lua support
+```
+
+> You can do `git commit --amend` followed by `git push --force` if you made a mistake.
 
 ### Raising a pull request
 
