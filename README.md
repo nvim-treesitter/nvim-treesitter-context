@@ -95,7 +95,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `yaml`
   - [x] `yang`
   - [x] `zig`
-  - [ ] `ada`
+  - [x] `ada`
   - [ ] `agda`
   - [ ] `arduino`
   - [ ] `astro`
