@@ -10,8 +10,32 @@ local enabled = false
 --- @type table<integer, Range4[]>
 local all_contexts = {}
 
---- @type table<integer, boolean>
-local win_update_scheduled = {}
+--- @generic F: function
+--- @param f F
+--- @param ms? number
+--- @return F
+local function throttle_by_id(f, ms)
+  ms = ms or 200
+  local timers = {} --- @type table<any,uv.uv_timer_t>
+  local waiting = {} --- @type table<any,boolean>
+  return function(id)
+    if timers[id] == nil then
+      timers[id] = assert(vim.loop.new_timer())
+    else
+      waiting[id] = true
+      return
+    end
+
+    f(id) -- first call, execute immediately
+    timers[id]:start(ms, 0, function()
+      if waiting[id] then
+        vim.schedule(function() f(id) end) -- only execute if there are calls waiting
+      end
+      waiting[id] = nil
+      timers[id] = nil
+    end)
+  end
+end
 
 local attached = {} --- @type table<integer,true>
 
@@ -50,7 +74,7 @@ local function can_open(bufnr, winid)
 end
 
 ---@param winid integer
-local function update_single_context(winid)
+local update_single_context = throttle_by_id(function(winid)
   -- Since the update is performed asynchronously, the window may be closed at this moment.
   -- Therefore, we need to check if it is still valid.
   if not api.nvim_win_is_valid(winid) then
@@ -75,21 +99,10 @@ local function update_single_context(winid)
   assert(context_lines)
 
   require('treesitter-context.render').open(bufnr, winid, context_ranges, context_lines)
-end
-
----@param winid integer
-local function schedule_context_update(winid)
-  if not win_update_scheduled[winid] then
-    win_update_scheduled[winid] = true
-    vim.schedule(function()
-      win_update_scheduled[winid] = nil
-      update_single_context(winid)
-    end)
-  end
-end
+end)
 
 local function update()
-  schedule_context_update(api.nvim_get_current_win())
+  update_single_context(api.nvim_get_current_win())
 end
 
 local M = {
@@ -139,7 +152,7 @@ function M.enable()
   autocmd('User', close, { pattern = 'SessionSavePre' })
   autocmd('User', update, { pattern = 'SessionSavePost' })
 
-  update_single_context(api.nvim_get_current_win())
+  update()
   enabled = true
 end
 
