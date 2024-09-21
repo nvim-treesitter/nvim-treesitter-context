@@ -18,4 +18,8 @@
   body: (_) @context.end
 ) @context
 
+(switch_expression) @context
+
+(switch_block_statement_group) @context
+
 (expression_statement) @context
