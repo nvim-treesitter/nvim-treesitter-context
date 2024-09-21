@@ -267,3 +267,16 @@ end, { silent = true })
 ## Adding support for other languages
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Overriding the builtin for a given language
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+
+You can provide you own language files by adding them to the
+`runtimepath` (`:help runtimepath`).
+
+For example, creating `~/.config/nvim/queries/java/context.scm` will take
+precedence over the `queries/java/context.scm` included in `nvim-treesitter-context`
+as long as `~/.config/nvim` appears earlier in  `runtimepath`.
+
+You can check the value of `runtimepath` with `:set rtp`.
