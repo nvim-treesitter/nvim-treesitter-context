@@ -125,7 +125,7 @@ function M.enable()
 
   attached[cbuf] = true
 
-  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized' }, update)
+  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized', 'DiagnosticChanged' }, update)
 
   autocmd('BufReadPost', function(args)
     attached[args.buf] = nil
