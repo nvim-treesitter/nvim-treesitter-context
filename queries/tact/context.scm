@@ -19,6 +19,10 @@
 
 ; functions
 ; ---------
+(asm_function
+  body: (_
+    (_) @context.end)) @context
+
 (global_function
   body: (_
     (_) @context.end)) @context
