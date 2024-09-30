@@ -15,13 +15,30 @@ local function get_parent_nodes(langtree, range)
     return
   end
 
-  local n = tree:root():named_descendant_for_range(unpack(range))
+  local root = tree:root()
+  local n = root:named_descendant_for_range(unpack(range))
+
+  if not n then
+    return
+  end
+
+  -- More efficient method for iterating parents
 
   local ret = {} --- @type TSNode[]
-  while n do
-    ret[#ret + 1] = n
-    n = n:parent()
+
+  if root.child_containing_descendant ~= nil then
+    local p = root
+    while p do
+      table.insert(ret, 1, p)
+      p = p:child_containing_descendant(n)
+    end
+  else
+    while n do
+      ret[#ret + 1] = n
+      n = n:parent()
+    end
   end
+
   return ret
 end
 
