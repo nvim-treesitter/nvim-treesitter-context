@@ -14,43 +14,34 @@ local all_contexts = {}
 --- @param f F
 --- @param ms? number
 --- @return F
-local function throttle(f, ms)
+local function throttle_by_id(f, ms)
   ms = ms or 200
-  local timer = assert(vim.loop.new_timer())
-  local waiting = 0
-  return function()
-    if timer:is_active() then
-      waiting = waiting + 1
+  local timers = {} --- @type table<any,uv.uv_timer_t>
+  local waiting = {} --- @type table<any,boolean>
+  return function(id)
+    if timers[id] == nil then
+      timers[id] = assert(vim.loop.new_timer())
+    else
+      waiting[id] = true
       return
     end
-    waiting = 0
-    f() -- first call, execute immediately
-    timer:start(ms, 0, function()
-      if waiting > 1 then
-        vim.schedule(f) -- only execute if there are calls waiting
+
+    f(id) -- first call, execute immediately
+    timers[id]:start(ms, 0, function()
+      if waiting[id] then
+        vim.schedule(function() f(id) end) -- only execute if there are calls waiting
       end
+      waiting[id] = nil
+      timers[id] = nil
     end)
   end
 end
 
-local had_open = false
+local attached = {} --- @type table<integer,true>
 
 local function close()
-  if had_open then
-    require('treesitter-context.render').close()
-  end
+  require('treesitter-context.render').close()
 end
-
---- @param bufnr integer
---- @param winid integer
---- @param ctx_ranges Range4[]
---- @param ctx_lines string[]
-local function open(bufnr, winid, ctx_ranges, ctx_lines)
-  had_open = true
-  require('treesitter-context.render').open(bufnr, winid, ctx_ranges, ctx_lines)
-end
-
-local attached = {} --- @type table<integer,true>
 
 ---@param bufnr integer
 ---@param winid integer
@@ -82,27 +73,37 @@ local function can_open(bufnr, winid)
   return true
 end
 
-local update = throttle(function()
-  local bufnr = api.nvim_get_current_buf()
-  local winid = api.nvim_get_current_win()
+---@param winid integer
+local update_single_context = throttle_by_id(function(winid)
+  -- Since the update is performed asynchronously, the window may be closed at this moment.
+  -- Therefore, we need to check if it is still valid.
+  if not api.nvim_win_is_valid(winid) then
+    return
+  end
+
+  local bufnr = api.nvim_win_get_buf(winid)
 
   if not can_open(bufnr, winid) then
     close()
     return
   end
 
-  local context, context_lines = require('treesitter-context.context').get(bufnr, winid)
-  all_contexts[bufnr] = context
+  local context_ranges, context_lines = require('treesitter-context.context').get(bufnr, winid)
+  all_contexts[bufnr] = context_ranges
 
-  if not context or #context == 0 then
+  if not context_ranges or #context_ranges == 0 then
     close()
     return
   end
 
   assert(context_lines)
 
-  open(bufnr, winid, context, context_lines)
+  require('treesitter-context.render').open(bufnr, winid, context_ranges, context_lines)
 end)
+
+local function update()
+  update_single_context(api.nvim_get_current_win())
+end
 
 local M = {
   config = config,
