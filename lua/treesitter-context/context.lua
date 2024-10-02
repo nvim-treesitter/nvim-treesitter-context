@@ -27,11 +27,12 @@ local function get_parent_nodes(langtree, range)
   local ret = {} --- @type TSNode[]
 
   if root.child_containing_descendant ~= nil then
-    local p = root
+    local p = root --- @type TSNode?
     while p do
       table.insert(ret, 1, p)
       p = p:child_containing_descendant(n)
     end
+    table.insert(ret, 1, n)
   else
     while n do
       ret[#ret + 1] = n
