@@ -45,32 +45,13 @@ end
 
 ---@param bufnr integer
 ---@param winid integer
-local function can_open(bufnr, winid)
-  if not attached[bufnr] then
-    return false
-  end
-
-  if vim.bo[bufnr].filetype == '' then
-    return false
-  end
-
-  if vim.bo[bufnr].buftype ~= '' then
-    return false
-  end
-
-  if vim.wo[winid].previewwindow then
-    return false
-  end
-
-  if vim.fn.getcmdtype() ~= '' then
-    return false
-  end
-
-  if api.nvim_win_get_height(winid) < config.min_window_height then
-    return false
-  end
-
-  return true
+local function cannot_open(bufnr, winid)
+  return not attached[bufnr]
+    or vim.bo[bufnr].filetype == ''
+    or vim.bo[bufnr].buftype ~= ''
+    or vim.wo[winid].previewwindow
+    or vim.fn.getcmdtype() ~= ''
+    or api.nvim_win_get_height(winid) < config.min_window_height
 end
 
 ---@param winid integer
@@ -90,7 +71,7 @@ local update_single_context = throttle_by_id(function(winid)
 
   local bufnr = api.nvim_win_get_buf(winid)
 
-  if not can_open(bufnr, winid) then
+  if cannot_open(bufnr, winid) then
     close()
     return
   end

@@ -29,13 +29,13 @@ local function get_parent_nodes(langtree, range)
   if root.child_containing_descendant ~= nil then
     local p = root --- @type TSNode?
     while p do
-      table.insert(ret, 1, p)
+      ret[#ret + 1] = p
       p = p:child_containing_descendant(n)
     end
-    table.insert(ret, 1, n)
+    ret[#ret + 1] = n
   else
     while n do
-      ret[#ret + 1] = n
+      table.insert(ret, 1, n)
       n = n:parent()
     end
   end
@@ -328,9 +328,7 @@ function M.get(bufnr, winid)
     contexts_height = 0
 
     for parents, query in iter_context_parents(bufnr, line_range) do
-      for j = #parents, 1, -1 do
-        local parent = parents[j]
-
+      for _, parent in ipairs(parents) do
         local parent_start_row = parent:range()
         local contexts_end_row = top_row + math.min(max_lines, contexts_height)
 
