@@ -81,6 +81,13 @@ local update_single_context = throttle_by_id(function(winid)
     return
   end
 
+  -- This check will be removed after multiwindow is fully supported.
+  -- It is needed for cases when focus is switched from one window to another rapidly,
+  -- causing blinking and displaying context from another window.
+  if winid ~= api.nvim_get_current_win() then
+    return
+  end
+
   local bufnr = api.nvim_win_get_buf(winid)
 
   if not can_open(bufnr, winid) then

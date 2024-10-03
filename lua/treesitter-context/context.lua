@@ -67,23 +67,24 @@ end
 
 ---@param node TSNode
 ---@return string
-local function hash_node(node)
+local function hash_args(node, bufnr)
   return table.concat({
     node:id(),
     node:symbol(),
     node:child_count(),
     node:type(),
     node:range(),
+    bufnr,
   }, ',')
 end
 
 --- Run the context query on a node and return the range if it is a valid
 --- context node.
 --- @param node TSNode
+--- @param bufnr integer
 --- @param query vim.treesitter.Query
 --- @return Range4?
-local context_range = cache.memoize(function(node, query)
-  local bufnr = api.nvim_get_current_buf()
+local context_range = cache.memoize(function(node, bufnr, query)
   local range = { node:range() } --- @type Range4
   range[3] = range[1] + 1
   range[4] = 0
@@ -117,7 +118,7 @@ local context_range = cache.memoize(function(node, query)
       return range
     end
   end
-end, hash_node)
+end, hash_args)
 
 ---@param lang string
 ---@return vim.treesitter.Query?
@@ -163,8 +164,9 @@ local function trim_contexts(context_ranges, context_lines, trim, top)
 end
 
 --- @param range Range4
+--- @param bufnr integer
 --- @return Range4, string[]
-local function get_text_for_range(range)
+local function get_text_for_range(range, bufnr)
   local start_row, end_row, end_col = range[1], range[3], range[4]
 
   if end_col == 0 then
@@ -172,7 +174,7 @@ local function get_text_for_range(range)
     end_col = -1
   end
 
-  local lines = api.nvim_buf_get_text(0, start_row, 0, end_row, -1, {})
+  local lines = api.nvim_buf_get_text(bufnr, start_row, 0, end_row, -1, {})
 
   -- Strip any empty lines from the node
   while #lines > 0 do
@@ -334,9 +336,9 @@ function M.get(bufnr, winid)
 
         -- Only process the parent if it is not in view.
         if parent_start_row < contexts_end_row then
-          local range0 = context_range(parent, query)
+          local range0 = context_range(parent, bufnr, query)
           if range0 and range_is_valid(range0) then
-            local range, lines = get_text_for_range(range0)
+            local range, lines = get_text_for_range(range0, bufnr)
             if range_is_valid(range) then
               local last_context = context_ranges[#context_ranges]
               if last_context and parent_start_row == last_context[1] then
