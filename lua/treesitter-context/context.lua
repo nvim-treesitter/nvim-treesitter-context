@@ -66,6 +66,7 @@ local function calc_max_lines(winid)
 end
 
 ---@param node TSNode
+---@param bufnr integer
 ---@return string
 local function hash_args(node, bufnr)
   return table.concat({
