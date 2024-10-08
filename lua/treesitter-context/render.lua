@@ -38,43 +38,69 @@ local function get_bufs()
 end
 
 --- @param bufnr integer
+--- @param winid integer
+--- @param width integer
+--- @param height integer
+--- @param col integer
+--- @param ty string
+--- @param hl string
+--- @return integer Window ID of created context window
+local function create_context_window(winid, bufnr, width, height, col, ty, hl)
+  local sep = config.separator and { config.separator, 'TreesitterContextSeparator' } or nil
+
+  local context_winid = api.nvim_open_win(bufnr, false, {
+    relative = 'win',
+    win = winid,
+    width = width,
+    height = height,
+    row = 0,
+    col = col,
+    focusable = false,
+    style = 'minimal',
+    noautocmd = true,
+    zindex = config.zindex,
+    border = sep and { '', '', '', '', sep, sep, sep, '' } or nil,
+  })
+
+  vim.w[context_winid][ty] = true
+  vim.wo[context_winid].wrap = false
+  vim.wo[context_winid].foldenable = false
+  vim.wo[context_winid].winhl = 'NormalFloat:' .. hl
+
+  return context_winid
+end
+
+--- @param winid integer
+--- @param context_winid integer
+--- @param width integer
+--- @param height integer
+--- @param col integer
+local function update_context_window(winid, context_winid, width, height, col)
+  api.nvim_win_set_config(context_winid, {
+    win = winid,
+    relative = 'win',
+    width = width,
+    height = height,
+    row = 0,
+    col = col,
+  })
+end
+
+--- @param bufnr integer
 --- @param winid integer?
 --- @param width integer
 --- @param height integer
 --- @param col integer
 --- @param ty string
 --- @param hl string
---- @return integer
+--- @return integer Window ID of context window
 local function display_window(bufnr, winid, width, height, col, ty, hl)
   if not winid or not api.nvim_win_is_valid(winid) then
-    local sep = config.separator and { config.separator, 'TreesitterContextSeparator' } or nil
-    winid = api.nvim_open_win(bufnr, false, {
-      relative = 'win',
-      width = width,
-      height = height,
-      row = 0,
-      col = col,
-      focusable = false,
-      style = 'minimal',
-      noautocmd = true,
-      zindex = config.zindex,
-      border = sep and { '', '', '', '', sep, sep, sep, '' } or nil,
-    })
-    vim.w[winid][ty] = true
-    vim.wo[winid].wrap = false
-    vim.wo[winid].foldenable = false
-    vim.wo[winid].winhl = 'NormalFloat:' .. hl
+    return create_context_window(winid, bufnr, width, height, col, ty, hl)
   else
-    api.nvim_win_set_config(winid, {
-      win = api.nvim_get_current_win(),
-      relative = 'win',
-      width = width,
-      height = height,
-      row = 0,
-      col = col,
-    })
+    update_context_window(api.nvim_get_current_win(), winid, width, height, col)
+    return winid
   end
-  return winid
 end
 
 --- @param winid integer
