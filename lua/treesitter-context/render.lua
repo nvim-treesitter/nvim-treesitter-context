@@ -376,13 +376,8 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
 
   local win_height = math.max(1, #ctx_lines)
 
-  local window_context = window_contexts[winid] or {
-    context_winid = nil,
-    gutter_winid = nil,
-  }
-  if window_contexts[winid] == nil then
-    window_contexts[winid] = window_context
-  end
+  window_contexts[winid] = window_contexts[winid] or {}
+  local window_context = window_contexts[winid] 
 
   if config.line_numbers and (vim.wo[winid].number or vim.wo[winid].relativenumber) then
     window_context.gutter_winid = display_window(
