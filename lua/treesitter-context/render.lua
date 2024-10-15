@@ -360,35 +360,37 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
     local extmarks = api.nvim_buf_get_extmarks(bufnr, -1, {ctx_srow, ctx_scol}, {ctx_erow, ctx_ecol}, { details = true })
 
     for _, m in ipairs(extmarks) do
-      --- @type integer, integer, integer, vim.api.keyset.extmark_details
-      local id, row, col, opts = m[1], m[2], m[3], m[4]
+      if not config.filter_extmarks or config.filter_extmarks(m) then
+        --- @type integer, integer, integer, vim.api.keyset.extmark_details
+        local id, row, col, opts = m[1], m[2], m[3], m[4]
 
-      local start_row = offset + (row - ctx_srow)
+        local start_row = offset + (row - ctx_srow)
 
-      local end_row --- @type integer?
-      if opts.end_row then
-        end_row = offset + (opts.end_row - ctx_srow)
+        local end_row --- @type integer?
+        if opts.end_row then
+          end_row = offset + (opts.end_row - ctx_srow)
+        end
+
+        -- Use pcall incase fields from opts are inconsistent with opts in
+        -- nvim_buf_set_extmark
+        pcall(add_extmark, ctx_bufnr, start_row, col, {
+          id = id,
+          end_row = end_row,
+          end_col = opts.end_col,
+          priority = opts.priority,
+          hl_group = opts.hl_group,
+          end_right_gravity = opts.end_right_gravity,
+          right_gravity = opts.right_gravity,
+          hl_eol = opts.hl_eol,
+          virt_text = opts.virt_text,
+          virt_text_pos = opts.virt_text_pos,
+          virt_text_win_col = opts.virt_text_win_col,
+          hl_mode = opts.hl_mode,
+          line_hl_group = opts.line_hl_group,
+          spell = opts.spell,
+          url = opts.url,
+        }, opts.ns_id)
       end
-
-      -- Use pcall incase fields from opts are inconsistent with opts in
-      -- nvim_buf_set_extmark
-      pcall(add_extmark, ctx_bufnr, start_row, col, {
-        id = id,
-        end_row = end_row,
-        end_col = opts.end_col,
-        priority = opts.priority,
-        hl_group = opts.hl_group,
-        end_right_gravity = opts.end_right_gravity,
-        right_gravity = opts.right_gravity,
-        hl_eol = opts.hl_eol,
-        virt_text = opts.virt_text,
-        virt_text_pos = opts.virt_text_pos,
-        virt_text_win_col = opts.virt_text_win_col,
-        hl_mode = opts.hl_mode,
-        line_hl_group = opts.line_hl_group,
-        spell = opts.spell,
-        url = opts.url,
-      }, opts.ns_id)
     end
     offset = offset + util.get_range_height(context)
   end

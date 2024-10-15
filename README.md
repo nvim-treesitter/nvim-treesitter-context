@@ -227,6 +227,7 @@ require'treesitter-context'.setup{
   separator = nil,
   zindex = 20, -- The Z-index of the context window
   on_attach = nil, -- (fun(buf: integer): boolean) return false to disable attaching
+  filter_extmarks = nil, -- (fun(extmark: [integer, integer, integer, vim.api.keyset.extmark_details]): boolean) filter out extmarks that should not be copied over
 }
 ```
 
