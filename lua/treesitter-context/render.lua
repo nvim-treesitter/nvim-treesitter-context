@@ -389,7 +389,10 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
       'treesitter_context_line_number',
       'TreesitterContextLineNumber'
     )
-    render_lno(winid, api.nvim_win_get_buf(window_context.gutter_winid), ctx_ranges, gutter_width)
+
+    if api.nvim_win_is_valid(window_context.gutter_winid) then
+      render_lno(winid, api.nvim_win_get_buf(window_context.gutter_winid), ctx_ranges, gutter_width)
+    end
   else
     close(window_context.gutter_winid)
     window_context.gutter_winid = nil
