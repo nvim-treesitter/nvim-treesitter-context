@@ -53,7 +53,7 @@ local function display_window(winid, context_winid, width, height, col, ty, hl)
     vim.wo[context_winid].wrap = false
     vim.wo[context_winid].foldenable = false
     vim.wo[context_winid].winhl = 'NormalFloat:' .. hl
-  else
+  elseif api.nvim_win_is_valid(context_winid) then
     api.nvim_win_set_config(context_winid, {
       win = winid,
       relative = 'win',
@@ -377,7 +377,7 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
   local win_height = math.max(1, #ctx_lines)
 
   window_contexts[winid] = window_contexts[winid] or {}
-  local window_context = window_contexts[winid] 
+  local window_context = window_contexts[winid]
 
   if config.line_numbers and (vim.wo[winid].number or vim.wo[winid].relativenumber) then
     window_context.gutter_winid = display_window(
