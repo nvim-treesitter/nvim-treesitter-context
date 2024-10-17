@@ -40,7 +40,7 @@ end
 local attached = {} --- @type table<integer,true>
 
 local function close()
-  require('treesitter-context.render').close()
+  require('treesitter-context.render').close(api.nvim_get_current_win())
 end
 
 ---@param bufnr integer
@@ -62,17 +62,10 @@ local update_single_context = throttle_by_id(function(winid)
     return
   end
 
-  -- This check will be removed after multiwindow is fully supported.
-  -- It is needed for cases when focus is switched from one window to another rapidly,
-  -- causing blinking and displaying context from another window.
-  if winid ~= api.nvim_get_current_win() then
-    return
-  end
-
   local bufnr = api.nvim_win_get_buf(winid)
 
-  if cannot_open(bufnr, winid) then
-    close()
+  if cannot_open(bufnr, winid) or winid ~= api.nvim_get_current_win() then
+    require('treesitter-context.render').close(winid)
     return
   end
 
@@ -80,7 +73,7 @@ local update_single_context = throttle_by_id(function(winid)
   all_contexts[bufnr] = context_ranges
 
   if not context_ranges or #context_ranges == 0 then
-    close()
+    require('treesitter-context.render').close(winid)
     return
   end
 
