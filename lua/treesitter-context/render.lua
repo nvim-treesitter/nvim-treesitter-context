@@ -408,6 +408,10 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
     'TreesitterContext'
   )
 
+  if api.nvim_win_is_valid(window_context.context_winid) then
+    return
+  end
+
   local ctx_bufnr = api.nvim_win_get_buf(window_context.context_winid)
 
   if not set_lines(ctx_bufnr, ctx_lines) then
