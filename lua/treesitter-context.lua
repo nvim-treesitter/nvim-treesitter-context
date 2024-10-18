@@ -43,6 +43,17 @@ local function close()
   require('treesitter-context.render').close(api.nvim_get_current_win())
 end
 
+local function close_all()
+  local render = require('treesitter-context.render')
+  if config.multiwindow then
+    for _, winid in pairs(api.nvim_list_wins()) do
+      render.close(winid)
+    end
+  else
+    render.close(api.nvim_get_current_win())
+  end
+end
+
 ---@param bufnr integer
 ---@param winid integer
 local function cannot_open(bufnr, winid)
@@ -64,7 +75,7 @@ local update_single_context = throttle_by_id(function(winid)
 
   local bufnr = api.nvim_win_get_buf(winid)
 
-  if cannot_open(bufnr, winid) or winid ~= api.nvim_get_current_win() then
+  if cannot_open(bufnr, winid) or not config.multiwindow and winid ~= api.nvim_get_current_win() then
     require('treesitter-context.render').close(winid)
     return
   end
@@ -82,8 +93,23 @@ local update_single_context = throttle_by_id(function(winid)
   require('treesitter-context.render').open(bufnr, winid, context_ranges, context_lines)
 end)
 
-local function update()
-  update_single_context(api.nvim_get_current_win())
+---@param args table
+local function update(args)
+  if args.event == "OptionSet" and args.match ~= 'number' and args.match ~= 'relativenumber' then
+    return
+  end
+
+  local multiwindow_events = { "WinResized", "User" }
+
+  if config.multiwindow and vim.tbl_contains(multiwindow_events, args.event) then
+    -- Resizing a single window may cause many resizes in different windows,
+    -- so it is necessary to iterate over all windows when a WinResized event is received.
+    for _, winid in pairs(api.nvim_list_wins()) do
+      update_single_context(winid)
+    end
+  else
+    update_single_context(api.nvim_get_current_win())
+  end
 end
 
 local M = {
@@ -107,7 +133,22 @@ function M.enable()
 
   attached[cbuf] = true
 
-  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized', 'DiagnosticChanged' }, update)
+  local update_events = {
+    'WinScrolled',
+    'BufEnter',
+    'WinEnter',
+    'VimResized',
+    'DiagnosticChanged',
+    'CursorMoved',
+    'OptionSet',
+  }
+
+  if config.multiwindow then
+    table.insert(update_events, 'WinResized')
+    table.insert(update_events, 'WinLeave')
+  end
+
+  autocmd(update_events, update)
 
   autocmd('BufReadPost', function(args)
     attached[args.buf] = nil
@@ -120,27 +161,30 @@ function M.enable()
     attached[args.buf] = nil
   end)
 
-  autocmd('CursorMoved', update)
-
-  autocmd('OptionSet', function(args)
-    if args.match == 'number' or args.match == 'relativenumber' then
-      update()
-    end
-  end)
-
-  autocmd({ 'BufLeave', 'WinLeave' }, close)
+  if config.multiwindow then
+    autocmd({ 'WinClosed' }, close)
+  else
+    autocmd({ 'BufLeave', 'WinLeave' }, close)
+  end
 
   autocmd('User', close, { pattern = 'SessionSavePre' })
   autocmd('User', update, { pattern = 'SessionSavePost' })
 
-  update()
+  if config.multiwindow then
+    for _, winid in pairs(api.nvim_list_wins()) do
+      update_single_context(winid)
+    end
+  else
+    update_single_context(api.nvim_get_current_win())
+  end
+
   enabled = true
 end
 
 function M.disable()
   augroup('treesitter_context_update', {})
   attached = {}
-  close()
+  close_all()
   enabled = false
 end
 
