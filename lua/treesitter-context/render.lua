@@ -6,6 +6,10 @@ local config = require('treesitter-context.config')
 
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 
+--- List of buffers that are to be deleted.
+---@type integer[]
+local retired_buffers = {}
+
 --- @class WindowContext
 --- @field context_winid integer? The context window ID.
 --- @field gutter_winid integer? The gutter window ID.
@@ -294,16 +298,30 @@ end
 ---@param context_winid? integer
 local function close(context_winid)
   vim.schedule(function()
-  if context_winid == nil or not api.nvim_win_is_valid(context_winid) then
+    if context_winid == nil or not api.nvim_win_is_valid(context_winid) then
       return
     end
+
     local bufnr = api.nvim_win_get_buf(context_winid)
-    if bufnr ~= nil and api.nvim_buf_is_valid(bufnr) then
-      api.nvim_buf_delete(bufnr, { force = true })
+    if bufnr ~= nil then
+      table.insert(retired_buffers, bufnr)
     end
     if api.nvim_win_is_valid(context_winid) then
       api.nvim_win_close(context_winid, true)
     end
+
+    if fn.getcmdwintype() ~= '' then
+      -- Can't delete buffers when the command-line window is open.
+      return
+    end
+
+    -- Delete retired buffers.
+    for _, retired_bufnr in ipairs(retired_buffers) do
+      if api.nvim_buf_is_valid(retired_bufnr) then
+        api.nvim_buf_delete(retired_bufnr, { force = true })
+      end
+    end
+    retired_buffers = {}
   end)
 end
 

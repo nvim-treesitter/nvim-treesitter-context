@@ -39,8 +39,14 @@ end
 
 local attached = {} --- @type table<integer,true>
 
-local function close()
-  require('treesitter-context.render').close(api.nvim_get_current_win())
+local function close(args)
+  local render = require('treesitter-context.render')
+  if args.event == "WinClosed" then
+    -- Closing current window instead of intended window may lead to context window flickering.
+    render.close(tonumber(args.match))
+  else
+    render.close(api.nvim_get_current_win())
+  end
 end
 
 local function close_all()
@@ -61,7 +67,6 @@ local function cannot_open(bufnr, winid)
     or vim.bo[bufnr].filetype == ''
     or vim.bo[bufnr].buftype ~= ''
     or vim.wo[winid].previewwindow
-    or vim.fn.getcmdtype() ~= ''
     or api.nvim_win_get_height(winid) < config.min_window_height
 end
 
@@ -69,7 +74,7 @@ end
 local update_single_context = throttle_by_id(function(winid)
   -- Since the update is performed asynchronously, the window may be closed at this moment.
   -- Therefore, we need to check if it is still valid.
-  if not api.nvim_win_is_valid(winid) then
+  if not api.nvim_win_is_valid(winid) or vim.fn.getcmdtype() ~= '' then
     return
   end
 
