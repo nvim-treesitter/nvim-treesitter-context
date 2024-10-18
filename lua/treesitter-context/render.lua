@@ -408,7 +408,7 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
     'TreesitterContext'
   )
 
-  if api.nvim_win_is_valid(window_context.context_winid) then
+  if not api.nvim_win_is_valid(window_context.context_winid) then
     return
   end
 
