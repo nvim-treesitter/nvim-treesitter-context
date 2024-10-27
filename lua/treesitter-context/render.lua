@@ -148,7 +148,9 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
           else
             hl = buf_query.hl_cache[capture]
           end
-          local priority = tonumber(metadata.priority) or vim.highlight.priorities.treesitter
+          local priority = tonumber(metadata.priority)
+            or (vim.hl and vim.hl.priorities.treesitter)
+            or vim.highlight.priorities.treesitter
           add_extmark(ctx_bufnr, msrow, nscol, {
             end_row = merow,
             end_col = necol,
