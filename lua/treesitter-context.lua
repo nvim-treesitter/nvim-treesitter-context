@@ -169,7 +169,7 @@ function M.enable()
   if config.multiwindow then
     autocmd({ 'WinClosed' }, close)
   else
-    autocmd({ 'BufLeave', 'WinLeave' }, close)
+    autocmd({ 'BufLeave', 'WinLeave', 'WinClosed' }, close)
   end
 
   autocmd('User', close, { pattern = 'SessionSavePre' })
