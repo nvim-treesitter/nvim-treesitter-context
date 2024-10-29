@@ -89,6 +89,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `typoscript`
   - [x] `usd`
   - [x] `verilog`
+  - [x] `vhdl`
   - [x] `vim`
   - [x] `vue`
   - [x] `xml`
