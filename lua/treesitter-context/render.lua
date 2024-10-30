@@ -253,7 +253,6 @@ end
 
 --- @param bufnr integer
 --- @param lines string[]
---- @return boolean
 local function set_lines(bufnr, lines)
   local clines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local redraw = false
@@ -272,8 +271,6 @@ local function set_lines(bufnr, lines)
     api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
     vim.bo[bufnr].modified = false
   end
-
-  return redraw
 end
 
 ---@param win integer
@@ -434,11 +431,9 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
 
   local ctx_bufnr = api.nvim_win_get_buf(window_context.context_winid)
 
-  if not set_lines(ctx_bufnr, ctx_lines) then
-    -- Context didn't change, can return here
-    return
-  end
+  set_lines(ctx_bufnr, ctx_lines)
 
+  -- Always update extmarks as changes are hard to detect reliably.
   api.nvim_buf_clear_namespace(ctx_bufnr, -1, 0, -1)
   highlight_contexts(bufnr, ctx_bufnr, ctx_ranges)
   copy_extmarks(bufnr, ctx_bufnr, ctx_ranges)
