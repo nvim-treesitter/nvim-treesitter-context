@@ -87,12 +87,12 @@ HIGHLIGHTS                                  *nvim-treesitter-context-highlights*
 `TreesitterContextBottom`                             *hl-TreesitterContextBottom*
     (default: links to `NONE`)
 
-    Use for the last line of of the context.
+    Use for the last line of the context.
 
 `TreesitterContextLineNumberBottom`         *hl-TreesitterContextLineNumberBottom*
     (default: links to `NONE`)
 
-    Use for the last line of of the context line number.
+    Use for the last line of the context line number.
 
 A border can be created by applying an underline highlight, e.g, for an
 underline across the screen:
