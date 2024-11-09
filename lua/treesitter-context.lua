@@ -134,10 +134,6 @@ local function autocmd(event, callback, opts)
 end
 
 function M.enable()
-  local cbuf = api.nvim_get_current_buf()
-
-  attached[cbuf] = true
-
   local update_events = {
     'WinScrolled',
     'BufEnter',
