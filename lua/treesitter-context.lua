@@ -39,25 +39,8 @@ end
 
 local attached = {} --- @type table<integer,true>
 
-local function close(args)
-  local render = require('treesitter-context.render')
-  if args.event == "WinClosed" then
-    -- Closing current window instead of intended window may lead to context window flickering.
-    render.close(tonumber(args.match))
-  else
-    render.close(api.nvim_get_current_win())
-  end
-end
-
-local function close_all()
-  local render = require('treesitter-context.render')
-  if config.multiwindow then
-    for _, winid in pairs(api.nvim_list_wins()) do
-      render.close(winid)
-    end
-  else
-    render.close(api.nvim_get_current_win())
-  end
+local function close()
+  require('treesitter-context.render').close()
 end
 
 ---@param bufnr integer
@@ -67,6 +50,7 @@ local function cannot_open(bufnr, winid)
     or vim.bo[bufnr].filetype == ''
     or vim.bo[bufnr].buftype ~= ''
     or vim.wo[winid].previewwindow
+    or vim.fn.getcmdtype() ~= ''
     or api.nvim_win_get_height(winid) < config.min_window_height
 end
 
@@ -74,14 +58,14 @@ end
 local update_single_context = throttle_by_id(function(winid)
   -- Since the update is performed asynchronously, the window may be closed at this moment.
   -- Therefore, we need to check if it is still valid.
-  if not api.nvim_win_is_valid(winid) or vim.fn.getcmdtype() ~= '' then
+  if not api.nvim_win_is_valid(winid) then
     return
   end
 
   local bufnr = api.nvim_win_get_buf(winid)
 
-  if cannot_open(bufnr, winid) or not config.multiwindow and winid ~= api.nvim_get_current_win() then
-    require('treesitter-context.render').close(winid)
+  if cannot_open(bufnr, winid) then
+    close()
     return
   end
 
@@ -89,7 +73,7 @@ local update_single_context = throttle_by_id(function(winid)
   all_contexts[bufnr] = context_ranges
 
   if not context_ranges or #context_ranges == 0 then
-    require('treesitter-context.render').close(winid)
+    close()
     return
   end
 
@@ -98,23 +82,8 @@ local update_single_context = throttle_by_id(function(winid)
   require('treesitter-context.render').open(bufnr, winid, context_ranges, context_lines)
 end)
 
----@param args table
-local function update(args)
-  if args.event == "OptionSet" and args.match ~= 'number' and args.match ~= 'relativenumber' then
-    return
-  end
-
-  local multiwindow_events = { "WinResized", "User" }
-
-  if config.multiwindow and vim.tbl_contains(multiwindow_events, args.event) then
-    -- Resizing a single window may cause many resizes in different windows,
-    -- so it is necessary to iterate over all windows when a WinResized event is received.
-    for _, winid in pairs(api.nvim_list_wins()) do
-      update_single_context(winid)
-    end
-  else
-    update_single_context(api.nvim_get_current_win())
-  end
+local function update()
+  update_single_context(api.nvim_get_current_win())
 end
 
 local M = {
@@ -134,22 +103,7 @@ local function autocmd(event, callback, opts)
 end
 
 function M.enable()
-  local update_events = {
-    'WinScrolled',
-    'BufEnter',
-    'WinEnter',
-    'VimResized',
-    'DiagnosticChanged',
-    'CursorMoved',
-    'OptionSet',
-  }
-
-  if config.multiwindow then
-    table.insert(update_events, 'WinResized')
-    table.insert(update_events, 'WinLeave')
-  end
-
-  autocmd(update_events, update)
+  autocmd({ 'WinScrolled', 'BufEnter', 'WinEnter', 'VimResized', 'DiagnosticChanged' }, update)
 
   autocmd('BufReadPost', function(args)
     attached[args.buf] = nil
@@ -162,30 +116,27 @@ function M.enable()
     attached[args.buf] = nil
   end)
 
-  if config.multiwindow then
-    autocmd({ 'WinClosed' }, close)
-  else
-    autocmd({ 'BufLeave', 'WinLeave', 'WinClosed' }, close)
-  end
+  autocmd('CursorMoved', update)
+
+  autocmd('OptionSet', function(args)
+    if args.match == 'number' or args.match == 'relativenumber' then
+      update()
+    end
+  end)
+
+  autocmd({ 'BufLeave', 'WinLeave' }, close)
 
   autocmd('User', close, { pattern = 'SessionSavePre' })
   autocmd('User', update, { pattern = 'SessionSavePost' })
 
-  if config.multiwindow then
-    for _, winid in pairs(api.nvim_list_wins()) do
-      update_single_context(winid)
-    end
-  else
-    update_single_context(api.nvim_get_current_win())
-  end
-
+  update()
   enabled = true
 end
 
 function M.disable()
   augroup('treesitter_context_update', {})
   attached = {}
-  close_all()
+  close()
   enabled = false
 end
 
