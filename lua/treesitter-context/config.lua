@@ -1,7 +1,6 @@
 
 --- @class (exact) TSContext.Config
 --- @field enable boolean
---- @field multiwindow boolean
 --- @field max_lines integer
 --- @field min_window_height integer
 --- @field line_numbers boolean
@@ -16,9 +15,6 @@
 ---
 --- Enable this plugin (Can be enabled/disabled later via commands)
 --- @field enable? boolean
----
---- Enable multiwindow support.
---- @field multiwindow? boolean
 ---
 --- How many lines the window should span. Values <= 0 mean no limit.
 --- @field max_lines? integer
@@ -49,7 +45,6 @@
 --- @type TSContext.Config
 local default_config = {
   enable = true,
-  multiwindow = false,
   max_lines = 0, -- no limit
   min_window_height = 0,
   line_numbers = true,

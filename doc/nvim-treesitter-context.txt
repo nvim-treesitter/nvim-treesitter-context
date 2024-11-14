@@ -23,9 +23,6 @@ not required.
       -- Enable this plugin (Can be enabled/disabled later via commands)
       enable = true,
 
-      -- Enable multiwindow support.
-      multiwindow = false,
-
       -- How many lines the window should span. Values <= 0 mean no limit.
       max_lines = 0,
 
