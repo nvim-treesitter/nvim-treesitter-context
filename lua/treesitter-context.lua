@@ -50,13 +50,10 @@ local function close(args)
 end
 
 local function close_all()
+  -- We can't close only certain windows based on the config because it might have changed.
   local render = require('treesitter-context.render')
-  if config.multiwindow then
-    for _, winid in pairs(api.nvim_list_wins()) do
-      render.close(winid)
-    end
-  else
-    render.close(api.nvim_get_current_win())
+  for _, winid in pairs(api.nvim_list_wins()) do
+    render.close(winid)
   end
 end
 
@@ -133,7 +130,29 @@ local function autocmd(event, callback, opts)
   api.nvim_create_autocmd(event, opts)
 end
 
+--- @param bufnr integer
+--- @return boolean?
+local function should_attach(bufnr)
+  if not config.on_attach or config.on_attach(bufnr) ~= false then
+    return true
+  end
+  return nil
+end
+
 function M.enable()
+  if enabled then
+    -- Some options may have changed.
+    -- We need to reload all contexts and clear autocommands first.
+    M.disable()
+  end
+
+  -- Restore attached table after reloading.
+  for _, bufnr in pairs(api.nvim_list_bufs()) do
+    if api.nvim_buf_is_loaded(bufnr) then
+      attached[bufnr] = should_attach(bufnr)
+    end
+  end
+
   local update_events = {
     'WinScrolled',
     'BufEnter',
@@ -152,10 +171,7 @@ function M.enable()
   autocmd(update_events, update)
 
   autocmd('BufReadPost', function(args)
-    attached[args.buf] = nil
-    if not config.on_attach or config.on_attach(args.buf) ~= false then
-      attached[args.buf] = true
-    end
+    attached[args.buf] = should_attach(args.buf)
   end)
 
   autocmd('BufDelete', function(args)
@@ -217,6 +233,7 @@ local did_init = false
 
 ---@param options? TSContext.UserConfig
 function M.setup(options)
+  -- NB: setup  may be called several times.
   if options then
     config.update(options)
   end
