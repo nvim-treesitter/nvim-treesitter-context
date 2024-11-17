@@ -29,7 +29,7 @@ local function throttle_by_id(f, ms)
     f(id) -- first call, execute immediately
     timers[id]:start(ms, 0, function()
       if waiting[id] then
-        vim.schedule(function() f(id) end) -- only execute if there are calls waiting
+        f(id) -- only execute if there are calls waiting
       end
       waiting[id] = nil
       timers[id] = nil
@@ -173,7 +173,6 @@ function M.enable()
 
   if config.multiwindow then
     table.insert(update_events, 'WinResized')
-    table.insert(update_events, 'WinLeave')
   end
 
   autocmd(update_events, update)
@@ -189,7 +188,7 @@ function M.enable()
   if config.multiwindow then
     autocmd({ 'WinClosed' }, close)
   else
-    autocmd({ 'BufLeave', 'WinLeave', 'WinClosed' }, close)
+    autocmd({ 'WinLeave', 'WinClosed' }, close)
   end
 
   autocmd('User', close, { pattern = 'SessionSavePre' })
