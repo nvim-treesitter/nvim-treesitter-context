@@ -69,6 +69,14 @@ end
 
 ---@param winid integer
 local update_single_context = throttle_by_id(function(winid)
+  -- Remove leaked contexts firstly.
+  local current_win = api.nvim_get_current_win()
+  if config.multiwindow then
+    require('treesitter-context.render').close_leaked_contexts()
+  else
+    require('treesitter-context.render').close_other_contexts(current_win)
+  end
+
   -- Since the update is performed asynchronously, the window may be closed at this moment.
   -- Therefore, we need to check if it is still valid.
   if not api.nvim_win_is_valid(winid) or vim.fn.getcmdtype() ~= '' then
@@ -77,7 +85,7 @@ local update_single_context = throttle_by_id(function(winid)
 
   local bufnr = api.nvim_win_get_buf(winid)
 
-  if cannot_open(bufnr, winid) or not config.multiwindow and winid ~= api.nvim_get_current_win() then
+  if cannot_open(bufnr, winid) or not config.multiwindow and winid ~= current_win then
     require('treesitter-context.render').close(winid)
     return
   end
