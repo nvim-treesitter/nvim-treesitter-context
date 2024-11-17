@@ -386,6 +386,34 @@ end
 
 local M = {}
 
+-- Contexts may sometimes leak due to reasons like the use of 'noautocmd'.
+-- In these cases, affected windows might remain visible, and even ToggleContext
+-- won't resolve the issue, as contexts are identified using parent windows.
+-- Therefore, it's essential to occasionally perform garbage collection to
+-- clean up these leaked contexts.
+function M.close_leaked_contexts()
+  local all_wins = api.nvim_list_wins()
+
+  for parent_winid, window_context in pairs(window_contexts) do
+    if not vim.tbl_contains(all_wins, parent_winid) then
+      close(window_context.context_winid)
+      close(window_context.gutter_winid)
+      window_contexts[parent_winid] = nil
+    end
+  end
+end
+
+--- @param winid integer The only window for which the context should be displayed.
+function M.close_other_contexts(winid)
+  for parent_winid, window_context in pairs(window_contexts) do
+    if parent_winid ~= winid then
+      close(window_context.context_winid)
+      close(window_context.gutter_winid)
+      window_contexts[parent_winid] = nil
+    end
+  end
+end
+
 --- @param bufnr integer
 --- @param winid integer
 --- @param ctx_ranges Range4[]
