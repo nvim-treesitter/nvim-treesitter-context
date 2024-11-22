@@ -1,4 +1,5 @@
 ([
   (enum)
   (message)
+  (service)
 ] @context)

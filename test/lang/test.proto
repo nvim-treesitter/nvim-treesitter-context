@@ -92,8 +92,45 @@ message SomeMessage { // {{CONTEXT}}
 
 
 
+// {{TEST}}
+service SomeService { // {{CONTEXT}}
+
+        rpc SomeMethod(SomeMessage) returns (SomeMessage);
+
+        rpc AnotherMethod(SomeMessage) returns (SomeMessage);
 
 
+
+
+
+
+
+
+
+
+
+        rpc GetRandomUser(SomeMessage) returns (SomeMessage);
+        
+        rpc GenerateRandomData(SomeMessage) returns (SomeMessage);
+        
+        rpc FetchRandomStats(SomeMessage) returns (SomeMessage);
+        
+        rpc CreateRandomProfile(SomeMessage) returns (SomeMessage);
+        
+        rpc ComputeRandomMetrics(SomeMessage) returns (SomeMessage);
+
+
+
+
+
+
+
+
+
+
+
+	// {{CURSOR}}
+}
 
 
 
