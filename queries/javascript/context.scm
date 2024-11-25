@@ -9,6 +9,7 @@
   (else_clause)
   (expression_statement)
   (for_statement)
+  (for_in_statement)
   (function_declaration)
   (generator_function_declaration)
   (jsx_element)

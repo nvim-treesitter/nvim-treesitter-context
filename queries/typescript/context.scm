@@ -8,12 +8,15 @@
   (else_clause)
   (expression_statement)
   (for_statement)
+  (for_in_statement)
   (interface_declaration)
   (lexical_declaration)
   (method_definition)
   (object)
   (pair)
   (while_statement)
+  (switch_statement)
+  (switch_case)
 ] @context)
 
 (arrow_function

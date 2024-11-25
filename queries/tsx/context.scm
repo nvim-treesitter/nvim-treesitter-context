@@ -8,6 +8,7 @@
   (else_clause)
   (expression_statement)
   (for_statement)
+  (for_in_statement)
   (interface_declaration)
   (jsx_element)
   (jsx_self_closing_element)
@@ -16,6 +17,8 @@
   (object)
   (pair)
   (while_statement)
+  (switch_statement)
+  (switch_case)
 ] @context)
 
 (arrow_function
