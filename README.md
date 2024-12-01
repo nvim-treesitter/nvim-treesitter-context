@@ -146,7 +146,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `json5`
   - [ ] `jsonc`
   - [ ] `jsx`
-  - [ ] `kdl`
+  - [x] `kdl`
   - [ ] `kotlin`
   - [ ] `lalrpop`
   - [ ] `ledger`
