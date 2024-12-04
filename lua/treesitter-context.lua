@@ -15,25 +15,51 @@ local all_contexts = {}
 --- @param ms? number
 --- @return F
 local function throttle_by_id(f, ms)
-  ms = ms or 200
+  ms = ms or 150
+
   local timers = {} --- @type table<any,uv.uv_timer_t>
+  local state = {} --- @type table<any,string>
   local waiting = {} --- @type table<any,boolean>
-  return function(id)
-    if timers[id] == nil then
-      timers[id] = assert(vim.loop.new_timer())
-    else
-      waiting[id] = true
+
+  local schedule = function(id, wrapper)
+    state[id] = "scheduled"
+    vim.schedule_wrap(wrapper)(id, wrapper)
+  end
+
+  local on_throttle_finish = function(id, wrapper)
+    assert(state[id] == "throttled")
+    if waiting[id] == nil then
+      timers[id] = nil
+      state[id] = nil
       return
     end
+    waiting[id] = nil
+    schedule(id, wrapper)
+  end
 
-    f(id) -- first call, execute immediately
-    timers[id]:start(ms, 0, function()
-      if waiting[id] then
-        f(id) -- only execute if there are calls waiting
-      end
-      waiting[id] = nil
-      timers[id] = nil
-    end)
+  local wrapper = function(id, wrapper)
+    assert(state[id] == "scheduled")
+    state[id] = "running"
+    f(id)
+    assert(state[id] == "running")
+    state[id] = "throttled"
+
+    if timers[id] == nil then
+      timers[id] = assert(vim.loop.new_timer())
+    end
+    timers[id]:start(ms, 0, function() on_throttle_finish(id, wrapper) end)
+  end
+
+  return function(id)
+    if state[id] == nil then
+      schedule(id, wrapper)
+      return
+    end
+    -- Don't set 'waiting' for 'scheduled' state since the callback is about to start.
+    -- Consequently, there is no need to run it again after throttling is completed.
+    if state[id] ~= "scheduled" then
+      waiting[id] = true
+    end
   end
 end
 
@@ -188,7 +214,7 @@ function M.enable()
   if config.multiwindow then
     autocmd({ 'WinClosed' }, close)
   else
-    autocmd({ 'WinLeave', 'WinClosed' }, close)
+    autocmd({ 'BufLeave', 'WinLeave', 'WinClosed' }, close)
   end
 
   autocmd('User', close, { pattern = 'SessionSavePre' })
