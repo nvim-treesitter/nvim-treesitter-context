@@ -8,7 +8,7 @@ local ns = api.nvim_create_namespace('nvim-treesitter-context')
 
 --- List of free buffers that can be reused.
 ---@type integer[]
-local buffers_pool = {}
+local buffer_pool = {}
 
 local BUFFER_POOL_SIZE = 20
 
@@ -23,10 +23,10 @@ local window_contexts = {}
 
 --- @return integer buf
 local function create_or_get_buf()
-  for index = #buffers_pool, 1, -1 do
-    local buf = buffers_pool[index]
+  for index = #buffer_pool, 1, -1 do
+    local buf = buffer_pool[index]
+    table.remove(buffer_pool, index)
     if api.nvim_buf_is_valid(buf) then
-      table.remove(buffers_pool, index)
       return buf
     end
   end
@@ -46,7 +46,7 @@ local function delete_excess_buffers()
 
   local new_buffers_pool = {} --- @type integer[]
 
-  for _, bufnr in ipairs(buffers_pool) do
+  for _, bufnr in ipairs(buffer_pool) do
     if api.nvim_buf_is_valid(bufnr) then
       if #new_buffers_pool < BUFFER_POOL_SIZE then
         table.insert(new_buffers_pool, bufnr)
@@ -56,7 +56,7 @@ local function delete_excess_buffers()
     end
   end
 
-  buffers_pool = new_buffers_pool
+  buffer_pool = new_buffers_pool
 end
 
 --- @param winid integer
@@ -337,7 +337,7 @@ local function close(context_winid)
     local bufnr = api.nvim_win_get_buf(context_winid)
     api.nvim_win_close(context_winid, true)
     if bufnr ~= nil and api.nvim_buf_is_valid(bufnr) then
-      table.insert(buffers_pool, bufnr)
+      table.insert(buffer_pool, bufnr)
     end
     delete_excess_buffers()
   end)
