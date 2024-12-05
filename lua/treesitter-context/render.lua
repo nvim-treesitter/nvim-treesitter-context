@@ -23,7 +23,7 @@ local window_contexts = {}
 
 --- @return integer buf
 local function create_or_get_buf()
-  for index=#buffers_pool, 1, -1 do
+  for index = #buffers_pool, 1, -1 do
     local buf = buffers_pool[index]
     if api.nvim_buf_is_valid(buf) then
       table.remove(buffers_pool, index)
