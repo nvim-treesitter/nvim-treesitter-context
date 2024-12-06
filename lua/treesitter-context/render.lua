@@ -10,7 +10,7 @@ local ns = api.nvim_create_namespace('nvim-treesitter-context')
 ---@type integer[]
 local buffer_pool = {}
 
-local BUFFER_POOL_SIZE = 20
+local MAX_BUFFER_POOL_SIZE = 20
 
 --- @class WindowContext
 --- @field context_winid integer? The context window ID.
@@ -24,8 +24,7 @@ local window_contexts = {}
 --- @return integer buf
 local function create_or_get_buf()
   for index = #buffer_pool, 1, -1 do
-    local buf = buffer_pool[index]
-    table.remove(buffer_pool, index)
+    local buf = table.remove(buffer_pool, index)
     if api.nvim_buf_is_valid(buf) then
       return buf
     end
@@ -44,19 +43,12 @@ local function delete_excess_buffers()
     return
   end
 
-  local new_buffers_pool = {} --- @type integer[]
-
-  for _, bufnr in ipairs(buffer_pool) do
-    if api.nvim_buf_is_valid(bufnr) then
-      if #new_buffers_pool < BUFFER_POOL_SIZE then
-        table.insert(new_buffers_pool, bufnr)
-      else
-        api.nvim_buf_delete(bufnr, { force = true })
-      end
+  while #buffer_pool > MAX_BUFFER_POOL_SIZE do
+    local buf = table.remove(buffer_pool, #buffer_pool)
+    if api.nvim_buf_is_valid(buf) then
+      api.nvim_buf_delete(buf, { force = true })
     end
   end
-
-  buffer_pool = new_buffers_pool
 end
 
 --- @param winid integer
@@ -337,6 +329,8 @@ local function close(context_winid)
     local bufnr = api.nvim_win_get_buf(context_winid)
     api.nvim_win_close(context_winid, true)
     if bufnr ~= nil and api.nvim_buf_is_valid(bufnr) then
+      -- We can't delete the buffer in-place if the pool is full and the command-line window is open.
+      -- Instead, add the buffer to the pool and let delete_excess_buffers() address this situation.
       table.insert(buffer_pool, bufnr)
     end
     delete_excess_buffers()
