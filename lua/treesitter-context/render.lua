@@ -6,9 +6,11 @@ local config = require('treesitter-context.config')
 
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 
---- List of buffers that are to be deleted.
+--- List of free buffers that can be reused.
 ---@type integer[]
-local retired_buffers = {}
+local buffer_pool = {}
+
+local MAX_BUFFER_POOL_SIZE = 20
 
 --- @class WindowContext
 --- @field context_winid integer? The context window ID.
@@ -20,13 +22,33 @@ local retired_buffers = {}
 local window_contexts = {}
 
 --- @return integer buf
-local function create_buf()
+local function create_or_get_buf()
+  for index = #buffer_pool, 1, -1 do
+    local buf = table.remove(buffer_pool, index)
+    if api.nvim_buf_is_valid(buf) then
+      return buf
+    end
+  end
+
   local buf = api.nvim_create_buf(false, true)
 
   vim.bo[buf].undolevels = -1
-  vim.bo[buf].bufhidden = 'wipe'
 
   return buf
+end
+
+local function delete_excess_buffers()
+  if fn.getcmdwintype() ~= '' then
+    -- Can't delete buffers when the command-line window is open.
+    return
+  end
+
+  while #buffer_pool > MAX_BUFFER_POOL_SIZE do
+    local buf = table.remove(buffer_pool, #buffer_pool)
+    if api.nvim_buf_is_valid(buf) then
+      api.nvim_buf_delete(buf, { force = true })
+    end
+  end
 end
 
 --- @param winid integer
@@ -40,7 +62,7 @@ end
 local function display_window(winid, context_winid, width, height, col, ty, hl)
   if not context_winid then
     local sep = config.separator and { config.separator, 'TreesitterContextSeparator' } or nil
-    context_winid = api.nvim_open_win(create_buf(), false, {
+    context_winid = api.nvim_open_win(create_or_get_buf(), false, {
       win = winid,
       relative = 'win',
       width = width,
@@ -305,25 +327,13 @@ local function close(context_winid)
     end
 
     local bufnr = api.nvim_win_get_buf(context_winid)
-    if bufnr ~= nil then
-      table.insert(retired_buffers, bufnr)
+    api.nvim_win_close(context_winid, true)
+    if bufnr ~= nil and api.nvim_buf_is_valid(bufnr) then
+      -- We can't delete the buffer in-place if the pool is full and the command-line window is open.
+      -- Instead, add the buffer to the pool and let delete_excess_buffers() address this situation.
+      table.insert(buffer_pool, bufnr)
     end
-    if api.nvim_win_is_valid(context_winid) then
-      api.nvim_win_close(context_winid, true)
-    end
-
-    if fn.getcmdwintype() ~= '' then
-      -- Can't delete buffers when the command-line window is open.
-      return
-    end
-
-    -- Delete retired buffers.
-    for _, retired_bufnr in ipairs(retired_buffers) do
-      if api.nvim_buf_is_valid(retired_bufnr) then
-        api.nvim_buf_delete(retired_bufnr, { force = true })
-      end
-    end
-    retired_buffers = {}
+    delete_excess_buffers()
   end)
 end
 
