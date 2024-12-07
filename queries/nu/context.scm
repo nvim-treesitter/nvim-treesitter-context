@@ -1,13 +1,40 @@
-(decl_def) @context
-(decl_module) @context
-(decl_export) @context
+;; Functions and modules
+(decl_def
+  (_) @context.end
+) @context
 
-(ctrl_if) @context
-(ctrl_try) @context
-(ctrl_match) @context
-(ctrl_for) @context
-(ctrl_while) @context
-(ctrl_do) @context
+(decl_module
+  (_) @context.end
+) @context
+
+(decl_export
+  (_) @context.end
+) @context
+
+;; Control flow
+(ctrl_if
+  (_) @context.end
+) @context
+
+(ctrl_try
+  (_) @context.end
+) @context
+
+(ctrl_match
+  (_) @context.end
+) @context
+
+(ctrl_for
+  (_) @context.end
+) @context
+
+(ctrl_while
+  (_) @context.end
+) @context
+
+(ctrl_do
+  (_) @context.end
+) @context
 
 (match_arm) @context
 (pipe_element) @context
