@@ -160,6 +160,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `mermaid`
   - [ ] `meson`
   - [ ] `nickel`
+  - [x] `nu`
   - [ ] `ocamllex`
   - [ ] `pascal`
   - [ ] `perl`
