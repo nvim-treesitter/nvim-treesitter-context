@@ -11,6 +11,7 @@
 --- @field mode 'cursor'|'topline'
 --- @field separator? string
 --- @field on_attach? fun(buf: integer): boolean
+--- @field filter_extmarks? fun(extmark: [integer, integer, integer, vim.api.keyset.extmark_details]): boolean
 
 --- @class (exact) TSContext.UserConfig : TSContext.Config
 ---
@@ -45,6 +46,9 @@
 ---
 --- Callback when attaching. Return false to disable attaching
 --- @field on_attach? fun(buf: integer): boolean
+---
+--- Callback to filter out extmarks that should not be copied over
+--- @field filter_extmarks? fun(extmark: [integer, integer, integer, vim.api.keyset.extmark_details]): boolean
 
 --- @type TSContext.Config
 local default_config = {
@@ -57,6 +61,7 @@ local default_config = {
   trim_scope = 'outer',
   zindex = 20,
   mode = 'cursor',
+  filter_extmarks = nil,
 }
 
 local config = vim.deepcopy(default_config)
