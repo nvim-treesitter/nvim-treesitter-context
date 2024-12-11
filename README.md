@@ -20,8 +20,9 @@ Note: if you need support for Neovim 0.6.x please use the tag `compat/0.6`.
 Note: support for specific languages is strictly community maintained and can break from time to time as parsers are updated.
 
 <details>
-<summary>click to expand</summary
+<summary>Supported (click to expand)</summary
 
+  - [x] `ada`
   - [x] `apex`
   - [x] `bash`
   - [x] `c`
@@ -36,6 +37,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `d`
   - [x] `dart`
   - [x] `devicetree`
+  - [x] `diff`
   - [x] `elixir`
   - [x] `elm`
   - [x] `fennel`
@@ -47,33 +49,37 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `graphql`
   - [x] `groovy`
   - [x] `haskell`
-  - [x] `html_tags`
+  - [x] `html`
   - [x] `ini`
-  - [x] `janet` (using the "janet_simple" grammar)
+  - [x] `janet_simple`
   - [x] `java`
   - [x] `javascript`
   - [x] `json`
   - [x] `jsonnet`
   - [x] `julia`
+  - [x] `kdl`
   - [x] `latex`
   - [x] `liquidsoap`
   - [x] `lua`
+  - [x] `make`
   - [x] `markdown`
   - [x] `matlab`
   - [x] `nim`
   - [x] `nix`
   - [x] `norg`
+  - [x] `nu`
   - [x] `objdump`
-  - [x] `ocaml_interface`
   - [x] `ocaml`
+  - [x] `ocaml_interface`
   - [x] `odin`
+  - [x] `org`
   - [x] `php`
   - [x] `php_only`
   - [x] `prisma`
   - [x] `proto`
   - [x] `python`
   - [x] `r`
-  - [x] `ruby` (and `rspec`)
+  - [x] `ruby`
   - [x] `rust`
   - [x] `scala`
   - [x] `scss`
@@ -99,110 +105,236 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `yaml`
   - [x] `yang`
   - [x] `zig`
-  - [x] `ada`
+
+</details>
+
+<details>
+<summary>Unsupported (click to expand)</summary
+
   - [ ] `agda`
+  - [ ] `angular`
   - [ ] `arduino`
+  - [ ] `asm`
   - [ ] `astro`
+  - [ ] `authzed`
+  - [ ] `awk`
+  - [ ] `bass`
   - [ ] `beancount`
   - [ ] `bibtex`
   - [ ] `bicep`
+  - [ ] `bitbake`
   - [ ] `blueprint`
+  - [ ] `bp`
+  - [ ] `cairo`
   - [ ] `chatito`
-  - [ ] `clojure`
+  - [ ] `circom`
+  - [ ] `comment`
   - [ ] `commonlisp`
   - [ ] `cooklang`
+  - [ ] `corn`
   - [ ] `cpon`
+  - [ ] `csv`
+  - [ ] `cylc`
+  - [ ] `desktop`
   - [ ] `dhall`
+  - [ ] `disassembly`
+  - [ ] `djot`
   - [ ] `dockerfile`
   - [ ] `dot`
+  - [ ] `doxygen`
+  - [ ] `dtd`
+  - [ ] `earthfile`
   - [ ] `ebnf`
-  - [ ] `ecma`
+  - [ ] `editorconfig`
+  - [ ] `eds`
   - [ ] `eex`
   - [ ] `elsa`
   - [ ] `elvish`
   - [ ] `embedded_template`
   - [ ] `erlang`
-  - [ ] `fennel`
+  - [ ] `facility`
+  - [ ] `faust`
+  - [ ] `fidl`
+  - [ ] `firrtl`
   - [ ] `foam`
+  - [ ] `forth`
   - [ ] `fsh`
+  - [ ] `fsharp`
   - [ ] `func`
   - [ ] `fusion`
-  - [ ] `gdscript`
+  - [ ] `gap`
+  - [ ] `gaptst`
+  - [ ] `gdshader`
+  - [ ] `git_config`
   - [ ] `git_rebase`
+  - [ ] `gitattributes`
+  - [ ] `gitcommit`
+  - [ ] `gitignore`
   - [ ] `gleam`
+  - [ ] `glimmer_javascript`
+  - [ ] `glimmer_typescript`
   - [ ] `glsl`
+  - [ ] `gn`
+  - [ ] `gnuplot`
+  - [ ] `goctl`
   - [ ] `godot_resource`
   - [ ] `gomod`
   - [ ] `gosum`
+  - [ ] `gotmpl`
   - [ ] `gowork`
+  - [ ] `gpg`
+  - [ ] `gren`
+  - [ ] `gstlaunch`
   - [ ] `hack`
+  - [ ] `hare`
+  - [ ] `haskell_persistent`
   - [ ] `hcl`
   - [ ] `heex`
+  - [ ] `helm`
   - [ ] `hjson`
   - [ ] `hlsl`
+  - [ ] `hlsplaylist`
   - [ ] `hocon`
-  - [ ] `html`
+  - [ ] `hoon`
   - [ ] `htmldjango`
   - [ ] `http`
+  - [ ] `hurl`
+  - [ ] `hyprlang`
+  - [ ] `idl`
+  - [ ] `inko`
+  - [ ] `ispc`
   - [ ] `jq`
   - [ ] `jsdoc`
   - [ ] `json5`
   - [ ] `jsonc`
-  - [ ] `jsx`
-  - [x] `kdl`
+  - [ ] `just`
+  - [ ] `kconfig`
   - [ ] `kotlin`
+  - [ ] `koto`
+  - [ ] `kusto`
   - [ ] `lalrpop`
   - [ ] `ledger`
+  - [ ] `leo`
+  - [ ] `linkerscript`
+  - [ ] `liquid`
   - [ ] `llvm`
+  - [ ] `luadoc`
+  - [ ] `luap`
+  - [ ] `luau`
   - [ ] `m68k`
   - [ ] `markdown_inline`
   - [ ] `menhir`
   - [ ] `mermaid`
   - [ ] `meson`
+  - [ ] `mlir`
+  - [ ] `muttrc`
+  - [ ] `nasm`
+  - [ ] `nginx`
   - [ ] `nickel`
-  - [x] `nu`
+  - [ ] `nim_format_string`
+  - [ ] `ninja`
+  - [ ] `nqc`
+  - [ ] `objc`
   - [ ] `ocamllex`
   - [ ] `pascal`
+  - [ ] `passwd`
+  - [ ] `pem`
   - [ ] `perl`
   - [ ] `phpdoc`
   - [ ] `pioasm`
   - [ ] `po`
+  - [ ] `pod`
   - [ ] `poe_filter`
+  - [ ] `pony`
+  - [ ] `powershell`
+  - [ ] `printf`
+  - [ ] `problog`
+  - [ ] `prolog`
+  - [ ] `promql`
+  - [ ] `properties`
   - [ ] `prql`
+  - [ ] `psv`
   - [ ] `pug`
+  - [ ] `puppet`
+  - [ ] `purescript`
+  - [ ] `pymanifest`
   - [ ] `ql`
   - [ ] `qmldir`
   - [ ] `qmljs`
   - [ ] `query`
   - [ ] `racket`
+  - [ ] `ralph`
   - [ ] `rasi`
+  - [ ] `rbs`
+  - [ ] `re2c`
+  - [ ] `readline`
+  - [ ] `regex`
   - [ ] `rego`
+  - [ ] `requirements`
+  - [ ] `rescript`
   - [ ] `rnoweb`
+  - [ ] `robot`
+  - [ ] `robots`
+  - [ ] `roc`
   - [ ] `ron`
   - [ ] `rst`
+  - [ ] `runescript`
+  - [ ] `scfg`
   - [ ] `scheme`
+  - [ ] `sflog`
+  - [ ] `slang`
   - [ ] `slint`
   - [ ] `smithy`
+  - [ ] `snakemake`
+  - [ ] `soql`
+  - [ ] `sosl`
+  - [ ] `sourcepawn`
   - [ ] `sparql`
   - [ ] `sql`
+  - [ ] `squirrel`
+  - [ ] `ssh_config`
   - [ ] `starlark`
+  - [ ] `strace`
+  - [ ] `styled`
   - [ ] `supercollider`
+  - [ ] `superhtml`
   - [ ] `surface`
+  - [ ] `sway`
   - [ ] `sxhkdrc`
+  - [ ] `systemtap`
   - [ ] `t32`
+  - [ ] `tablegen`
+  - [ ] `textproto`
   - [ ] `thrift`
   - [ ] `tiger`
   - [ ] `tlaplus`
+  - [ ] `tmux`
   - [ ] `todotxt`
+  - [ ] `tsv`
   - [ ] `turtle`
   - [ ] `twig`
+  - [ ] `typespec`
+  - [ ] `typst`
+  - [ ] `udev`
   - [ ] `ungrammar`
+  - [ ] `unison`
+  - [ ] `uxntal`
   - [ ] `v`
   - [ ] `vala`
+  - [ ] `vento`
   - [ ] `vhs`
+  - [ ] `vimdoc`
+  - [ ] `vrl`
   - [ ] `wgsl`
   - [ ] `wgsl_bevy`
+  - [ ] `wing`
+  - [ ] `wit`
+  - [ ] `xcompose`
+  - [ ] `xresources`
   - [ ] `yuck`
+  - [ ] `zathurarc`
+  - [ ] `ziggy`
+  - [ ] `ziggy_schema`
 
 </details>
 

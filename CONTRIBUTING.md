@@ -75,4 +75,4 @@ A pull request for supporting a new language requires:
 
     See `test/lang/test.c` for examples.
 
-3. Updating `README.md` to mark `[LANG]` as supported.
+3. Run `make test`. This should automatically update README.md to mark `[LANG]` as supported.

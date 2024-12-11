@@ -1,105 +1,17 @@
 local helpers = require('nvim-test.helpers')
 local Screen = require('nvim-test.screen')
 
+local install_langs = require('test.helpers').install_langs
+
 local clear = helpers.clear
 local exec_lua = helpers.exec_lua
 local cmd = helpers.api.nvim_command
 local feed = helpers.feed
-local api = helpers.api
 local fn = helpers.fn
 
 local function requires_nvim10()
   if fn.has('nvim-0.10') == 0 then
     pending('Requires nvim-0.10')
-  end
-end
-
-local function install_langs(langs)
-  if type(langs) == 'string' then
-    langs = { langs }
-  end
-  exec_lua(
-    [[
-  local langs = ...
-  require'nvim-treesitter.configs'.setup {
-    ensure_installed = langs,
-    sync_install = true,
-  }
-
-  -- Clear the message "<lang> has been installed".
-  print(' ')
-  ]],
-    langs
-  )
-end
-
----@param line string
----@return string?
-local function parse_directive(line)
-  --- @type string?
-  local directive = line:match('{{([A-Z]+)}}')
-  return directive
-end
-
---- @param filename string
---- @return table<integer, integer[]>? contexts
-local function parse_directives(filename)
-  local f = io.open(filename, 'r')
-  if not f then
-    return
-  end
-
-  local context = {} --- @type table<integer,integer[]>
-  local contexts = {} --- @type table<integer,integer[]>
-
-  local i = 0
-  for l in f:lines() do
-    local directive = parse_directive(l)
-    if directive then
-      if directive == 'TEST' then
-        context = {}
-      elseif directive == 'CURSOR' then
-        contexts[i] = vim.deepcopy(context)
-      elseif directive == 'CONTEXT' then
-        table.insert(context, i)
-      elseif directive == 'POPCONTEXT' then
-        table.remove(context, #context)
-      end
-    end
-    i = i + 1
-  end
-  f:close()
-
-  for _, c in pairs(contexts) do
-    table.sort(c)
-  end
-
-  return contexts
-end
-
-local langs = {} --- @type string[]
-do
-  local f = assert(io.open('README.md', 'r'))
-  local readme_langs = {} --- @type table<string,true>
-  for l in f:lines() do
-    --- @type string?
-    local lang = l:match('%- %[x%] `([^`]+)`')
-    if lang then
-      readme_langs[lang] = true
-    end
-  end
-  f:close()
-
-  f = assert(io.open('nvim-treesitter/lockfile.json', 'r'))
-
-  for k in pairs(vim.json.decode(f:read('*a'))) do
-    if readme_langs[k] then
-      langs[#langs + 1] = k
-      readme_langs[k] = nil
-    end
-  end
-  if next(readme_langs) then
-    print('Invalid languages:', table.concat(vim.tbl_keys(readme_langs), ', '))
   end
 end
 
@@ -135,7 +47,7 @@ describe('ts_context', function()
       [14] = { background = Screen.colors.LightMagenta, foreground = Screen.colors.SlateBlue },
       [15] = { foreground = Screen.colors.SlateBlue },
       [16] = { foreground = tonumber('0x6a0dad') },
-      [17] = { background = Screen.colors.Plum1, bold = true, foreground = Screen.colors.Magenta1},
+      [17] = { background = Screen.colors.Plum1, bold = true, foreground = Screen.colors.Magenta1 },
     }
 
     -- Use the classic vim colorscheme, not the new defaults in nvim >= 0.10
@@ -146,8 +58,6 @@ describe('ts_context', function()
       cmd('hi link @type.builtin Special')
       cmd('hi link @keyword.type Type')
       cmd('hi link @attribute PreProc')
-    --   cmd('hi link @property Identifier')
-    -- --   default_attrs[2] = { background = Screen.colors.LightMagenta }
     end
 
     screen:set_default_attr_ids(default_attrs)
@@ -210,111 +120,6 @@ describe('ts_context', function()
                                     |
     ]],
     })
-  end)
-
-  describe('query:', function()
-    local readme_lines = {} --- @type string[]
-
-    setup(function()
-      local f = assert(io.open('README.md', 'r'))
-      for l in f:lines() do
-        readme_lines[#readme_lines + 1] = l
-      end
-      f:close()
-    end)
-
-    for _, lang in ipairs(langs) do
-      it(lang, function()
-        install_langs(lang)
-
-        local index --- @type integer
-        local line_orig --- @type string
-
-        for i, l in pairs(readme_lines) do
-          --- @type string?
-          local lang1 = l:match('%- %[x%] `([^`]+)`')
-          if lang1 == lang then
-            l = l:gsub(' %(broken%)', '')
-            index, line_orig = i, l
-            readme_lines[i] = l .. ' (broken)'
-          else
-            readme_lines[i] = l
-          end
-        end
-
-        assert(index)
-
-        exec_lua(
-          [[
-        local lang = ...
-        vim.treesitter.query.get(lang, 'context')
-        ]],
-          lang
-        )
-
-        readme_lines[index] = line_orig
-      end)
-    end
-
-    teardown(function()
-      local f = assert(io.open('README.md', 'w'))
-      for _, l in ipairs(readme_lines) do
-        f:write(l)
-        f:write('\n')
-      end
-      f:close()
-    end)
-  end)
-
-  describe('contexts:', function()
-    for _, lang in ipairs(langs) do
-      it(lang, function()
-        install_langs(lang)
-
-        local test_file = 'test/lang/test.' .. lang
-        if not vim.uv.fs_stat(test_file) then
-          pending('No test file')
-          return
-        end
-
-        local contexts = parse_directives(test_file)
-
-        if not contexts or not next(contexts) then
-          pending('No tests')
-          return
-        end
-
-        cmd('edit ' .. test_file)
-
-        for cursor_row, context_rows in pairs(contexts) do
-          local bufnr = api.nvim_get_current_buf()
-          local winid = api.nvim_get_current_win()
-          api.nvim_win_set_cursor(winid, { cursor_row + 1, 0 })
-          assert(fn.getline('.'):match('{{CURSOR}}'))
-          feed(string.format('zt%d<C-y>', #context_rows + 2))
-
-          --- @type [integer,integer,integer,integer][]
-          local ranges = exec_lua(
-            [[
-            return require('treesitter-context.context').get(...)
-          ]],
-            bufnr,
-            winid
-          )
-
-          local act_context_rows = {} --- @type integer[]
-          for _, r in ipairs(ranges) do
-            table.insert(act_context_rows, r[1])
-          end
-
-          helpers.eq(
-            context_rows,
-            act_context_rows,
-            string.format('test for cursor %d failed', cursor_row)
-          )
-        end
-      end)
-    end
   end)
 
   describe('language:', function()
