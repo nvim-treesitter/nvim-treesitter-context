@@ -140,7 +140,9 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   local parser = buf_highlighter.tree
 
   parser:for_each_tree(function(tstree, ltree)
+    --- @diagnostic disable-next-line:invisible
     local buf_query = buf_highlighter:get_query(ltree:lang())
+    --- @diagnostic disable-next-line:invisible
     local query = buf_query:query()
     if not query then
       return
@@ -164,10 +166,13 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
         if nsrow >= start_row then
           local msrow = offset + (nsrow - start_row)
           local merow = offset + (nerow - start_row)
-          local hl --- @type integer
+          local hl --- @type integer?
+          --- @diagnostic disable-next-line: invisible naughty
           if buf_query.get_hl_from_capture then
+            --- @diagnostic disable-next-line: invisible naughty
             hl = buf_query:get_hl_from_capture(capture)
           else
+            --- @diagnostic disable-next-line: invisible naughty
             hl = buf_query.hl_cache[capture]
           end
           local priority = tonumber(metadata.priority)
@@ -341,6 +346,7 @@ end
 --- @param context_winid integer
 local function horizontal_scroll_contexts(winid, context_winid)
   local active_win_view = api.nvim_win_call(winid, fn.winsaveview)
+  --- @type vim.fn.winsaveview.ret
   local context_win_view = api.nvim_win_call(context_winid, fn.winsaveview)
   if active_win_view.leftcol ~= context_win_view.leftcol then
     context_win_view.leftcol = active_win_view.leftcol
@@ -366,8 +372,10 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
     )
 
     for _, m in ipairs(extmarks) do
-      --- @type integer, integer, integer, vim.api.keyset.extmark_details
-      local id, row, col, opts = m[1], m[2], m[3], m[4]
+      local id = m[1]
+      local row = m[2]
+      local col = m[3] --[[@as integer]]
+      local opts = m[4] --[[@as vim.api.keyset.extmark_details]]
 
       local start_row = offset + (row - ctx_srow)
 
@@ -384,6 +392,7 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
         end_col = opts.end_col,
         priority = opts.priority,
         hl_group = opts.hl_group,
+        --- @diagnostic disable-next-line:assign-type-mismatch bug in core
         end_right_gravity = opts.end_right_gravity,
         right_gravity = opts.right_gravity,
         hl_eol = opts.hl_eol,
@@ -393,6 +402,7 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
         hl_mode = opts.hl_mode,
         line_hl_group = opts.line_hl_group,
         spell = opts.spell,
+        --- @diagnostic disable-next-line:assign-type-mismatch fixed in 0.11
         url = opts.url,
       }, opts.ns_id)
     end

@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := test
 
-NEOVIM_VERSION ?= v0.9.5
-NEOVIM_RUNNER_VERSION ?= v0.10.0
+NVIM_TEST_VERSION ?= v0.10.2
+NVIM_RUNNER_VERSION ?= v0.10.2
 
 NVIM_TS_SHA ?= 894cb3c
 
@@ -18,25 +18,58 @@ nvim-treesitter:
 nvim-test:
 	git clone https://github.com/lewis6991/nvim-test
 	nvim-test/bin/nvim-test --init \
-		--runner_version $(NEOVIM_RUNNER_VERSION) \
-		--target_version $(NEOVIM_VERSION)
+		--runner_version $(NVIM_RUNNER_VERSION) \
+		--target_version $(NVIM_TEST_VERSION)
 
 .PHONY: test
 test: nvim-test nvim-treesitter
 	nvim-test/bin/nvim-test test \
-		--runner_version $(NEOVIM_RUNNER_VERSION) \
-		--target_version $(NEOVIM_VERSION) \
+		--runner_version $(NVIM_RUNNER_VERSION) \
+		--target_version $(NVIM_TEST_VERSION) \
 		--lpath=$(PWD)/lua/?.lua \
 		--filter="$(FILTER)" \
 		--verbose
 
 .PHONY: parsers
 parsers: nvim-test nvim-treesitter
-	$(XDG_DATA_HOME)/nvim-test/nvim-runner-$(NEOVIM_RUNNER_VERSION)/bin/nvim \
+	$(XDG_DATA_HOME)/nvim-test/nvim-runner-$(NVIM_RUNNER_VERSION)/bin/nvim \
 		--clean -u NONE -c 'source install_parsers.lua'
 
 lint:
 	luacheck lua
+
+# ------------------------------------------------------------------------------
+# LuaLS
+# ------------------------------------------------------------------------------
+
+ifeq ($(shell uname -m),arm64)
+    LUALS_ARCH ?= arm64
+else
+    LUALS_ARCH ?= x64
+endif
+
+LUALS_VERSION := 3.13.2
+LUALS_TARBALL := lua-language-server-$(LUALS_VERSION)-$(shell uname -s)-$(LUALS_ARCH).tar.gz
+LUALS_URL := https://github.com/LuaLS/lua-language-server/releases/download/$(LUALS_VERSION)/$(LUALS_TARBALL)
+
+.INTERMEDIATE: $(LUALS_TARBALL)
+$(LUALS_TARBALL):
+	wget $(LUALS_URL)
+
+luals: $(LUALS_TARBALL)
+	mkdir luals
+	tar -xf $< -C luals
+
+export VIMRUNTIME=$(XDG_DATA_HOME)/nvim-test/nvim-test-$(NVIM_TEST_VERSION)/share/nvim/runtime
+.PHONY: luals-check
+luals-check: luals nvim-test
+	ls $(VIMRUNTIME)
+	VIMRUNTIME=$(XDG_DATA_HOME)/nvim-test/nvim-test-$(NVIM_TEST_VERSION)/share/nvim/runtime \
+		luals/bin/lua-language-server \
+			--logpath=luals_check \
+			--configpath=../.luarc.json \
+			--check=lua
+	@grep '^\[\]$$' luals_check/check.json
 
 # ------------------------------------------------------------------------------
 # Stylua

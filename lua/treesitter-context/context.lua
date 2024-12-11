@@ -26,17 +26,19 @@ local function get_parent_nodes(langtree, range)
 
   local ret = {} --- @type TSNode[]
 
+  --- @diagnostic disable-next-line:undefined-field added in 0.11
   if root.child_containing_descendant ~= nil then
     local p = root --- @type TSNode?
     while p do
       ret[#ret + 1] = p
-      p = p:child_containing_descendant(n)
+      --- @diagnostic disable-next-line:undefined-field added in 0.11
+      p = p:child_containing_descendant(n) --- @type TSNode?
     end
     ret[#ret + 1] = n
   else
     while n do
       table.insert(ret, 1, n)
-      n = n:parent()
+      n = n:parent() --- @type TSNode?
     end
   end
 
@@ -86,6 +88,7 @@ end
 --- @param query vim.treesitter.Query
 --- @return Range4?
 local context_range = cache.memoize(function(node, bufnr, query)
+  --- @diagnostic disable-next-line:missing-fields
   local range = { node:range() } --- @type Range4
   range[3] = range[1] + 1
   range[4] = 0
