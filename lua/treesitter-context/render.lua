@@ -231,7 +231,7 @@ local function build_lno_str(win, lnum, width)
       winid = win,
       use_statuscol_lnum = lnum,
       highlights = true,
-      fillchar = ' ',  -- Fixed in Neovim 0.10 (#396)
+      fillchar = ' ', -- Fixed in Neovim 0.10 (#396)
     })
     if ok then
       return data.str, data.highlights
@@ -357,7 +357,13 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
   local offset = 0
   for _, context in ipairs(contexts) do
     local ctx_srow, ctx_scol, ctx_erow, ctx_ecol = context[1], context[2], context[3], context[4]
-    local extmarks = api.nvim_buf_get_extmarks(bufnr, -1, {ctx_srow, ctx_scol}, {ctx_erow, ctx_ecol}, { details = true })
+    local extmarks = api.nvim_buf_get_extmarks(
+      bufnr,
+      -1,
+      { ctx_srow, ctx_scol },
+      { ctx_erow, ctx_ecol },
+      { details = true }
+    )
 
     for _, m in ipairs(extmarks) do
       --- @type integer, integer, integer, vim.api.keyset.extmark_details

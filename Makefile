@@ -37,3 +37,34 @@ parsers: nvim-test nvim-treesitter
 
 lint:
 	luacheck lua
+
+# ------------------------------------------------------------------------------
+# Stylua
+# ------------------------------------------------------------------------------
+ifeq ($(shell uname -s),Darwin)
+    STYLUA_PLATFORM := macos-aarch64
+else
+    STYLUA_PLATFORM := linux-x86_64
+endif
+
+STYLUA_VERSION := v2.0.2
+STYLUA_ZIP := stylua-$(STYLUA_PLATFORM).zip
+STYLUA_URL := https://github.com/JohnnyMorganz/StyLua/releases/download/$(STYLUA_VERSION)/$(STYLUA_ZIP)
+
+.INTERMEDIATE: $(STYLUA_ZIP)
+$(STYLUA_ZIP):
+	wget $(STYLUA_URL)
+
+stylua: $(STYLUA_ZIP)
+	unzip $<
+
+.PHONY: stylua-check
+stylua-check: stylua
+	./stylua --check lua/**/*.lua
+
+.PHONY: stylua-run
+stylua-run: stylua
+	./stylua \
+		lua/**/*.lua \
+		lua/*.lua \
+		test/*_spec.lua
