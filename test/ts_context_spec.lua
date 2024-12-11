@@ -6,6 +6,13 @@ local exec_lua = helpers.exec_lua
 local cmd = helpers.api.nvim_command
 local feed = helpers.feed
 local api = helpers.api
+local fn = helpers.fn
+
+local function requires_nvim10()
+  if fn.has('nvim-0.10') == 0 then
+    pending('Requires nvim-0.10')
+  end
+end
 
 local function install_langs(langs)
   if type(langs) == 'string' then
@@ -103,7 +110,7 @@ describe('ts_context', function()
     clear()
     screen = Screen.new(30, 16)
     screen:attach()
-    screen:set_default_attr_ids({
+    local default_attrs = {
       [1] = {
         foreground = Screen.colors.Brown,
         background = Screen.colors.LightMagenta,
@@ -127,7 +134,23 @@ describe('ts_context', function()
       [13] = { foreground = Screen.colors.White, background = Screen.colors.Red },
       [14] = { background = Screen.colors.LightMagenta, foreground = Screen.colors.SlateBlue },
       [15] = { foreground = Screen.colors.SlateBlue },
-    })
+      [16] = { foreground = tonumber('0x6a0dad') },
+      [17] = { background = Screen.colors.Plum1, bold = true, foreground = Screen.colors.Magenta1},
+    }
+
+    -- Use the classic vim colorscheme, not the new defaults in nvim >= 0.10
+    if fn.has('nvim-0.10') > 0 then
+      cmd('colorscheme vim')
+    else
+      cmd('hi link @variable.builtin Special')
+      cmd('hi link @type.builtin Special')
+      cmd('hi link @keyword.type Type')
+      cmd('hi link @attribute PreProc')
+    --   cmd('hi link @property Identifier')
+    -- --   default_attrs[2] = { background = Screen.colors.LightMagenta }
+    end
+
+    screen:set_default_attr_ids(default_attrs)
 
     cmd([[set runtimepath+=.,./nvim-treesitter]])
 
@@ -267,7 +290,7 @@ describe('ts_context', function()
           local bufnr = api.nvim_get_current_buf()
           local winid = api.nvim_get_current_win()
           api.nvim_win_set_cursor(winid, { cursor_row + 1, 0 })
-          assert(helpers.fn.getline('.'):match('{{CURSOR}}'))
+          assert(fn.getline('.'):match('{{CURSOR}}'))
           feed(string.format('zt%d<C-y>', #context_rows + 2))
 
           --- @type [integer,integer,integer,integer][]
@@ -312,7 +335,7 @@ describe('ts_context', function()
       screen:expect({
         grid = [[
         {1:impl}{2: }{7:Foo}{2: }{14:{}{2:                    }|
-        {2:    }{1:fn}{2: }{3:bar}{14:(}{1:&}{3:self}{14:)}{2: }{14:{}{2:           }|
+        {2:    }{1:fn}{2: }{3:bar}{14:(}{1:&}{14:self)}{2: }{14:{}{2:           }|
         {2:        }{1:if}{2: }{3:condition}{2: }{14:{}{2:        }|
         {2:            }{1:for}{2: }{3:i}{2: }{1:in}{2: }{10:0}{1:..}{10:100}{2: }{14:{}{2: }|
                                       |
@@ -334,7 +357,7 @@ describe('ts_context', function()
       screen:expect({
         grid = [[
         {1:impl}{2: }{7:Foo}{2: }{14:{}{2:                    }|
-        {2:    }{1:fn}{2: }{3:bar}{14:(}{1:&}{3:self}{14:)}{2: }{14:{}{2:           }|
+        {2:    }{1:fn}{2: }{3:bar}{14:(}{1:&}{14:self)}{2: }{14:{}{2:           }|
         {2:        }{1:if}{2: }{3:condition}{2: }{14:{}{2:        }|
         {2:            }{1:for}{2: }{3:i}{2: }{1:in}{2: }{10:0}{1:..}{10:100}{2: }{14:{}{2: }|
         {2:                }{3:foo}{14:(}{1:async}{2: }{1:move}|
@@ -354,6 +377,8 @@ describe('ts_context', function()
     end)
 
     it('c', function()
+      requires_nvim10()
+
       install_langs('c')
       cmd('edit test/test.c')
       exec_lua([[vim.treesitter.start()]])
@@ -362,15 +387,15 @@ describe('ts_context', function()
       -- Check the struct context
       screen:expect({
         grid = [[
-        {1:struct}{2: }{7:Bert}{2: }{14:{}{2:                 }|
+        {7:struct}{2: }{7:Bert}{2: }{14:{}{2:                 }|
             {8:// comment}                |
-            {9:int} {4:*}f2{15:;}                  |
+            {15:int} {4:*}{5:f2}{15:;}                  |
             {8:// comment}                |*2
         ^    {8:// comment}                |
             {8:// comment}                |*2
         {15:};}                            |
                                       |
-        {4:typedef} {4:enum} {15:{}                |
+        {9:typedef} {9:enum} {15:{}                |
           {11:E1}{15:,}                         |
           {11:E2}{15:,}                         |
           {11:E3}                          |
@@ -384,16 +409,16 @@ describe('ts_context', function()
       -- Check the enum context
       screen:expect({
         grid = [[
-        {1:typedef}{2: }{1:enum}{2: }{14:{}{2:                }|
+        {7:typedef}{2: }{7:enum}{2: }{14:{}{2:                }|
           {11:E3}                          |
           {8:// comment}                  |*3
         ^  {8:// comment}                  |
           {8:// comment}                  |*2
         {15:}} {9:Myenum}{15:;}                     |
                                       |
-        {9:int} {5:main}{15:(}{9:int} {5:arg1}{15:,}            |
-                 {9:char} {4:**}{5:arg2}{15:,}         |
-                 {9:char} {4:**}{5:arg3}          |
+        {15:int} {5:main}{15:(int} {5:arg1}{15:,}            |
+                 {15:char} {4:**}{5:arg2}{15:,}         |
+                 {15:char} {4:**}{5:arg3}          |
                  {15:)}                    |
         {15:{}                             |
                                       |
@@ -404,11 +429,11 @@ describe('ts_context', function()
       feed('40<C-e>')
       screen:expect({
         grid = [[
-        {7:int}{2: }{3:main}{14:(}{7:int}{2: }{3:arg1}{14:,}{2:            }|
-        {2:         }{7:char}{2: }{1:**}{3:arg2}{14:,}{2:         }|
+        {14:int}{2: }{3:main}{14:(int}{2: }{3:arg1}{14:,}{2:            }|
+        {2:         }{14:char}{2: }{1:**}{3:arg2}{14:,}{2:         }|
         {2:  }{1:if}{2: }{14:(}{3:arg1}{2: }{1:==}{2: }{10:4}{2:               }|
         {2:      }{1:&&}{2: }{3:arg2}{2: }{1:==}{2: }{3:arg3}{14:)}{2: }{14:{}{2:      }|
-        {2:    }{1:for}{2: }{14:(}{7:int}{2: }{3:i}{2: }{1:=}{2: }{10:0}{14:;}{2: }{3:i}{2: }{1:<}{2: }{3:arg1}{14:;}{2: }|
+        {2:    }{1:for}{2: }{14:(int}{2: }{3:i}{2: }{1:=}{2: }{10:0}{14:;}{2: }{3:i}{2: }{1:<}{2: }{3:arg1}{14:;}{2: }|
         ^                              |
               {4:do} {15:{}                    |
                 {8:// comment}            |*5
@@ -423,7 +448,7 @@ describe('ts_context', function()
       feed('41<C-e>')
       screen:expect({
         grid = [[
-        {7:int}{2: }{3:main}{14:(}{7:int}{2: }{3:arg1}{14:,}{2:            }|
+        {14:int}{2: }{3:main}{14:(int}{2: }{3:arg1}{14:,}{2:            }|
         {2:  }{1:if}{2: }{14:(}{3:arg1}{2: }{1:==}{2: }{10:4}{2:               }|
         {2:      }{1:&&}{2: }{3:arg2}{2: }{1:==}{2: }{3:arg3}{14:)}{2: }{14:{}{2:      }|
         {2:  }{14:}}{2: }{1:else}{2: }{1:if}{2: }{14:(}{3:arg1}{2: }{1:==}{2: }{10:4}{14:)}{2: }{14:{}{2:     }|
@@ -436,6 +461,8 @@ describe('ts_context', function()
     end)
 
     it('cpp', function()
+      requires_nvim10()
+
       install_langs('cpp')
       cmd('edit test/lang/test.cpp')
       exec_lua([[vim.treesitter.start()]])
@@ -443,8 +470,8 @@ describe('ts_context', function()
 
       screen:expect({
         grid = [[
-        {1:struct}{2: }{7:Struct}{2: }{14:{}{2:               }|
-            {9:int} {4:*}f2{15:;}                  |
+        {7:struct}{2: }{7:Struct}{2: }{14:{}{2:               }|
+            {15:int} {4:*}{5:f2}{15:;}                  |
                                       |*3
         ^    {8:// cursor position 1}      |
         {15:};}                            |
@@ -455,8 +482,8 @@ describe('ts_context', function()
 
       screen:expect({
         grid = [[
-        {1:class}{2: }{7:Class}{2: }{14:{}{2:                 }|
-            {9:int} {4:*}f2{15:;}                  |
+        {7:class}{2: }{7:Class}{2: }{14:{}{2:                 }|
+            {15:int} {4:*}{5:f2}{15:;}                  |
                                       |*3
         ^    {8:// cursor position 2}      |
         {15:};}                            |
@@ -468,7 +495,7 @@ describe('ts_context', function()
 
       screen:expect({
         grid = [[
-        {1:typedef}{2: }{1:enum}{2: }{14:{}{2:                }|
+        {7:typedef}{2: }{7:enum}{2: }{14:{}{2:                }|
           {11:E2}{15:,}                         |
           {11:E3}                          |
                                       |*2
@@ -481,10 +508,10 @@ describe('ts_context', function()
       feed('26<C-e>')
       screen:expect({
         grid = [[
-        {7:int}{2: }{3:main}{14:(}{7:int}{2: }{3:arg1}{14:,}{2:            }|
+        {14:int}{2: }{3:main}{14:(int}{2: }{3:arg1}{14:,}{2:            }|
         {2:  }{1:if}{2: }{14:(}{3:arg1}{2: }{1:==}{2: }{10:4}{2:               }|
         {2:      }{1:&&}{2: }{3:arg2}{2: }{1:==}{2: }{3:arg3}{14:)}{2: }{14:{}{2:      }|
-        {2:    }{1:for}{2: }{14:(}{7:int}{2: }{3:i}{2: }{1:=}{2: }{10:0}{14:;}{2: }{3:i}{2: }{1:<}{2: }{3:arg1}{14:;}{2: }|
+        {2:    }{1:for}{2: }{14:(int}{2: }{3:i}{2: }{1:=}{2: }{10:0}{14:;}{2: }{3:i}{2: }{1:<}{2: }{3:arg1}{14:;}{2: }|
         {2:      }{1:while}{2: }{14:(}{10:1}{14:)}{2: }{14:{}{2:             }|
         ^        {8:// cursor position 4}  |
               {15:}}                       |
@@ -497,11 +524,11 @@ describe('ts_context', function()
       feed('18<C-e>')
       screen:expect({
         grid = [[
-        {7:int}{2: }{3:main}{14:(}{7:int}{2: }{3:arg1}{14:,}{2:            }|
-        {2:         }{7:char}{2: }{1:**}{3:arg2}{14:,}{2:         }|
-        {2:         }{7:char}{2: }{1:**}{3:arg3}{2:          }|
+        {14:int}{2: }{3:main}{14:(int}{2: }{3:arg1}{14:,}{2:            }|
+        {2:         }{14:char}{2: }{1:**}{3:arg2}{14:,}{2:         }|
+        {2:         }{14:char}{2: }{1:**}{3:arg3}{2:          }|
         {2:  }{1:do}{2: }{14:{}{2:                        }|
-        {2:    }{1:for}{2: }{14:(}{7:auto}{2: }{3:value}{2: }{14::}{2: }{3:array}{14:)}{2: }{14:{}|
+        {2:    }{1:for}{2: }{14:(auto}{2: }{3:value}{2: }{14::}{2: }{3:array}{14:)}{2: }{14:{}|
         ^      {8:// cursor position 5}    |
             {15:}}                         |
           {15:}} {4:while} {15:(}{11:1}{15:);}                |
@@ -530,7 +557,7 @@ describe('ts_context', function()
                                       |
                                       |
               {5:$position} {4:=} {5:$index}{15:;}     |
-              {4:return} {15:(}{9:int}{15:)} {5:$position}{15:;} |
+              {4:return} {15:(int)} {5:$position}{15:;} |
             {15:}}                         |
             {4:if} {15:(}{5:$indexValue} {4:<} {5:$key}{15:)} {15:{} |
               {8:// comment}              |
@@ -542,13 +569,13 @@ describe('ts_context', function()
       feed('67<C-e>')
       screen:expect({
         grid = [[
-        {1:class}{2: }{7:Fruit}{2: }{14:{}{2:                 }|
+        {7:class}{2: }{7:Fruit}{2: }{14:{}{2:                 }|
                                       |
                                       |
                                       |
                                       |
-        ^    {15:#[}ReturnTypeWillChange{15:]}   |
-            {4:public} {4:function} {5:rot}{15:():} {9:voi}|
+        ^    {15:#[}{16:ReturnTypeWillChange}{15:]}   |
+            {4:public} {4:function} {5:rot}{15:():} {15:voi}|
             {15:{}                         |
                                       |
                                       |
@@ -565,8 +592,8 @@ describe('ts_context', function()
       feed('5<C-e>')
       screen:expect({
         grid = [[
-        {1:class}{2: }{7:Fruit}{2: }{14:{}{2:                 }|
-        {2:    }{1:public}{2: }{1:function}{2: }{3:rot}{14:():}{2: }{7:voi}|
+        {7:class}{2: }{7:Fruit}{2: }{14:{}{2:                 }|
+        {2:    }{1:public}{2: }{1:function}{2: }{3:rot}{14:():}{2: }{14:voi}|
         {2:    }{14:{}{2:                         }|
                                       |
                                       |
@@ -593,16 +620,16 @@ describe('ts_context', function()
 
       screen:expect({
         grid = [[
-        {1:interface}{2: }{7:User}{2: }{14:{}{2:              }|
+        {7:interface}{2: }{7:User}{2: }{14:{}{2:              }|
                                       |*3
-          {5:id}{15::} {9:number}{15:;}                 |
+          {5:id}{15::} {15:number;}                 |
         ^                              |
                                       |*3
         {15:}}                             |
                                       |
-        {4:class} {9:UserAccount} {15:{}           |
-          {5:name}{15::} {9:string}{15:;}               |
-          {5:id}{15::} {9:number}{15:;}                 |
+        {9:class} {9:UserAccount} {15:{}           |
+          {5:name}{15::} {15:string;}               |
+          {5:id}{15::} {15:number;}                 |
                                       |*2
       ]],
       })
@@ -610,8 +637,8 @@ describe('ts_context', function()
       feed('21<C-e>')
       screen:expect({
         grid = [[
-        {1:class}{2: }{7:UserAccount}{2: }{14:{}{2:           }|
-        {2:  }{14:constructor(}{3:name}{14::}{2: }{7:string}{14:,}{2: }{3:id}|
+        {7:class}{2: }{7:UserAccount}{2: }{14:{}{2:           }|
+        {2:  }{14:constructor(}{3:name}{14::}{2: }{14:string,}{2: }{3:id}|
         {2:    }{1:for}{2: }{14:(}{1:let}{2: }{3:i}{2: }{1:=}{2: }{10:0}{14:;}{2: }{3:i}{2: }{1:<}{2: }{10:3}{14:;}{2: }{3:i}{1:++}|
                                       |*2
         ^                              |
@@ -626,7 +653,7 @@ describe('ts_context', function()
       feed('16<C-e>')
       screen:expect({
         grid = [[
-        {1:function}{2: }{3:wrapInArray}{14:(}{3:obj}{14::}{2: }{7:stri}|
+        {1:function}{2: }{3:wrapInArray}{14:(}{3:obj}{14::}{2: }{14:stri}|
         {2:  }{1:if}{2: }{14:(}{1:typeof}{2: }{3:obj}{2: }{1:===}{2: }{10:"string"}{14:)}|
                                       |*3
         ^                              |
@@ -640,6 +667,8 @@ describe('ts_context', function()
     end)
 
     it('markdown', function()
+      requires_nvim10()
+
       install_langs({ 'markdown', 'markdown_inline', 'html' })
       cmd('edit test/lang/test.md')
       exec_lua([[vim.treesitter.start()]])
@@ -647,11 +676,12 @@ describe('ts_context', function()
       feed('3<C-e>')
       screen:expect({
         grid = [[
+        {2:```html                       }|
         {14:<html>}{2:                        }|
         {2:  }{14:<body>}{2:                      }|
-                                      |*3
+                                      |*2
         ^                              |
-            {15:<script>}                  |
+        {8:    }{15:<script>}                  |
                                       |*9
       ]],
       })
@@ -659,13 +689,14 @@ describe('ts_context', function()
       feed('5<C-e>')
       screen:expect({
         grid = [[
+        {2:```html                       }|
         {14:<html>}{2:                        }|
         {2:  }{14:<body>}{2:                      }|
         {2:    }{14:<script>}{2:                  }|
-                                      |*2
+                                      |
         ^                              |
                                       |*8
-              {4:function} {5:test}{15:()} {15:{}       |
+        {8:      }{4:function}{8: }{5:test}{15:()}{8: }{15:{}       |
                                       |
       ]],
       })
@@ -688,6 +719,8 @@ describe('ts_context', function()
     -- unsupported injected languages (markdown_inline does not
     -- have queries specified)
     it('markdown_inline', function()
+      requires_nvim10()
+
       install_langs({ 'markdown', 'markdown_inline' })
       cmd('edit test/lang/test.md')
       exec_lua([[vim.treesitter.start()]])
@@ -695,7 +728,7 @@ describe('ts_context', function()
       feed('47<C-e>')
       screen:expect({
         grid = [[
-        {2:# Title                       }|
+        {17:# Title}{2:                       }|
                                       |*4
         ^Test                          |
                                       |*10
