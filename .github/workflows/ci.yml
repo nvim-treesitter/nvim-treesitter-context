@@ -52,7 +52,7 @@ jobs:
       matrix:
         neovim_version:
           - 'v0.9.5'
-          # - 'v0.10.0'
+          - 'v0.10.2'
 
     env:
       NVIM_TEST_VERSION: ${{ matrix.neovim_version }}
