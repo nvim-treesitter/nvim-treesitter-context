@@ -32,7 +32,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: leafo/gh-actions-lua@v9
+      - uses: leafo/gh-actions-lua@v10
         with:
           luaVersion: "5.1.5"
 
