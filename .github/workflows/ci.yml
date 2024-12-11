@@ -14,6 +14,36 @@ jobs:
       # Check commit messages
       - uses: webiny/action-conventional-commits@v1.1.0
 
+  stylua:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download stylua
+        run: make stylua
+
+      - name: Lint
+        run: make stylua-check
+
+  luals:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: leafo/gh-actions-lua@v9
+        with:
+          luaVersion: "5.1.5"
+
+      - uses: leafo/gh-actions-luarocks@v4
+
+      - name: Download nvim-test
+        run: make nvim-test
+
+      - name: LuaLS
+        run: make luals-check
+
   test:
     runs-on: ubuntu-latest
 
@@ -25,7 +55,7 @@ jobs:
           # - 'v0.10.0'
 
     env:
-      NEOVIM_VERSION: ${{ matrix.neovim_version }}
+      NVIM_TEST_VERSION: ${{ matrix.neovim_version }}
 
     steps:
       - name: Checkout

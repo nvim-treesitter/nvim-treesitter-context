@@ -1,17 +1,18 @@
 local helpers = require('nvim-test.helpers')
 local Screen = require('nvim-test.screen')
 
-local clear    = helpers.clear
+local clear = helpers.clear
 local exec_lua = helpers.exec_lua
-local cmd      = helpers.api.nvim_command
-local feed     = helpers.feed
-local api      = helpers.api
+local cmd = helpers.api.nvim_command
+local feed = helpers.feed
+local api = helpers.api
 
 local function install_langs(langs)
   if type(langs) == 'string' then
-    langs = {langs}
+    langs = { langs }
   end
-  exec_lua([[
+  exec_lua(
+    [[
   local langs = ...
   require'nvim-treesitter.configs'.setup {
     ensure_installed = langs,
@@ -20,7 +21,9 @@ local function install_langs(langs)
 
   -- Clear the message "<lang> has been installed".
   print(' ')
-  ]], langs)
+  ]],
+    langs
+  )
 end
 
 ---@param line string
@@ -84,7 +87,7 @@ do
 
   for k in pairs(vim.json.decode(f:read('*a'))) do
     if readme_langs[k] then
-      langs[#langs+1] = k
+      langs[#langs + 1] = k
       readme_langs[k] = nil
     end
   end
@@ -101,46 +104,55 @@ describe('ts_context', function()
     screen = Screen.new(30, 16)
     screen:attach()
     screen:set_default_attr_ids({
-      [1] = {foreground = Screen.colors.Brown, background = Screen.colors.LightMagenta, bold = true};
-      [2] = {background = Screen.colors.LightMagenta};
-      [3] = {foreground = Screen.colors.DarkCyan, background = Screen.colors.LightMagenta};
-      [4] = {bold = true, foreground = Screen.colors.Brown};
-      [5] = {foreground = Screen.colors.DarkCyan};
-      [6] = {bold = true, foreground = Screen.colors.Blue};
-      [7] = {foreground = Screen.colors.SeaGreen, background = Screen.colors.LightMagenta, bold = true};
-      [8] = {foreground = Screen.colors.Blue};
-      [9] = {bold = true, foreground = Screen.colors.SeaGreen};
-      [10] = {foreground = Screen.colors.Fuchsia, background = Screen.colors.LightMagenta};
-      [11] = {foreground = Screen.colors.Fuchsia};
-      [12] = {foreground = tonumber('0x6a0dad'), background = Screen.colors.LightMagenta};
-      [13] = {foreground = Screen.colors.White, background = Screen.colors.Red};
-      [14] = {background = Screen.colors.LightMagenta, foreground = Screen.colors.SlateBlue};
-      [15] = {foreground = Screen.colors.SlateBlue};
+      [1] = {
+        foreground = Screen.colors.Brown,
+        background = Screen.colors.LightMagenta,
+        bold = true,
+      },
+      [2] = { background = Screen.colors.LightMagenta },
+      [3] = { foreground = Screen.colors.DarkCyan, background = Screen.colors.LightMagenta },
+      [4] = { bold = true, foreground = Screen.colors.Brown },
+      [5] = { foreground = Screen.colors.DarkCyan },
+      [6] = { bold = true, foreground = Screen.colors.Blue },
+      [7] = {
+        foreground = Screen.colors.SeaGreen,
+        background = Screen.colors.LightMagenta,
+        bold = true,
+      },
+      [8] = { foreground = Screen.colors.Blue },
+      [9] = { bold = true, foreground = Screen.colors.SeaGreen },
+      [10] = { foreground = Screen.colors.Fuchsia, background = Screen.colors.LightMagenta },
+      [11] = { foreground = Screen.colors.Fuchsia },
+      [12] = { foreground = tonumber('0x6a0dad'), background = Screen.colors.LightMagenta },
+      [13] = { foreground = Screen.colors.White, background = Screen.colors.Red },
+      [14] = { background = Screen.colors.LightMagenta, foreground = Screen.colors.SlateBlue },
+      [15] = { foreground = Screen.colors.SlateBlue },
     })
 
-    cmd [[set runtimepath+=.,./nvim-treesitter]]
+    cmd([[set runtimepath+=.,./nvim-treesitter]])
 
     -- Required to load custom predicates
-    exec_lua [[require'nvim-treesitter'.setup()]]
+    exec_lua([[require'nvim-treesitter'.setup()]])
 
-    cmd [[let $XDG_CACHE_HOME='scratch/cache']]
-    cmd [[set packpath=]]
+    cmd([[let $XDG_CACHE_HOME='scratch/cache']])
+    cmd([[set packpath=]])
     cmd('syntax enable')
   end)
 
   it('load the plugin', function()
-    exec_lua[[require'treesitter-context'.setup{}]]
+    exec_lua([[require'treesitter-context'.setup{}]])
   end)
 
   it('edit a file', function()
     install_langs('lua')
-    exec_lua[[require'treesitter-context'.setup{}]]
+    exec_lua([[require'treesitter-context'.setup{}]])
     cmd('edit test/test_file.lua')
-    exec_lua [[vim.treesitter.start()]]
-    feed'<C-e>'
-    feed'jj'
+    exec_lua([[vim.treesitter.start()]])
+    feed('<C-e>')
+    feed('jj')
     -- screen:snapshot_util()
-    screen:expect{grid=[[
+    screen:expect({
+      grid = [[
       {1:local}{2: }{1:function}{2: }{3:foo}{14:()}{2:          }|
         {4:local} {4:function} {5:bar}{15:()}        |
       ^                              |
@@ -154,11 +166,13 @@ describe('ts_context', function()
       {4:end}                           |
       {6:~                             }|
                                     |
-    ]]}
+    ]],
+    })
 
-    feed'2<C-e>'
-    feed'jj'
-    screen:expect{grid=[[
+    feed('2<C-e>')
+    feed('jj')
+    screen:expect({
+      grid = [[
       {1:local}{2: }{1:function}{2: }{3:foo}{14:()}{2:          }|
       {2:  }{1:local}{2: }{1:function}{2: }{3:bar}{14:()}{2:        }|
       ^                              |
@@ -171,7 +185,8 @@ describe('ts_context', function()
       {4:end}                           |
       {6:~                             }|*3
                                     |
-    ]]}
+    ]],
+    })
   end)
 
   describe('query:', function()
@@ -180,7 +195,7 @@ describe('ts_context', function()
     setup(function()
       local f = assert(io.open('README.md', 'r'))
       for l in f:lines() do
-        readme_lines[#readme_lines+1] = l
+        readme_lines[#readme_lines + 1] = l
       end
       f:close()
     end)
@@ -198,7 +213,7 @@ describe('ts_context', function()
           if lang1 == lang then
             l = l:gsub(' %(broken%)', '')
             index, line_orig = i, l
-            readme_lines[i] = l..' (broken)'
+            readme_lines[i] = l .. ' (broken)'
           else
             readme_lines[i] = l
           end
@@ -206,10 +221,13 @@ describe('ts_context', function()
 
         assert(index)
 
-        exec_lua([[
+        exec_lua(
+          [[
         local lang = ...
         vim.treesitter.query.get(lang, 'context')
-        ]], lang)
+        ]],
+          lang
+        )
 
         readme_lines[index] = line_orig
       end)
@@ -223,7 +241,6 @@ describe('ts_context', function()
       end
       f:close()
     end)
-
   end)
 
   describe('contexts:', function()
@@ -231,7 +248,7 @@ describe('ts_context', function()
       it(lang, function()
         install_langs(lang)
 
-        local test_file = 'test/lang/test.'..lang
+        local test_file = 'test/lang/test.' .. lang
         if not vim.uv.fs_stat(test_file) then
           pending('No test file')
           return
@@ -244,49 +261,56 @@ describe('ts_context', function()
           return
         end
 
-        cmd('edit '..test_file)
+        cmd('edit ' .. test_file)
 
         for cursor_row, context_rows in pairs(contexts) do
           local bufnr = api.nvim_get_current_buf()
           local winid = api.nvim_get_current_win()
-          api.nvim_win_set_cursor(winid, {cursor_row + 1, 0})
+          api.nvim_win_set_cursor(winid, { cursor_row + 1, 0 })
           assert(helpers.fn.getline('.'):match('{{CURSOR}}'))
           feed(string.format('zt%d<C-y>', #context_rows + 2))
 
           --- @type [integer,integer,integer,integer][]
-          local ranges = exec_lua([[
+          local ranges = exec_lua(
+            [[
             return require('treesitter-context.context').get(...)
-          ]], bufnr, winid)
+          ]],
+            bufnr,
+            winid
+          )
 
           local act_context_rows = {} --- @type integer[]
           for _, r in ipairs(ranges) do
             table.insert(act_context_rows, r[1])
           end
 
-          helpers.eq(context_rows, act_context_rows, string.format('test for cursor %d failed', cursor_row))
+          helpers.eq(
+            context_rows,
+            act_context_rows,
+            string.format('test for cursor %d failed', cursor_row)
+          )
         end
-
       end)
     end
-
   end)
 
   describe('language:', function()
     before_each(function()
-      exec_lua[[require'treesitter-context'.setup{
+      exec_lua([[require'treesitter-context'.setup{
         mode = 'topline',
-      }]]
-      cmd'set scrolloff=5'
-      cmd'set nowrap'
+      }]])
+      cmd('set scrolloff=5')
+      cmd('set nowrap')
     end)
 
     it('rust', function()
       install_langs('rust')
       cmd('edit test/lang/test.rs')
-      exec_lua [[vim.treesitter.start()]]
-      feed'20<C-e>'
+      exec_lua([[vim.treesitter.start()]])
+      feed('20<C-e>')
 
-      screen:expect{grid=[[
+      screen:expect({
+        grid = [[
         {1:impl}{2: }{7:Foo}{2: }{14:{}{2:                    }|
         {2:    }{1:fn}{2: }{3:bar}{14:(}{1:&}{3:self}{14:)}{2: }{14:{}{2:           }|
         {2:        }{1:if}{2: }{3:condition}{2: }{14:{}{2:        }|
@@ -303,10 +327,12 @@ describe('ts_context', function()
                                       |
                                       |
                                       |
-      ]]}
+      ]],
+      })
 
-      feed'14<C-e>'
-      screen:expect{grid=[[
+      feed('14<C-e>')
+      screen:expect({
+        grid = [[
         {1:impl}{2: }{7:Foo}{2: }{14:{}{2:                    }|
         {2:    }{1:fn}{2: }{3:bar}{14:(}{1:&}{3:self}{14:)}{2: }{14:{}{2:           }|
         {2:        }{1:if}{2: }{3:condition}{2: }{14:{}{2:        }|
@@ -323,18 +349,19 @@ describe('ts_context', function()
                 {4:try} {15:{}                 |
                                       |
                                       |
-      ]]}
-
+      ]],
+      })
     end)
 
     it('c', function()
       install_langs('c')
       cmd('edit test/test.c')
-      exec_lua [[vim.treesitter.start()]]
-      feed'<C-e>'
+      exec_lua([[vim.treesitter.start()]])
+      feed('<C-e>')
 
       -- Check the struct context
-      screen:expect{grid=[[
+      screen:expect({
+        grid = [[
         {1:struct}{2: }{7:Bert}{2: }{14:{}{2:                 }|
             {8:// comment}                |
             {9:int} {4:*}f2{15:;}                  |
@@ -349,12 +376,14 @@ describe('ts_context', function()
           {11:E3}                          |
           {8:// comment}                  |
                                       |
-      ]]}
+      ]],
+      })
 
-      feed'12<C-e>'
+      feed('12<C-e>')
 
       -- Check the enum context
-      screen:expect{grid=[[
+      screen:expect({
+        grid = [[
         {1:typedef}{2: }{1:enum}{2: }{14:{}{2:                }|
           {11:E3}                          |
           {8:// comment}                  |*3
@@ -368,11 +397,13 @@ describe('ts_context', function()
                  {15:)}                    |
         {15:{}                             |
                                       |
-      ]]}
+      ]],
+      })
 
       -- func -> if -> for -> do while
-      feed'40<C-e>'
-      screen:expect{grid=[[
+      feed('40<C-e>')
+      screen:expect({
+        grid = [[
         {7:int}{2: }{3:main}{14:(}{7:int}{2: }{3:arg1}{14:,}{2:            }|
         {2:         }{7:char}{2: }{1:**}{3:arg2}{14:,}{2:         }|
         {2:  }{1:if}{2: }{14:(}{3:arg1}{2: }{1:==}{2: }{10:4}{2:               }|
@@ -385,11 +416,13 @@ describe('ts_context', function()
               {15:}} {4:while} {15:(}{11:1}{15:);}            |
               {8:// comment}              |
                                       |
-      ]]}
+      ]],
+      })
 
       -- func -> if / else if / else
-      feed'41<C-e>'
-      screen:expect{grid=[[
+      feed('41<C-e>')
+      screen:expect({
+        grid = [[
         {7:int}{2: }{3:main}{14:(}{7:int}{2: }{3:arg1}{14:,}{2:            }|
         {2:  }{1:if}{2: }{14:(}{3:arg1}{2: }{1:==}{2: }{10:4}{2:               }|
         {2:      }{1:&&}{2: }{3:arg2}{2: }{1:==}{2: }{3:arg3}{14:)}{2: }{14:{}{2:      }|
@@ -398,37 +431,43 @@ describe('ts_context', function()
         ^    {8:// comment}                |
             {8:// comment}                |*9
                                       |
-      ]]}
+      ]],
+      })
     end)
 
     it('cpp', function()
       install_langs('cpp')
       cmd('edit test/lang/test.cpp')
-      exec_lua [[vim.treesitter.start()]]
-      feed'<C-e>'
+      exec_lua([[vim.treesitter.start()]])
+      feed('<C-e>')
 
-      screen:expect{grid=[[
+      screen:expect({
+        grid = [[
         {1:struct}{2: }{7:Struct}{2: }{14:{}{2:               }|
             {9:int} {4:*}f2{15:;}                  |
                                       |*3
         ^    {8:// cursor position 1}      |
         {15:};}                            |
                                       |*9
-      ]]}
-      feed'16<C-e>'
+      ]],
+      })
+      feed('16<C-e>')
 
-      screen:expect{grid=[[
+      screen:expect({
+        grid = [[
         {1:class}{2: }{7:Class}{2: }{14:{}{2:                 }|
             {9:int} {4:*}f2{15:;}                  |
                                       |*3
         ^    {8:// cursor position 2}      |
         {15:};}                            |
                                       |*9
-      ]]}
+      ]],
+      })
 
-      feed'16<C-e>'
+      feed('16<C-e>')
 
-      screen:expect{grid=[[
+      screen:expect({
+        grid = [[
         {1:typedef}{2: }{1:enum}{2: }{14:{}{2:                }|
           {11:E2}{15:,}                         |
           {11:E3}                          |
@@ -436,10 +475,12 @@ describe('ts_context', function()
         ^  {8:// cursor position 3}        |
         {15:}} {9:myenum}{15:;}                     |
                                       |*9
-      ]]}
+      ]],
+      })
 
-      feed'26<C-e>'
-      screen:expect{grid=[[
+      feed('26<C-e>')
+      screen:expect({
+        grid = [[
         {7:int}{2: }{3:main}{14:(}{7:int}{2: }{3:arg1}{14:,}{2:            }|
         {2:  }{1:if}{2: }{14:(}{3:arg1}{2: }{1:==}{2: }{10:4}{2:               }|
         {2:      }{1:&&}{2: }{3:arg2}{2: }{1:==}{2: }{3:arg3}{14:)}{2: }{14:{}{2:      }|
@@ -450,10 +491,12 @@ describe('ts_context', function()
             {15:}}                         |
           {15:}}                           |
                                       |*7
-      ]]}
+      ]],
+      })
 
-      feed'18<C-e>'
-      screen:expect{grid=[[
+      feed('18<C-e>')
+      screen:expect({
+        grid = [[
         {7:int}{2: }{3:main}{14:(}{7:int}{2: }{3:arg1}{14:,}{2:            }|
         {2:         }{7:char}{2: }{1:**}{3:arg2}{14:,}{2:         }|
         {2:         }{7:char}{2: }{1:**}{3:arg3}{2:          }|
@@ -465,16 +508,18 @@ describe('ts_context', function()
         {15:}}                             |
         {6:~                             }|*6
                                       |
-      ]]}
+      ]],
+      })
     end)
 
     it('php', function()
       install_langs('php')
       cmd('edit test/lang/test.php')
-      exec_lua [[vim.treesitter.start()]]
+      exec_lua([[vim.treesitter.start()]])
 
-      feed'7<C-e>'
-      screen:expect{grid=[[
+      feed('7<C-e>')
+      screen:expect({
+        grid = [[
         {1:function}{2: }{3:foo}{14:(}{3:$a}{14:,}{2: }{3:$b}{14:)}{2: }{14:{}{2:        }|
         {2:  }{1:while}{2: }{14:(}{3:$a}{2: }{1:<=}{2: }{3:$b}{14:)}{2: }{14:{}{2:          }|
             {5:$index} {4:=} {5:$low} {4:+} {5:floor}{15:((}{5:$hi}|
@@ -491,10 +536,12 @@ describe('ts_context', function()
               {8:// comment}              |
                                       |
                                       |
-      ]]}
+      ]],
+      })
 
-      feed'67<C-e>'
-      screen:expect{grid=[[
+      feed('67<C-e>')
+      screen:expect({
+        grid = [[
         {1:class}{2: }{7:Fruit}{2: }{14:{}{2:                 }|
                                       |
                                       |
@@ -512,10 +559,12 @@ describe('ts_context', function()
                                       |
                                       |
 
-      ]]}
+      ]],
+      })
 
-      feed'5<C-e>'
-      screen:expect{grid=[[
+      feed('5<C-e>')
+      screen:expect({
+        grid = [[
         {1:class}{2: }{7:Fruit}{2: }{14:{}{2:                 }|
         {2:    }{1:public}{2: }{1:function}{2: }{3:rot}{14:():}{2: }{7:voi}|
         {2:    }{14:{}{2:                         }|
@@ -532,16 +581,18 @@ describe('ts_context', function()
                                       |
                                       |
                                       |
-      ]]}
+      ]],
+      })
     end)
 
     it('typescript', function()
       install_langs('typescript')
       cmd('edit test/lang/test.ts')
-      exec_lua [[vim.treesitter.start()]]
-      feed'<C-e>'
+      exec_lua([[vim.treesitter.start()]])
+      feed('<C-e>')
 
-      screen:expect{grid=[[
+      screen:expect({
+        grid = [[
         {1:interface}{2: }{7:User}{2: }{14:{}{2:              }|
                                       |*3
           {5:id}{15::} {9:number}{15:;}                 |
@@ -553,10 +604,12 @@ describe('ts_context', function()
           {5:name}{15::} {9:string}{15:;}               |
           {5:id}{15::} {9:number}{15:;}                 |
                                       |*2
-      ]]}
+      ]],
+      })
 
-      feed'21<C-e>'
-      screen:expect{grid=[[
+      feed('21<C-e>')
+      screen:expect({
+        grid = [[
         {1:class}{2: }{7:UserAccount}{2: }{14:{}{2:           }|
         {2:  }{14:constructor(}{3:name}{14::}{2: }{7:string}{14:,}{2: }{3:id}|
         {2:    }{1:for}{2: }{14:(}{1:let}{2: }{3:i}{2: }{1:=}{2: }{10:0}{14:;}{2: }{3:i}{2: }{1:<}{2: }{10:3}{14:;}{2: }{3:i}{1:++}|
@@ -567,10 +620,12 @@ describe('ts_context', function()
           {15:}}                           |
         {15:}}                             |
                                       |*3
-      ]]}
+      ]],
+      })
 
-      feed'16<C-e>'
-      screen:expect{grid=[[
+      feed('16<C-e>')
+      screen:expect({
+        grid = [[
         {1:function}{2: }{3:wrapInArray}{14:(}{3:obj}{14::}{2: }{7:stri}|
         {2:  }{1:if}{2: }{14:(}{1:typeof}{2: }{3:obj}{2: }{1:===}{2: }{10:"string"}{14:)}|
                                       |*3
@@ -580,26 +635,30 @@ describe('ts_context', function()
         {15:}}                             |
         {6:~                             }|*6
                                       |
-      ]]}
+      ]],
+      })
     end)
 
     it('markdown', function()
-      install_langs({'markdown', 'markdown_inline', 'html'})
+      install_langs({ 'markdown', 'markdown_inline', 'html' })
       cmd('edit test/lang/test.md')
-      exec_lua [[vim.treesitter.start()]]
+      exec_lua([[vim.treesitter.start()]])
 
-      feed'3<C-e>'
-      screen:expect{grid=[[
+      feed('3<C-e>')
+      screen:expect({
+        grid = [[
         {14:<html>}{2:                        }|
         {2:  }{14:<body>}{2:                      }|
                                       |*3
         ^                              |
             {15:<script>}                  |
                                       |*9
-      ]]}
+      ]],
+      })
 
-      feed'5<C-e>'
-      screen:expect{grid=[[
+      feed('5<C-e>')
+      screen:expect({
+        grid = [[
         {14:<html>}{2:                        }|
         {2:  }{14:<body>}{2:                      }|
         {2:    }{14:<script>}{2:                  }|
@@ -608,10 +667,12 @@ describe('ts_context', function()
                                       |*8
               {4:function} {5:test}{15:()} {15:{}       |
                                       |
-      ]]}
+      ]],
+      })
 
-      feed'12<C-e>'
-      screen:expect{grid=[[
+      feed('12<C-e>')
+      screen:expect({
+        grid = [[
         {14:<html>}{2:                        }|
         {2:  }{14:<body>}{2:                      }|
         {2:    }{14:<script>}{2:                  }|
@@ -619,25 +680,27 @@ describe('ts_context', function()
         {2:        }{1:if}{2: }{3:test}{2: }{1:!=}{2: }{10:""}{2: }{14:{}{2:       }|
         ^                              |
                                       |*10
-      ]]}
+      ]],
+      })
     end)
 
     -- Separate Markdown testcase to test plugin behavior with
     -- unsupported injected languages (markdown_inline does not
     -- have queries specified)
     it('markdown_inline', function()
-      install_langs({'markdown', 'markdown_inline'})
+      install_langs({ 'markdown', 'markdown_inline' })
       cmd('edit test/lang/test.md')
-      exec_lua [[vim.treesitter.start()]]
+      exec_lua([[vim.treesitter.start()]])
 
-      feed'47<C-e>'
-      screen:expect{grid=[[
+      feed('47<C-e>')
+      screen:expect({
+        grid = [[
         {2:# Title                       }|
                                       |*4
         ^Test                          |
                                       |*10
-      ]]}
+      ]],
+      })
     end)
   end)
-
 end)

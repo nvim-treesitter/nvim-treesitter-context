@@ -22,12 +22,12 @@ local function throttle_by_id(f, ms)
   local waiting = {} --- @type table<any,boolean>
 
   local schedule = function(id, wrapper)
-    state[id] = "scheduled"
+    state[id] = 'scheduled'
     vim.schedule_wrap(wrapper)(id, wrapper)
   end
 
   local on_throttle_finish = function(id, wrapper)
-    assert(state[id] == "throttled")
+    assert(state[id] == 'throttled')
     if waiting[id] == nil then
       timers[id] = nil
       state[id] = nil
@@ -38,16 +38,18 @@ local function throttle_by_id(f, ms)
   end
 
   local wrapper = function(id, wrapper)
-    assert(state[id] == "scheduled")
-    state[id] = "running"
+    assert(state[id] == 'scheduled')
+    state[id] = 'running'
     f(id)
-    assert(state[id] == "running")
-    state[id] = "throttled"
+    assert(state[id] == 'running')
+    state[id] = 'throttled'
 
     if timers[id] == nil then
       timers[id] = assert(vim.loop.new_timer())
     end
-    timers[id]:start(ms, 0, function() on_throttle_finish(id, wrapper) end)
+    timers[id]:start(ms, 0, function()
+      on_throttle_finish(id, wrapper)
+    end)
   end
 
   return function(id)
@@ -57,7 +59,7 @@ local function throttle_by_id(f, ms)
     end
     -- Don't set 'waiting' for 'scheduled' state since the callback is about to start.
     -- Consequently, there is no need to run it again after throttling is completed.
-    if state[id] ~= "scheduled" then
+    if state[id] ~= 'scheduled' then
       waiting[id] = true
     end
   end
@@ -67,7 +69,7 @@ local attached = {} --- @type table<integer,true>
 
 local function close(args)
   local render = require('treesitter-context.render')
-  if args.event == "WinClosed" then
+  if args.event == 'WinClosed' then
     -- Closing current window instead of intended window may lead to context window flickering.
     render.close(tonumber(args.match))
   else
@@ -131,11 +133,11 @@ end)
 
 ---@param args table
 local function update(args)
-  if args.event == "OptionSet" and args.match ~= 'number' and args.match ~= 'relativenumber' then
+  if args.event == 'OptionSet' and args.match ~= 'number' and args.match ~= 'relativenumber' then
     return
   end
 
-  local multiwindow_events = { "WinResized", "User" }
+  local multiwindow_events = { 'WinResized', 'User' }
 
   if config.multiwindow and vim.tbl_contains(multiwindow_events, args.event) then
     -- Resizing a single window may cause many resizes in different windows,
@@ -258,7 +260,11 @@ local function init()
   api.nvim_set_hl(0, 'TreesitterContext', { link = 'NormalFloat', default = true })
   api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
   api.nvim_set_hl(0, 'TreesitterContextBottom', { link = 'NONE', default = true })
-  api.nvim_set_hl(0, 'TreesitterContextLineNumberBottom', { link = 'TreesitterContextBottom', default = true })
+  api.nvim_set_hl(
+    0,
+    'TreesitterContextLineNumberBottom',
+    { link = 'TreesitterContextBottom', default = true }
+  )
   api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'FloatBorder', default = true })
 end
 
