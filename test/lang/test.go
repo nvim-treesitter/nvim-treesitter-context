@@ -1,17 +1,21 @@
-import (
+// {{TEST}}
+
+import ( // {{CONTEXT}}
     "errors"
 
 
     "fmt"
 
+    // {{CURSOR}}
 )
 
-func (r *rect) area(a int,
+// {{TEST}}
+
+func (r *rect) area(a int, // {{CONTEXT}}
 b int) int {
     return r.width * r.height
 
-
-
+// {{CURSOR}}
 
 
 }
@@ -20,18 +24,21 @@ var b
   ,c
   ,d int = 1, 2
 
-func foo(a int,
+// {{TEST}}
+
+func foo(a int, // {{CONTEXT}}
   b int) (int,
   int) {
 
     i := 1
 
-  select {
+  select { // {{CONTEXT}}
     case msg1 := <-c1:
       fmt.Println("received", msg1)
-    case msg2 := <-c2:
+    case msg2 := <-c2: // {{CONTEXT}}
 
 
+      // {{CURSOR}}
 
 
       fmt.Println("received", msg2)
