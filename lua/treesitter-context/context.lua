@@ -193,7 +193,10 @@ local function get_text_for_range(range, bufnr)
     end_row = end_row - 1
   end
 
-  if end_col == -1 then
+  -- Adjust the end row to include the whole line. If we decide to clip
+  -- at the end column, then we also need to adjust lines.
+  -- if end_col == -1 then
+  if end_col ~= 0 then
     end_col = 0
     end_row = end_row + 1
   end
