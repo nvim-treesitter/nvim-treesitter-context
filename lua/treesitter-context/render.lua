@@ -79,6 +79,7 @@ local function display_window(winid, context_winid, width, height, col, ty, hl)
     vim.wo[context_winid].wrap = false
     vim.wo[context_winid].foldenable = false
     vim.wo[context_winid].winhl = 'NormalFloat:' .. hl
+    vim.wo[context_winid].conceallevel = vim.wo[winid].conceallevel
   elseif api.nvim_win_is_valid(context_winid) then
     api.nvim_win_set_config(context_winid, {
       win = winid,
@@ -119,8 +120,29 @@ local function add_extmark(bufnr, row, col, opts, ns0)
   local ok, err = pcall(api.nvim_buf_set_extmark, bufnr, ns0 or ns, row, col, opts)
   if not ok then
     local range = vim.inspect({ row, col, opts.end_row, opts.end_col }) --- @type string
-    error(string.format('Could not apply exmtark to %s: %s', range, err))
+    error(string.format('Could not apply exmtark to %s: %s', range, err), 2)
   end
+end
+
+--- @param buf_query vim.treesitter.highlighter.Query
+--- @param capture integer
+--- @return integer?
+local function get_hl(buf_query, capture)
+  --- @diagnostic disable-next-line: invisible naughty
+  if buf_query.get_hl_from_capture then
+    --- @diagnostic disable-next-line: invisible naughty
+    return buf_query:get_hl_from_capture(capture)
+  end
+  --- @diagnostic disable-next-line: invisible naughty
+  return buf_query.hl_cache[capture]
+end
+
+--- Is a position a after another position b?
+--- @param a [integer, integer] [row, col]
+--- @param b [integer, integer] [row, col]
+--- @return boolean
+local function is_after(a, b)
+  return a[1] > b[1] or (a[1] == b[1] and a[2] > b[2])
 end
 
 --- @param bufnr integer
@@ -159,31 +181,31 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
         local range = vim.treesitter.get_range(node, bufnr, metadata[capture])
         local nsrow, nscol, nerow, necol = range[1], range[2], range[4], range[5]
 
-        if nerow > end_row or (nerow == end_row and necol > end_col) then
-          break
-        end
-
         if nsrow >= start_row then
+          if is_after({ nsrow, nscol }, { end_row, end_col }) then
+            -- Node range begins after the context range, skip it
+            break
+          elseif is_after({ nerow, necol }, { end_row, end_col }) then
+            -- Node range extends beyond the context range, clip it
+            nerow, necol = end_row, end_col
+          end
+
           local msrow = offset + (nsrow - start_row)
           local merow = offset + (nerow - start_row)
-          local hl --- @type integer?
-          --- @diagnostic disable-next-line: invisible naughty
-          if buf_query.get_hl_from_capture then
-            --- @diagnostic disable-next-line: invisible naughty
-            hl = buf_query:get_hl_from_capture(capture)
-          else
-            --- @diagnostic disable-next-line: invisible naughty
-            hl = buf_query.hl_cache[capture]
-          end
+
           local priority = tonumber(metadata.priority)
             or (vim.hl and vim.hl.priorities.treesitter)
             or vim.highlight.priorities.treesitter
+
+          -- The "conceal" attribute can be set at the pattern level or on a particular capture
+          local conceal = metadata.conceal or metadata[capture] and metadata[capture].conceal
+
           add_extmark(ctx_bufnr, msrow, nscol, {
             end_row = merow,
             end_col = necol,
             priority = priority + pri_offset,
-            hl_group = hl,
-            conceal = metadata.conceal,
+            hl_group = get_hl(buf_query, capture),
+            conceal = conceal,
           })
 
           -- TODO(lewis6991): Extmarks of equal priority appear to apply
@@ -380,8 +402,15 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
       local start_row = offset + (row - ctx_srow)
 
       local end_row --- @type integer?
-      if opts.end_row then
-        end_row = offset + (opts.end_row - ctx_srow)
+      local end_col = opts.end_col
+      local mend_row = opts.end_row
+      if mend_row then
+        if is_after({ mend_row, end_col }, { ctx_erow, ctx_ecol }) then
+          mend_row = ctx_erow
+          end_col = ctx_ecol
+        end
+
+        end_row = offset + (mend_row - ctx_srow)
       end
 
       -- Use pcall incase fields from opts are inconsistent with opts in
@@ -389,7 +418,7 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
       pcall(add_extmark, ctx_bufnr, start_row, col, {
         id = id,
         end_row = end_row,
-        end_col = opts.end_col,
+        end_col = end_col,
         priority = opts.priority,
         hl_group = opts.hl_group,
         --- @diagnostic disable-next-line:assign-type-mismatch bug in core
@@ -397,7 +426,9 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
         right_gravity = opts.right_gravity,
         hl_eol = opts.hl_eol,
         virt_text = opts.virt_text,
+        virt_text_hide = opts.virt_text_hide,
         virt_text_pos = opts.virt_text_pos,
+        virt_text_repeat_linebreak = opts.virt_text_repeat_linebreak,
         virt_text_win_col = opts.virt_text_win_col,
         hl_mode = opts.hl_mode,
         line_hl_group = opts.line_hl_group,

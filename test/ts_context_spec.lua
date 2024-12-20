@@ -48,6 +48,7 @@ describe('ts_context', function()
       [15] = { foreground = Screen.colors.SlateBlue },
       [16] = { foreground = tonumber('0x6a0dad') },
       [17] = { background = Screen.colors.Plum1, bold = true, foreground = Screen.colors.Magenta1 },
+      [18] = { background = Screen.colors.LightMagenta, foreground = Screen.colors.Blue },
     }
 
     -- Use the classic vim colorscheme, not the new defaults in nvim >= 0.10
@@ -481,7 +482,7 @@ describe('ts_context', function()
       feed('3<C-e>')
       screen:expect({
         grid = [[
-        {2:```html                       }|
+        {18:```}{1:html}{2:                       }|
         {14:<html>}{2:                        }|
         {2:  }{14:<body>}{2:                      }|
                                       |*2
@@ -494,7 +495,7 @@ describe('ts_context', function()
       feed('5<C-e>')
       screen:expect({
         grid = [[
-        {2:```html                       }|
+        {18:```}{1:html}{2:                       }|
         {14:<html>}{2:                        }|
         {2:  }{14:<body>}{2:                      }|
         {2:    }{14:<script>}{2:                  }|
