@@ -85,8 +85,9 @@ local function close_all()
   end
 end
 
----@param bufnr integer
----@param winid integer
+--- @param bufnr integer
+---
+--- @param winid integer
 local function cannot_open(bufnr, winid)
   return not attached[bufnr]
     or vim.bo[bufnr].filetype == ''
@@ -95,7 +96,7 @@ local function cannot_open(bufnr, winid)
     or api.nvim_win_get_height(winid) < config.min_window_height
 end
 
----@param winid integer
+--- @param winid integer
 local update_single_context = throttle_by_id(function(winid)
   -- Remove leaked contexts firstly.
   local current_win = api.nvim_get_current_win()
@@ -131,7 +132,7 @@ local update_single_context = throttle_by_id(function(winid)
   require('treesitter-context.render').open(bufnr, winid, context_ranges, context_lines)
 end)
 
----@param args table
+--- @param args table
 local function update(args)
   if args.event == 'OptionSet' and args.match ~= 'number' and args.match ~= 'relativenumber' then
     return
@@ -156,9 +157,9 @@ local M = {
 
 local group = augroup('treesitter_context_update', {})
 
----@param event string|string[]
----@param callback fun(args: table)
----@param opts? vim.api.keyset.create_autocmd
+--- @param event string|string[]
+--- @param callback fun(args: table)
+--- @param opts? vim.api.keyset.create_autocmd
 local function autocmd(event, callback, opts)
   opts = opts or {}
   opts.callback = callback
@@ -270,7 +271,7 @@ end
 
 local did_init = false
 
----@param options? TSContext.UserConfig
+--- @param options? TSContext.UserConfig
 function M.setup(options)
   -- NB: setup  may be called several times.
   if options then
@@ -289,7 +290,7 @@ function M.setup(options)
   end
 end
 
----@param depth integer? default 1
+--- @param depth integer? default 1
 function M.go_to_context(depth)
   depth = depth or 1
   local line = api.nvim_win_get_cursor(0)[1]

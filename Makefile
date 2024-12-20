@@ -91,13 +91,20 @@ $(STYLUA_ZIP):
 stylua: $(STYLUA_ZIP)
 	unzip $<
 
+LUA_FILES := \
+    lua/**/*.lua \
+    lua/*.lua \
+    test/*_spec.lua
+
 .PHONY: stylua-check
 stylua-check: stylua
-	./stylua --check lua/**/*.lua
+	./stylua --check $(LUA_FILES)
+	@! grep -n -- '---.*nil' $(LUA_FILES) \
+		|| (echo "Error: Found 'nil' in annotation, please use '?'" && exit 1)
+	@! grep -n -- '---@' $(LUA_FILES) \
+		|| (echo "Error: Found '---@' in Lua files, please use '--- @'" && exit 1)
 
 .PHONY: stylua-run
 stylua-run: stylua
-	./stylua \
-		lua/**/*.lua \
-		lua/*.lua \
-		test/*_spec.lua
+	./stylua $(LUA_FILES)
+	sed -i -r 's/---@/--- @/g' $(LUA_FILES)
