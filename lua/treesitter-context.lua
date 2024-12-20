@@ -21,12 +21,12 @@ local function throttle_by_id(f, ms)
   local state = {} --- @type table<any,string>
   local waiting = {} --- @type table<any,boolean>
 
-  local schedule = function(id, wrapper)
+  local function schedule(id, wrapper)
     state[id] = 'scheduled'
     vim.schedule_wrap(wrapper)(id, wrapper)
   end
 
-  local on_throttle_finish = function(id, wrapper)
+  local function on_throttle_finish(id, wrapper)
     assert(state[id] == 'throttled')
     if waiting[id] == nil then
       timers[id] = nil
@@ -37,7 +37,7 @@ local function throttle_by_id(f, ms)
     schedule(id, wrapper)
   end
 
-  local wrapper = function(id, wrapper)
+  local function wrapper(id, self)
     assert(state[id] == 'scheduled')
     state[id] = 'running'
     f(id)
@@ -48,7 +48,7 @@ local function throttle_by_id(f, ms)
       timers[id] = assert(vim.loop.new_timer())
     end
     timers[id]:start(ms, 0, function()
-      on_throttle_finish(id, wrapper)
+      on_throttle_finish(id, self)
     end)
   end
 
@@ -158,7 +158,7 @@ local M = {
 local group = augroup('treesitter_context_update', {})
 
 --- @param event string|string[]
---- @param callback fun(args: table)
+--- @param callback fun(args: vim.api.keyset.create_autocmd.callback_args):boolean?
 --- @param opts? vim.api.keyset.create_autocmd
 local function autocmd(event, callback, opts)
   opts = opts or {}
@@ -174,6 +174,18 @@ local function should_attach(bufnr)
     return true
   end
   return nil
+end
+
+--- @param req { type:string, method: string }
+--- @return boolean
+local function is_semantic_tokens_request(req)
+  local ms = require('vim.lsp.protocol').Methods
+  return req.type == 'complete'
+    and (
+      req.method == ms.textDocument_semanticTokens_full
+      or req.method == ms.textDocument_semanticTokens_full_delta
+      or req.method == ms.textDocument_semanticTokens_range
+    )
 end
 
 function M.enable()
@@ -195,7 +207,6 @@ function M.enable()
     'BufEnter',
     'WinEnter',
     'VimResized',
-    'DiagnosticChanged',
     'CursorMoved',
     'OptionSet',
   }
@@ -205,6 +216,8 @@ function M.enable()
   end
 
   autocmd(update_events, update)
+
+  autocmd('DiagnosticChanged', vim.schedule_wrap(update))
 
   autocmd('BufReadPost', function(args)
     attached[args.buf] = should_attach(args.buf)
@@ -222,6 +235,14 @@ function M.enable()
 
   autocmd('User', close, { pattern = 'SessionSavePre' })
   autocmd('User', update, { pattern = 'SessionSavePost' })
+
+  autocmd('LspRequest', function(args)
+    if is_semantic_tokens_request(args.data.request) then
+      vim.schedule(function()
+        update(args)
+      end)
+    end
+  end)
 
   if config.multiwindow then
     for _, winid in pairs(api.nvim_list_wins()) do
