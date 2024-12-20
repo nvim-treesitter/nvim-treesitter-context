@@ -7,7 +7,7 @@ local config = require('treesitter-context.config')
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 
 --- List of free buffers that can be reused.
----@type integer[]
+--- @type integer[]
 local buffer_pool = {}
 
 local MAX_BUFFER_POOL_SIZE = 20
@@ -98,9 +98,9 @@ local function get_gutter_width(winid)
   return fn.getwininfo(winid)[1].textoff
 end
 
----@param name string
----@param from_buf integer
----@param to_buf integer
+--- @param name string
+--- @param from_buf integer
+--- @param to_buf integer
 local function copy_option(name, from_buf, to_buf)
   --- @cast name any
   local current = vim.bo[from_buf][name]
@@ -110,11 +110,11 @@ local function copy_option(name, from_buf, to_buf)
   end
 end
 
----@param bufnr integer
----@param row integer
----@param col integer
----@param opts vim.api.keyset.set_extmark
----@param ns0? integer
+--- @param bufnr integer
+--- @param row integer
+--- @param col integer
+--- @param opts vim.api.keyset.set_extmark
+--- @param ns0? integer
 local function add_extmark(bufnr, row, col, opts, ns0)
   local ok, err = pcall(api.nvim_buf_set_extmark, bufnr, ns0 or ns, row, col, opts)
   if not ok then
@@ -249,9 +249,9 @@ local function build_lno_str(win, lnum, width)
   return string.format('%' .. width .. 'd', relnum or lnum)
 end
 
----@param bufnr integer
----@param row integer
----@param hl_group 'TreesitterContextBottom' | 'TreesitterContextLineNumberBottom'
+--- @param bufnr integer
+--- @param row integer
+--- @param hl_group 'TreesitterContextBottom' | 'TreesitterContextLineNumberBottom'
 local function highlight_bottom(bufnr, row, hl_group)
   add_extmark(bufnr, row, 0, {
     end_line = row + 1,
@@ -303,10 +303,10 @@ local function set_lines(bufnr, lines)
   return redraw
 end
 
----@param win integer
----@param bufnr integer
----@param contexts Range4[]
----@param gutter_width integer
+--- @param win integer
+--- @param bufnr integer
+--- @param contexts Range4[]
+--- @param gutter_width integer
 local function render_lno(win, bufnr, contexts, gutter_width)
   local lno_text = {} --- @type string[]
   local lno_highlights = {} --- @type StatusLineHighlight[][]
@@ -324,7 +324,7 @@ local function render_lno(win, bufnr, contexts, gutter_width)
   highlight_bottom(bufnr, #lno_text - 1, 'TreesitterContextLineNumberBottom')
 end
 
----@param context_winid? integer
+--- @param context_winid? integer
 local function close(context_winid)
   vim.schedule(function()
     if context_winid == nil or not api.nvim_win_is_valid(context_winid) then
@@ -356,9 +356,9 @@ local function horizontal_scroll_contexts(winid, context_winid)
   end
 end
 
----@param bufnr integer
----@param ctx_bufnr integer
----@param contexts Range4[]
+--- @param bufnr integer
+--- @param ctx_bufnr integer
+--- @param contexts Range4[]
 local function copy_extmarks(bufnr, ctx_bufnr, contexts)
   local offset = 0
   for _, context in ipairs(contexts) do

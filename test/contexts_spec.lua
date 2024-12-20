@@ -10,8 +10,8 @@ local tc_helpers = require('test.helpers')
 local install_langs = tc_helpers.install_langs
 local get_langs = tc_helpers.get_langs
 
----@param line string
----@return string?
+--- @param line string
+--- @return string?
 local function parse_directive(line)
   --- @type string?
   local directive = line:match('{{([A-Z]+)}}')

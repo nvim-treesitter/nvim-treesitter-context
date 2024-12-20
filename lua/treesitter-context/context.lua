@@ -67,9 +67,9 @@ local function calc_max_lines(winid)
   return max_lines
 end
 
----@param node TSNode
----@param bufnr integer
----@return string
+--- @param node TSNode
+--- @param bufnr integer
+--- @return string
 local function hash_args(node, bufnr)
   return table.concat({
     node:id(),
@@ -126,8 +126,8 @@ local context_range = cache.memoize(function(node, bufnr, query)
   end
 end, hash_args)
 
----@param lang string
----@return vim.treesitter.Query?
+--- @param lang string
+--- @return vim.treesitter.Query?
 local function get_context_query(lang)
   local ok, query = pcall(get_query, lang, 'context')
 
@@ -143,10 +143,10 @@ local function get_context_query(lang)
   return query
 end
 
----@param context_ranges Range4[]
----@param context_lines string[][]
----@param trim integer
----@param top boolean
+--- @param context_ranges Range4[]
+--- @param context_lines string[][]
+--- @param trim integer
+--- @param top boolean
 local function trim_contexts(context_ranges, context_lines, trim, top)
   while trim > 0 do
     local idx = top and 1 or #context_ranges
@@ -203,9 +203,9 @@ end
 
 local M = {}
 
----@param bufnr integer
----@param range Range4
----@return vim.treesitter.LanguageTree[]
+--- @param bufnr integer
+--- @param range Range4
+--- @return vim.treesitter.LanguageTree[]
 local function get_parent_langtrees(bufnr, range)
   local root_tree = vim.treesitter.get_parser(bufnr)
   if not root_tree then
@@ -259,10 +259,10 @@ end
 --- Creates a copy of a list-like table such that any nested tables are
 --- "unrolled" and appended to the result.
 ---
----@see From https://github.com/premake/premake-core/blob/master/src/base/table.lua
+--- @see From https://github.com/premake/premake-core/blob/master/src/base/table.lua
 ---
----@param t table List-like table
----@return table Flattened copy of the given list-like table
+--- @param t table List-like table
+--- @return table Flattened copy of the given list-like table
 local function tbl_flatten(t)
   local result = {}
   --- @param _t table<any,any>
