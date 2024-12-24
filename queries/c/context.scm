@@ -46,3 +46,7 @@
 (case_statement
   value: (_) (_) @context.end
 ) @context
+
+(declaration
+  declarator: (_ (_) @content.end)
+) @context

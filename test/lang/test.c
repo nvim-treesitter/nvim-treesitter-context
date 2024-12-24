@@ -88,3 +88,15 @@ void baz(int a) { // {{CONTEXT}}
     } break;
   }
 }
+
+// {{TEST}}
+void declaration() { // {{CONTEXT}}
+  struct Bert foo = { // {{CONTEXT}}
+    .f1 = 0,
+
+
+    // {{CURSOR}}
+    .f2 = 0,
+
+  };
+}
