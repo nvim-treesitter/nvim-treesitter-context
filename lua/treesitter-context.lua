@@ -188,6 +188,15 @@ local function is_semantic_tokens_request(req)
     )
 end
 
+--- @param args table
+local function semantic_update(args)
+  if is_semantic_tokens_request(args.data.request) then
+    vim.schedule(function()
+      update(args)
+    end)
+  end
+end
+
 function M.enable()
   if enabled then
     -- Some options may have changed.
@@ -236,13 +245,9 @@ function M.enable()
   autocmd('User', close, { pattern = 'SessionSavePre' })
   autocmd('User', update, { pattern = 'SessionSavePost' })
 
-  autocmd('LspRequest', function(args)
-    if is_semantic_tokens_request(args.data.request) then
-      vim.schedule(function()
-        update(args)
-      end)
-    end
-  end)
+  if vim.fn.has('nvim-0.10') == 1 then
+    autocmd('LspRequest', semantic_update)
+  end
 
   if config.multiwindow then
     for _, winid in pairs(api.nvim_list_wins()) do
