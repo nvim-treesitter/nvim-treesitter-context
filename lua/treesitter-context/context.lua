@@ -27,12 +27,12 @@ local function get_parent_nodes(langtree, range)
   local ret = {} --- @type TSNode[]
 
   --- @diagnostic disable-next-line:undefined-field added in 0.11
-  if root.child_containing_descendant ~= nil then
+  if root.child_with_descendant ~= nil then
     local p = root --- @type TSNode?
     while p do
       ret[#ret + 1] = p
       --- @diagnostic disable-next-line:undefined-field added in 0.11
-      p = p:child_containing_descendant(n) --- @type TSNode?
+      p = p:child_with_descendant(n) --- @type TSNode?
     end
     ret[#ret + 1] = n
   else

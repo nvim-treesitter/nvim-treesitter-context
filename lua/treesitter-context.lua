@@ -157,6 +157,9 @@ local M = {
 
 local group = augroup('treesitter_context_update', {})
 
+-- TODO(lewis6991): When nvim 0.11 is released use:
+---- @param callback fun(args: vim.api.keyset.create_autocmd.callback_args):boolean?
+
 --- @param event string|string[]
 --- @param callback fun(args: vim.api.keyset.create_autocmd.callback_args):boolean?
 --- @param opts? vim.api.keyset.create_autocmd

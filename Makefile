@@ -63,7 +63,7 @@ luals: $(LUALS_TARBALL)
 export VIMRUNTIME=$(XDG_DATA_HOME)/nvim-test/nvim-test-$(NVIM_TEST_VERSION)/share/nvim/runtime
 .PHONY: luals-check
 luals-check: luals nvim-test
-	ls $(VIMRUNTIME)
+	@ls $(VIMRUNTIME) > /dev/null
 	VIMRUNTIME=$(XDG_DATA_HOME)/nvim-test/nvim-test-$(NVIM_TEST_VERSION)/share/nvim/runtime \
 		luals/bin/lua-language-server \
 			--logpath=luals_check \
