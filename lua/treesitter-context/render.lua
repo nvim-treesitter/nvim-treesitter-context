@@ -225,6 +225,7 @@ end
 
 --- @class StatusLineHighlight
 --- @field group string
+--- @field groups? string[]
 --- @field start integer
 
 --- @param ctx_node_line_num integer
@@ -291,9 +292,14 @@ local function highlight_lno_str(buf, text, highlights)
       local col = hl.start
       local endcol = hlidx < #linehl and linehl[hlidx + 1].start or #text[line]
       if col ~= endcol then
+        local hl_groups = hl.groups or { hl.group }
+        for i, shl in ipairs(hl_groups) do
+          hl_groups[i] = shl:find('LineNr') and 'TreesitterContextLineNumber' or shl
+        end
         add_extmark(buf, line - 1, col, {
           end_col = endcol,
-          hl_group = hl.group:find('LineNr') and 'TreesitterContextLineNumber' or hl.group,
+          --- @diagnostic disable-next-line:assign-type-mismatch added in 0.11
+          hl_group = hl.groups and hl_groups or hl_groups[1],
         })
       end
     end
