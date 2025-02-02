@@ -11,7 +11,8 @@
 ) @context
 
 (function_definition
-  body: (_) @context.end
+  parameters: (_)
+    _ @context.end
 ) @context
 
 (table_constructor
@@ -24,6 +25,10 @@
 
 (if_statement
   consequence: (_) @context.end
+) @context
+
+(if_statement
+  (comment _) @context.end
 ) @context
 
 (repeat_statement
