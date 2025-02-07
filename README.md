@@ -96,6 +96,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `tsx`
   - [x] `typescript`
   - [x] `typoscript`
+  - [x] `typst`
   - [x] `usd`
   - [x] `verilog`
   - [x] `vhdl`
@@ -314,7 +315,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `turtle`
   - [ ] `twig`
   - [ ] `typespec`
-  - [ ] `typst`
   - [ ] `udev`
   - [ ] `ungrammar`
   - [ ] `unison`
