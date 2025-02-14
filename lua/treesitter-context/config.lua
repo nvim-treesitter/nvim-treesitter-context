@@ -8,6 +8,7 @@
 --- @field trim_scope 'outer'|'inner'
 --- @field zindex integer
 --- @field mode 'cursor'|'topline'
+--- @field update_debounce integer
 --- @field separator? string
 --- @field on_attach? fun(buf: integer): boolean
 
@@ -38,6 +39,9 @@
 --- Line used to calculate context.
 --- @field mode? 'cursor'|'topline'
 ---
+--- Rendering deboucne between context updates.
+--- @field update_debounce? integer
+---
 --- Separator between context and content. Should be a single character string, like '-'.
 --- When separator is set, the context will only show up when there are at least 2 lines above cursorline.
 --- @field separator? string
@@ -56,6 +60,7 @@ local default_config = {
   trim_scope = 'outer',
   zindex = 20,
   mode = 'cursor',
+  update_debounce = 150,
 }
 
 local config = vim.deepcopy(default_config)

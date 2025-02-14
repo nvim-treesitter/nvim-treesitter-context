@@ -10,13 +10,13 @@ local enabled = false
 --- @type table<integer, Range4[]>
 local all_contexts = {}
 
+--- @type number
+local ms = 150
+
 --- @generic F: function
 --- @param f F
---- @param ms? number
 --- @return F
-local function throttle_by_id(f, ms)
-  ms = ms or 150
-
+local function throttle_by_id(f)
   local timers = {} --- @type table<any,uv.uv_timer_t>
   local state = {} --- @type table<any,string>
   local waiting = {} --- @type table<any,boolean>
@@ -312,6 +312,8 @@ function M.setup(options)
     init()
     did_init = true
   end
+
+  ms = config.update_debounce
 end
 
 --- @param depth integer? default 1
