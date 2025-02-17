@@ -11,7 +11,7 @@ local function get_langs()
   end
   f:close()
 
-  f = assert(io.open('nvim-treesitter/lockfile.json', 'r'))
+  f = assert(io.open('deps/nvim-treesitter/lockfile.json', 'r'))
   local txt = f:read('*a')
   local j = vim.json.decode(txt)
 
@@ -26,7 +26,7 @@ local function get_langs()
   return langs
 end
 
-vim.cmd [[set runtimepath+=.,./nvim-treesitter]]
+vim.cmd [[set runtimepath+=.,./deps/nvim-treesitter]]
 require'nvim-treesitter.install'.prefer_git = false
 require("nvim-treesitter").setup()
 require'nvim-treesitter.install'.ensure_installed_sync(get_langs())

@@ -1,29 +1,48 @@
 .DEFAULT_GOAL := test
 
-NVIM_TEST_VERSION ?= v0.10.2
-NVIM_RUNNER_VERSION ?= v0.10.2
+export XDG_DATA_HOME ?= $(HOME)/.data
+
+# ------------------------------------------------------------------------------
+# nvim-treesitter
+# ------------------------------------------------------------------------------
 
 NVIM_TS_SHA ?= 894cb3c
+NVIM_TS := deps/nvim-treesitter
+
+.PHONY: nvim-treesitter
+nvim-treesitter: $(NVIM_TS)
+
+$(NVIM_TS):
+	git clone  \
+      	--filter=blob:none \
+		https://github.com/nvim-treesitter/nvim-treesitter $@
+	cd $@ && git checkout $(NVIM_TS_SHA)
+
+# ------------------------------------------------------------------------------
+# Nvim-test
+# ------------------------------------------------------------------------------
 
 FILTER=.*
 
-export XDG_DATA_HOME ?= $(HOME)/.data
+export NVIM_TEST_VERSION ?= v0.10.2
+export NVIM_RUNNER_VERSION ?= v0.10.2
 
-nvim-treesitter:
-	git clone  \
-      	--filter=blob:none \
-		https://github.com/nvim-treesitter/nvim-treesitter
-	cd nvim-treesitter && git checkout $(NVIM_TS_SHA)
+NVIM_TEST := deps/nvim-test
+NVIM_TEST_REV = v1.1.0
 
-nvim-test:
-	git clone https://github.com/lewis6991/nvim-test
-	nvim-test/bin/nvim-test --init \
-		--runner_version $(NVIM_RUNNER_VERSION) \
-		--target_version $(NVIM_TEST_VERSION)
+.PHONY: nvim-test
+nvim-test: $(NVIM_TEST)
+
+$(NVIM_TEST):
+	git clone \
+		--filter=blob:none \
+		--branch $(NVIM_TEST_REV) \
+		https://github.com/lewis6991/nvim-test $@
+	$(NVIM_TEST)/bin/nvim-test --init
 
 .PHONY: test
-test: nvim-test nvim-treesitter
-	nvim-test/bin/nvim-test test \
+test: $(NVIM_TEST) $(NVIM_TS)
+	$(NVIM_TEST)/bin/nvim-test test \
 		--runner_version $(NVIM_RUNNER_VERSION) \
 		--target_version $(NVIM_TEST_VERSION) \
 		--lpath=$(PWD)/lua/?.lua \
@@ -31,7 +50,7 @@ test: nvim-test nvim-treesitter
 		--verbose
 
 .PHONY: parsers
-parsers: nvim-test nvim-treesitter
+parsers: $(NVIM_TEST) $(NVIM_TS)
 	$(XDG_DATA_HOME)/nvim-test/nvim-runner-$(NVIM_RUNNER_VERSION)/bin/nvim \
 		--clean -u NONE -c 'source install_parsers.lua'
 
@@ -77,6 +96,10 @@ ifeq ($(shell uname -s),Darwin)
 else
     STYLUA_PLATFORM := linux-x86_64
 endif
+
+# ------------------------------------------------------------------------------
+# Stylua
+# ------------------------------------------------------------------------------
 
 STYLUA_VERSION := v2.0.2
 STYLUA_ZIP := stylua-$(STYLUA_PLATFORM).zip
