@@ -72,7 +72,7 @@ end
 
 local attached = {} --- @type table<integer,true>
 
---- @param args vim.api.keyset.create_autocmd.callback_args
+--- @param args table
 local function au_close(args)
   if args.event == 'WinClosed' then
     -- Closing current window instead of intended window may lead to context window flickering.
@@ -144,7 +144,7 @@ local function update(event)
   end
 end
 
---- @param args vim.api.keyset.create_autocmd.callback_args
+--- @param args table
 local function au_update(args)
   if args.event == 'OptionSet' and args.match ~= 'number' and args.match ~= 'relativenumber' then
     return
@@ -163,7 +163,7 @@ local group = augroup('treesitter_context_update', {})
 ---- @param callback fun(args: vim.api.keyset.create_autocmd.callback_args):boolean?
 
 --- @param event string|string[]
---- @param callback fun(args: vim.api.keyset.create_autocmd.callback_args):boolean?
+--- @param callback fun(args: table):boolean?
 --- @param opts? vim.api.keyset.create_autocmd
 local function autocmd(event, callback, opts)
   opts = opts or {}
