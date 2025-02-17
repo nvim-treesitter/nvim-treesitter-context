@@ -40,6 +40,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `devicetree`
   - [x] `diff`
   - [x] `elixir`
+  - [x] `enforce`
   - [x] `elm`
   - [x] `fennel`
   - [x] `fish`
@@ -153,7 +154,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `elsa`
   - [ ] `elvish`
   - [ ] `embedded_template`
-  - [ ] `enforce`
   - [ ] `erlang`
   - [ ] `facility`
   - [ ] `faust`
