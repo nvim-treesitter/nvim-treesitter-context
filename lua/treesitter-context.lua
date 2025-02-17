@@ -236,13 +236,15 @@ function M.enable()
   autocmd('User', au_close, { pattern = 'SessionSavePre' })
   autocmd('User', au_update, { pattern = 'SessionSavePost' })
 
-  autocmd('LspRequest', function(args)
-    if is_semantic_tokens_request(args.data.request) then
-      vim.schedule(function()
-        au_update(args)
-      end)
-    end
-  end)
+  if vim.fn.has('nvim-0.10') == 1 then
+    autocmd('LspRequest', function(args)
+      if is_semantic_tokens_request(args.data.request) then
+        vim.schedule(function()
+          au_update(args)
+        end)
+      end
+    end)
+  end
 
   update()
 
