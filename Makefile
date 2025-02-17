@@ -48,28 +48,26 @@ else
     LUALS_ARCH ?= x64
 endif
 
-LUALS_VERSION := 3.13.2
-LUALS_TARBALL := lua-language-server-$(LUALS_VERSION)-$(shell uname -s)-$(LUALS_ARCH).tar.gz
-LUALS_URL := https://github.com/LuaLS/lua-language-server/releases/download/$(LUALS_VERSION)/$(LUALS_TARBALL)
+LUALS_VERSION := 3.13.6
+LUALS := deps/lua-language-server-$(LUALS_VERSION)-$(shell uname -s)-$(LUALS_ARCH)
+LUALS_TARBALL := $(LUALS).tar.gz
+LUALS_URL := https://github.com/LuaLS/lua-language-server/releases/download/$(LUALS_VERSION)/$(notdir $(LUALS_TARBALL))
 
-.INTERMEDIATE: $(LUALS_TARBALL)
-$(LUALS_TARBALL):
-	wget $(LUALS_URL)
+.PHONY: luals
+luals: $(LUALS)
 
-luals: $(LUALS_TARBALL)
-	mkdir luals
-	tar -xf $< -C luals
+$(LUALS):
+	wget --directory-prefix=$(dir $@) $(LUALS_URL)
+	mkdir -p $@
+	tar -xf $(LUALS_TARBALL) -C $@
+	rm -rf $(LUALS_TARBALL)
 
-export VIMRUNTIME=$(XDG_DATA_HOME)/nvim-test/nvim-test-$(NVIM_TEST_VERSION)/share/nvim/runtime
 .PHONY: luals-check
-luals-check: luals nvim-test
-	@ls $(VIMRUNTIME) > /dev/null
+luals-check: $(LUALS) $(NVIM_TEST)
 	VIMRUNTIME=$(XDG_DATA_HOME)/nvim-test/nvim-test-$(NVIM_TEST_VERSION)/share/nvim/runtime \
-		luals/bin/lua-language-server \
-			--logpath=luals_check \
+		$(LUALS)/bin/lua-language-server \
 			--configpath=../.luarc.json \
 			--check=lua
-	@grep '^\[\]$$' luals_check/check.json
 
 # ------------------------------------------------------------------------------
 # Stylua
@@ -83,28 +81,29 @@ endif
 STYLUA_VERSION := v2.0.2
 STYLUA_ZIP := stylua-$(STYLUA_PLATFORM).zip
 STYLUA_URL := https://github.com/JohnnyMorganz/StyLua/releases/download/$(STYLUA_VERSION)/$(STYLUA_ZIP)
+STYLUA := deps/stylua
 
 .INTERMEDIATE: $(STYLUA_ZIP)
 $(STYLUA_ZIP):
 	wget $(STYLUA_URL)
 
-stylua: $(STYLUA_ZIP)
-	unzip $<
+.PHONY: stylua
+stylua: $(STYLUA)
 
-LUA_FILES := \
-    lua/**/*.lua \
-    lua/*.lua \
-    test/*_spec.lua
+$(STYLUA): $(STYLUA_ZIP)
+	unzip $< -d $(dir $@)
+
+LUA_FILES := $(shell git ls-files 'lua/*.lua' 'test/*_spec.lua')
 
 .PHONY: stylua-check
-stylua-check: stylua
-	./stylua --check $(LUA_FILES)
+stylua-check: $(STYLUA)
+	$(STYLUA) --check $(LUA_FILES)
 	@! grep -n -- '---.*nil' $(LUA_FILES) \
 		|| (echo "Error: Found 'nil' in annotation, please use '?'" && exit 1)
 	@! grep -n -- '---@' $(LUA_FILES) \
 		|| (echo "Error: Found '---@' in Lua files, please use '--- @'" && exit 1)
 
 .PHONY: stylua-run
-stylua-run: stylua
-	./stylua $(LUA_FILES)
+stylua-run: $(STYLUA)
+	$(STYLUA) $(LUA_FILES)
 	sed -i -r 's/---@/--- @/g' $(LUA_FILES)

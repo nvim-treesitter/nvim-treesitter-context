@@ -1,6 +1,2 @@
-nvim-test
+deps
 nvim-treesitter
-
-luals
-luals_check
-stylua
