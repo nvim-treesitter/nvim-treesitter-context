@@ -10,59 +10,48 @@ local enabled = false
 --- @type table<integer, Range4[]>
 local all_contexts = {}
 
+--- Schedule a function to run on the next event loop iteration.
+--- If the function is called again within 150ms, it will be scheduled
+--- again to run on the next event loop iteration. This means that
+--- the function will run at most twice every 150ms.
 --- @generic F: function
 --- @param f F
---- @param ms? number
 --- @return F
-local function throttle_by_id(f, ms)
-  ms = ms or 150
-
+local function throttle_by_id(f)
   local timers = {} --- @type table<any,uv.uv_timer_t>
-  local state = {} --- @type table<any,string>
+  local scheduled = {} --- @type table<any,true?>
   local waiting = {} --- @type table<any,boolean>
 
-  local function schedule(id, wrapper)
-    state[id] = 'scheduled'
-    vim.schedule_wrap(wrapper)(id, wrapper)
-  end
+  local function r(id)
+    if not scheduled[id] then
+      scheduled[id] = true
+      vim.schedule(function()
+        -- Start a timer to check if the function needs to run again
+        -- after the throttling period.
+        timers[id] = timers[id] or assert(vim.loop.new_timer())
+        timers[id]:start(150, 0, function()
+          scheduled[id] = nil
+          if waiting[id] then
+            -- r was called again within throttling period; reschedule it.
+            waiting[id] = nil
+            r(id)
+          else
+            -- Done - clean up
+            timers[id] = nil
+          end
+        end)
 
-  local function on_throttle_finish(id, wrapper)
-    assert(state[id] == 'throttled')
-    if waiting[id] == nil then
-      timers[id] = nil
-      state[id] = nil
-      return
-    end
-    waiting[id] = nil
-    schedule(id, wrapper)
-  end
-
-  local function wrapper(id, self)
-    assert(state[id] == 'scheduled')
-    state[id] = 'running'
-    f(id)
-    assert(state[id] == 'running')
-    state[id] = 'throttled'
-
-    if timers[id] == nil then
-      timers[id] = assert(vim.loop.new_timer())
-    end
-    timers[id]:start(ms, 0, function()
-      on_throttle_finish(id, self)
-    end)
-  end
-
-  return function(id)
-    if state[id] == nil then
-      schedule(id, wrapper)
-      return
-    end
-    -- Don't set 'waiting' for 'scheduled' state since the callback is about to start.
-    -- Consequently, there is no need to run it again after throttling is completed.
-    if state[id] ~= 'scheduled' then
+        f(id)
+      end)
+    elseif timers[id] and timers[id]:get_due_in() > 0 then
+      -- Only set waiting if the throttle timer is running as that means the
+      -- function is about to start.
+      -- Consequently, there is no need to run it again after throttling is completed.
       waiting[id] = true
     end
   end
+
+  return r
 end
 
 local attached = {} --- @type table<integer,true>
