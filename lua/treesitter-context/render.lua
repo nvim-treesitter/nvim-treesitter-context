@@ -543,11 +543,10 @@ function M.close(winid)
   end
 
   local window_context = window_contexts[winid]
-  if window_context == nil then
-    return
+  if window_context then
+    close(window_context.context_winid)
+    close(window_context.gutter_winid)
   end
-  close(window_context.context_winid)
-  close(window_context.gutter_winid)
 
   window_contexts[winid] = nil
 end
