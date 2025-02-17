@@ -1,0 +1,45 @@
+// {{TEST}}
+class Foo { // {{CONTEXT}}
+
+
+
+	// {{CONTEXT}}
+}
+
+
+// {{TEST}}
+class Foo { // {{CONTEXT}}
+	void Foo() { // {{CONTEXT}}
+
+
+
+		// {{CURSOR}}
+	}
+}
+
+// {{TEST}}
+class Foo { // {{CONTEXT}}
+	void foo() { // {{CONTEXT}}
+		if (true) { // {{CONTEXT}}
+			switch (foo) { // {{CONTEXT}}
+				case "foo": // {{CONTEXT}}
+
+
+
+				// {{CURSOR}}
+				break;
+			}
+		}
+	}
+}
+
+
+// {{TEST}}
+enum Foo { // {{CONTEXT}}
+
+
+
+	// {{CURSOR}}
+}
+
+// vim: ft=enforce
