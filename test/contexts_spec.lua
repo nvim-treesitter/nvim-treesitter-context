@@ -79,7 +79,7 @@ for _, lang in ipairs(langs_with_queries) do
 
     setup(function()
       clear()
-      cmd([[set runtimepath+=.,./nvim-treesitter]])
+      cmd([[set runtimepath+=.,./deps/nvim-treesitter]])
 
       -- Required to load custom predicates
       exec_lua([[require'nvim-treesitter'.setup()]])

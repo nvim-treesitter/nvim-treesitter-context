@@ -63,7 +63,7 @@ describe('ts_context', function()
 
     screen:set_default_attr_ids(default_attrs)
 
-    cmd([[set runtimepath+=.,./nvim-treesitter]])
+    cmd([[set runtimepath+=.,./deps/nvim-treesitter]])
 
     -- Required to load custom predicates
     exec_lua([[require'nvim-treesitter'.setup()]])

@@ -41,7 +41,7 @@ function M.get_langs()
   end
   f:close()
 
-  f = assert(io.open('nvim-treesitter/lockfile.json', 'r'))
+  f = assert(io.open('deps/nvim-treesitter/lockfile.json', 'r'))
 
   for k in vim.spairs(vim.json.decode(f:read('*a'))) do
     langs[#langs + 1] = k

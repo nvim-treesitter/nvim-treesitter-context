@@ -13,7 +13,7 @@ describe('query:', function()
 
   setup(function()
     clear()
-    cmd([[set runtimepath+=.,./nvim-treesitter]])
+    cmd([[set runtimepath+=.,./deps/nvim-treesitter]])
     -- Required to load custom predicates
     exec_lua([[require'nvim-treesitter'.setup()]])
     cmd([[let $XDG_CACHE_HOME='scratch/cache']])
