@@ -142,3 +142,25 @@ service SomeService { // {{CONTEXT}}
 
 
 
+// {{TEST}}
+message SomeMessage { // {{CONTEXT}}
+	oneof someOneof { // {{CONTEXT}}
+		SomeEnum someEnum = 1;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	// {{CURSOR}}
+       }
+}
