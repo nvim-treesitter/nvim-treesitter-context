@@ -7,7 +7,7 @@
       "$VIMRUNTIME",
       "${3rd}/busted/library",
       "${3rd}/luv/library",
-      "nvim-test"
+      "deps/nvim-test"
     ],
     "workspace.checkThirdParty": false,
     "diagnostics": {
