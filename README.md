@@ -40,8 +40,8 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `devicetree`
   - [x] `diff`
   - [x] `elixir`
-  - [x] `enforce`
   - [x] `elm`
+  - [x] `enforce`
   - [x] `fennel`
   - [x] `fish`
   - [x] `fortran`
