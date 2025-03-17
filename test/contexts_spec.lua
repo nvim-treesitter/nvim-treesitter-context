@@ -62,7 +62,7 @@ for _, lang in ipairs(langs) do
   end
 end
 
-local filetype_to_test_files = {} --- @type table<string,string[]>
+local lang_to_test_files = {} --- @type table<string,string[]>
 setup(function()
   clear()
   cmd([[set runtimepath+=.,./deps/nvim-treesitter]])
@@ -75,27 +75,30 @@ setup(function()
     cmd('edit ' .. test_file)
     local bufnr = api.nvim_get_current_buf()
     --- @type string
-    local filetype = exec_lua([[return vim.filetype.match({ buf = ... })]], bufnr)
-    if filetype ~= vim.NIL then
-      if not filetype_to_test_files[filetype] then
-        filetype_to_test_files[filetype] = {}
+    local treesitter_lang = exec_lua(
+      [[
+    local ok, parser = pcall(vim.treesitter.get_parser, ...)
+    if not ok then
+      return nil
+    end
+    return parser:lang()
+    ]],
+      bufnr
+    )
+    if treesitter_lang ~= vim.NIL and treesitter_lang ~= '' then
+      if not lang_to_test_files[treesitter_lang] then
+        lang_to_test_files[treesitter_lang] = {}
       end
-      table.insert(filetype_to_test_files[filetype], test_file)
+      if not vim.tbl_contains(lang_to_test_files[treesitter_lang], test_file) then
+        table.insert(lang_to_test_files[treesitter_lang], test_file)
+      end
     end
   end
 end)
 
 for _, lang in ipairs(langs_with_queries) do
   describe('contexts (' .. lang .. '):', function()
-    --- @type string
-    local filetype = exec_lua(
-      [[return require('nvim-treesitter.parsers').get_parser_configs()[...].filetype]],
-      lang
-    )
-    if filetype == vim.NIL then
-      filetype = lang
-    end
-    local test_files_for_filetype = filetype_to_test_files[filetype]
+    local test_files_for_filetype = lang_to_test_files[lang]
     if not test_files_for_filetype then
       pending('No test file')
       return
