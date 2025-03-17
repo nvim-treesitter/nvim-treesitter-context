@@ -86,8 +86,8 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `scala`
   - [x] `scss`
   - [x] `smali`
-  - [x] `starlark`
   - [x] `solidity`
+  - [x] `starlark`
   - [x] `svelte`
   - [x] `swift`
   - [x] `tact`
