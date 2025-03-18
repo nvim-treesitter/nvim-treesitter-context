@@ -1,0 +1,46 @@
+diff --git a/src/main.rs b/src/main.rs // {{CONTEXT}}
+index 8a23456..9b78901 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -10,7 +10,7 @@ fn main() { // {{CONTEXT}}
+     println!("Hello, world!");
+     
+     // Initialize configuration
+-    let config = Config::new();
++    let config = Config::new_with_defaults();
+     
+     let args = std::env::args().collect::<Vec<String>>(); // {{CURSOR}}
+     
+@@ -25,6 +25,8 @@ fn main() {
+     // Process command line arguments
+     let mut processor = ArgProcessor::new(&args);
+     processor.process();
++    
++    println!("Configuration loaded successfully");
+ 
+     if args.len() > 1 {
+         println!("Arguments provided: {}", args.len() - 1);
+@@ -45,9 +47,7 @@ fn process_file(path: &str) -> Result<(), Error> {
+     let file = File::open(path)?;
+     let reader = BufReader::new(file);
+     
+-    for line in reader.lines() {
+-        println!("{}", line?);
+-    }
++    reader.lines().for_each(|line| println!("{}", line.unwrap_or_default()));
+     
+     Ok(())
+ }
+@@ -78,6 +78,11 @@ impl Config {
+         }
+     }
+     
++    pub fn new_with_defaults() -> Self {
++        let mut config = Self::new();
++        config.timeout = Some(30);
++        config
++    }
++    
+     // Other methods...
+ }
+
