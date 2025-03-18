@@ -1,8 +1,8 @@
-impl Foo {
+impl Foo { // {{CONTEXT}}
 
 
 
-
+    // {{CURSOR}}
     fn bar(&self) {
 
 

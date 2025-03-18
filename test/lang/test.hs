@@ -1,4 +1,5 @@
-function arg1 arg2 =
+-- {{TEST}}
+function arg1 arg2 = -- {{CONTEXT}}
 
 
 
@@ -13,7 +14,7 @@ function arg1 arg2 =
 
 
 
-
+    -- {{CURSOR}}
     case (arg1, arg2) of
 
 
@@ -27,12 +28,9 @@ function arg1 arg2 =
 
 
 
+        -- {{CURSOR}}
 
-
-        (Just _, Just _) -> do
-
-
-
+        (Just _, Just _) -> do -- {{CONTEXT}}
 
 
 
@@ -45,10 +43,10 @@ function arg1 arg2 =
 
 
 
-            undefined
+            -- {{CURSOR}}
 
 
-
+            undefined -- {{POPCONTEXT}}
 
 
 
@@ -63,4 +61,7 @@ function arg1 arg2 =
 
 
 
+
+
+        -- {{CURSOR}}
         _ -> undefined

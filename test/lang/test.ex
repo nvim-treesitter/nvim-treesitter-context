@@ -1,32 +1,33 @@
-defmodule Foo do
-  @moduledoc """
+# {{TEST}}
+defmodule Foo do # {{CONTEXT}}
+  @moduledoc """ {{CONTEXT}}
   Some really long
 
 
 
 
-  documentation.
-  """
+  documentation. {{CURSOR}}
+  """ # {{POPCONTEXT}}
 
-  @some_const ~w[
+  @some_const ~w[ # {{CONTEXT}}
     hi
     i'm
     a
     big
     list
-    sigil
-  ]
+    sigil # {{CURSOR}}
+  ] # {{POPCONTEXT}}
 
 
 
-  def run(%{
+  def run(%{ # {{CONTEXT}}
     multi: multi,
     line: line,
     function_clause: function_clause
   }) do
 
 
-
+    # BUG: max context lines reached
     case line do
 
 

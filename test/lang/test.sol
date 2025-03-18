@@ -1,6 +1,9 @@
-interface SomeInterface {
+interface SomeInterface { // {{CONTEXT}}
     function someFunction(uint a, uint b) external returns (uint c);
     function testFunction(uint) external returns (uint);
+
+
+    // {{CURSOR}}
 }
 
 contract Contract {

@@ -1,5 +1,6 @@
 
-foreach(subdir
+# {{TEST}}
+foreach(subdir # {{CONTEXT}}
         os
         api
         api/private
@@ -9,10 +10,10 @@ foreach(subdir
         eval
         lua
         viml
-        viml/parser
+        viml/parser # {{CURSOR}}
        )
 
-  if(WIN32)
+  if(WIN32) # {{CONTEXT}}
 
 
 
@@ -25,9 +26,9 @@ foreach(subdir
 
 
 
+    # {{CURSOR}}
 
-
-    add_custom_command(
+    add_custom_command( # {{CONTEXT}}
 
 
 
@@ -46,8 +47,9 @@ foreach(subdir
         ${PROJECT_SOURCE_DIR}/src/nvim/eval.lua
         ${PROJECT_SOURCE_DIR}/src/nvim/options.lua
         ${PROJECT_SOURCE_DIR}/runtime/doc/api.mpack
-      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} # {{CURSOR}}
     )
+    # {{POPCONTEXT}}
 
 
 
@@ -79,13 +81,13 @@ foreach(subdir
 
 
 
-
+    # {{CURSOR}}
 
   endif()
+  # {{POPCONTEXT}}
 
 
 
 
-
-
+  # {{CURSOR}}
 endforeach()

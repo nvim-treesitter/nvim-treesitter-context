@@ -1,4 +1,4 @@
-* a heading
+* a heading {{CONTEXT}}
 
 
 
@@ -8,13 +8,12 @@
 
 
 
-
-
- ** a subheading
-
+{{CURSOR}}
+ ** a subheading {{CONTEXT}}
 
 
 
+{{CURSOR}}
 
 
 

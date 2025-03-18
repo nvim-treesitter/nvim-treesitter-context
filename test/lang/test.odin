@@ -2,7 +2,8 @@ package main
 
 import "core:fmt"
 
-demo_struct :: struct($T: typeid) {
+// {{TEST}}
+demo_struct :: struct($T: typeid) { // {{CONTEXT}}
   name: string,
   payload: T,
   // comment
@@ -17,7 +18,7 @@ demo_struct :: struct($T: typeid) {
   // comment
   // comment
   // comment
-  // comment
+  // {{CURSOR}}
 
 }
 

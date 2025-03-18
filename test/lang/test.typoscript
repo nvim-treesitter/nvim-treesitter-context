@@ -1,9 +1,10 @@
-foo {
+// vim: ft=typoscript
+foo { // {{CONTEXT}}
 
 
 
 
-
+    // {{CURSOR}}
 }
 
 [condition]

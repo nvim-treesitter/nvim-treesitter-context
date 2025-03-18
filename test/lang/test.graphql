@@ -1,72 +1,93 @@
-interface
+# {{TEST}}
+interface # {{CONTEXT}}
   Foo
 {
   id: ID!
   name: String
 
-
+  # {{CURSOR}}
 }
-
-input
+# {{TEST}}
+input # {{CONTEXT}}
   Stuff {
   limit: Int
   since_id: ID
-
+  # {{CURSOR}}
 }
-
-type Bar
+# {{TEST}}
+type Bar # {{CONTEXT}}
   implements Foo {
   age: Int
 
-}
 
-type Mutation {
+  # {{CURSOR}}
+}
+# {{TEST}}
+type Mutation { # {{CONTEXT}}
   addBar(name: String, age: int): Bar
-}
 
-query Stuff {
+
+  # {{CURSOR}}
+}
+# {{TEST}}
+query Stuff { # {{CONTEXT}}
   name
   foo {
-    name
+
+
+
+    name # {{CURSOR}}
   }
 }
-
-query GetSearchResults {
-  search(contains: "Shakespeare") {
+# {{TEST}}
+query GetSearchResults { # {{CONTEXT}}
+  search(contains: "Shakespeare") { # {{CONTEXT}}
     __typename
+
+
+    # {{CURSOR}}
     # inline fragment
-    ... on Book {
+    ... on Book { # {{CONTEXT}}
       title
-    }
-    ... on Author {
+
+
+      # {{CURSOR}}
+    } # {{POPCONTEXT}}
+    ... on Author { # {{CONTEXT}}
       name
 
+
+      # {{CURSOR}}
     }
   }
 }
-
-mutation
+# {{TEST}}
+mutation # {{CONTEXT}}
   CreateBar {
-  addBar(name: "AAAA",
+  addBar(name: "AAAA", # {{CONTEXT}}
     age: 42) {
     name
     foo {
       age
 
+
+      # {{CURSOR}}
     }
   }
 }
-
-type Root {
+# {{TEST}}
+type Root { # {{CONTEXT}}
   name: String
 
 
+  # {{CURSOR}}
 }
-
-schema {
+# {{TEST}}
+schema { # {{CONTEXT}}
   query: Root
 
 
+  # {{CURSOR}}
 }
 
 

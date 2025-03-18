@@ -1,4 +1,5 @@
-enum Test {
+# {{TEST}}
+enum Test { # {{CONTEXT}}
 
 
 	VALUE1,
@@ -11,86 +12,87 @@ enum Test {
 
 	VALUE3,
 
-
+    # {{CURSOR}}
 }
-
-func test_function():
+# {{TEST}}
+func test_function(): # {{CONTEXT}}
 	
 
 
 	var test_value = Test.Value1
 
 
-	if test_value = Test.VALUE1:
+	if test_value = Test.VALUE1: # {{CONTEXT}}
 		
 		
 		
 		
 
-		# do nothing
+		# {{CURSOR}}
 		pass
 	
-	elif test_value = Test.VALUE2:
+	elif test_value = Test.VALUE2: # {{CONTEXT}}
 		
 		
 		
 
 
-		for i in 5:
+		for i in 5: # {{CONTEXT}}
 			
 			
 			
 			
 
-			# do nothing 5 times
-			pass
-			
-	else:
+			# {{CURSOR}}
+			pass # {{POPCONTEXT}}
+		# {{POPCONTEXT}}
+	else: # {{CONTEXT}}
 		
 		
 		
 		
-		
-		while true:
+		# {{CURSOR}}
+		while true: # {{CONTEXT}}
 			
 			
 			
 			
-			# do nothing forever
-			pass
-
-	match test_value:
-		Test.VALUE1:
+			# {{CURSOR}}
+			pass # {{POPCONTEXT}}
+		# {{POPCONTEXT}}
+	# {{POPCONTEXT}}
+	match test_value: # {{CONTEXT}}
+		Test.VALUE1: # {{CONTEXT}}
 			
 			
 			
 			
 			
 			
-			print("foo")
-
-		Test.VALUE2:
+			print("foo") # {{CURSOR}}
+			# {{POPCONTEXT}}
+		Test.VALUE2: # {{CONTEXT}}
 			
 			
 			
 			
-			print("bar")
-
-class HelpClass:
+			print("bar") # {{CURSOR}}
+# {{TEST}}
+class HelpClass: # {{CONTEXT}}
 	
 	
 	
 	
 	
 	var class_variable
-	func class_function():
+	func class_function(): # {{CONTEXT}}
 		
 		
 		
 		
 		
 		
-		print("foobar")
+		print("foobar") # {{CURSOR}}
 
 
 

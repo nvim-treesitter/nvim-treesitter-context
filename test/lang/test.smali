@@ -85,7 +85,7 @@
     return-void
 .end method
 
-.method public testMethod(ILjava/lang/String;)Ljava/lang/String;
+.method public testMethod(ILjava/lang/String;)Ljava/lang/String; # {{CONTEXT}}
     .registers 3
     .annotation runtime Lorg/junit/Test;
     .end annotation
@@ -96,7 +96,7 @@
 
 	const-string v0, "testing\n123"
 
-	goto switch:
+	goto switch: # {{CURSOR}}
 
 	sget v0, Lbaksmali/test/class;->staticField:I
 

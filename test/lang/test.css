@@ -1,13 +1,14 @@
-.foo {
+/* {{TEST}} */
+.foo { /* {{CONTEXT}} */
     background-color: #fff;
     color: #000;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 
 
-    font-size: 14px;
+    font-size: 14px; /* {{CURSOR}} */
 
 
-    @supports (font-size: calc(1vw + 1vh + 1vmin)) {
+    @supports (font-size: calc(1vw + 1vh + 1vmin)) { /* {{CONTEXT}} */
 
 
 
@@ -17,12 +18,12 @@
 
 
 
+        /* {{CURSOR}} */
 
+    } /* {{POPCONTEXT}} */
 
-    }
-
-    @color-profile
-    --swop5c {
+    @color-profile /* {{CONTEXT}} */
+    --swop5c { /* BUG: marking context here does not work */
 
 
 
@@ -33,22 +34,23 @@
 
 
 
+        /* {{CURSOR}} */
 
-
-    }
-
-
-
+    } /* {{POPCONTEXT}} */
 
 
 
 
 
-    line-height: 1.42857143;
+
+
+
+    line-height: 1.42857143; /* {{CURSOR}} */
 }
 
-@keyframes wave {
-    0% {
+/* {{TEST}} */
+@keyframes wave { /* {{CONTEXT}} */
+    0% { /* {{CONTEXT}} */
         transform: translateY(-50%) scale(0);
         opacity: 0;
 
@@ -58,31 +60,32 @@
 
 
 
-
-    }
-    50% {
+        /* {{CURSOR}} */
+    } /* {{POPCONTEXT}} */
+    50% { /* {{CONTEXT}} */
 
 
 
         transform: translateY(-50%) scale(1);
-        opacity: 1;
-    }
-    100% {
+        opacity: 1; /* {{CURSOR}} */
+    } /* {{POPCONTEXT}} */
+    100% { /* {{CONTEXT}} */
         transform: translateY(-50%) scale(0);
 
 
 
-        opacity: 0;
-    }
-}
+        opacity: 0; /* {{CURSOR}} */
+    } /* {{POPCONTEXT}} */
+} /* {{POPCONTEXT}} */
 
-@media (
+/* {{TEST}} */
+@media ( /* {{CONTEXT}} */
 
 prefers-reduced-motion: reduce) {
 
 
-
-  *,
+  /* {{CURSOR}} */
+  *, /* {{CONTEXT}} */
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
@@ -103,12 +106,9 @@ prefers-reduced-motion: reduce) {
 
 
 
+    /* {{CURSOR}} */
 
-
-  }
-
-
-
+  } /* {{POPCONTEXT}} */
 
 
 
@@ -119,6 +119,9 @@ prefers-reduced-motion: reduce) {
 
 
 
+
+
+  /* {{CURSOR}} */
 }
 
 
