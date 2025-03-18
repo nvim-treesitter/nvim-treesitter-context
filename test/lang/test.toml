@@ -1,0 +1,7 @@
+[test] # {{CONTEXT}}
+wow = [ # {{CONTEXT}}
+
+
+
+	"hello", # {{CURSOR}}
+]
