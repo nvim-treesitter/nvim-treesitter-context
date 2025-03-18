@@ -1,6 +1,7 @@
+<!-- {{TEST}} -->
 <!DOCTYPE html>
-<html lang="en">
-  <head>
+<html lang="en"> <!-- {{CONTEXT}} -->
+  <head> <!-- {{CONTEXT}} -->
 
 
 
@@ -10,7 +11,7 @@
 
 
 
-
+    <!-- {{CURSOR}} -->
 
     <title></title>
     <meta charset="UTF-8" />
@@ -19,12 +20,13 @@
 
 
 
-  </head>
-  <style>
+  </head> <!-- {{POPCONTEXT}} -->
+  <style> /* {{CONTEXT}} */
 
 
-    .test {
 
+    /* {{CURSOR}} */
+    .test { /* {{CONTEXT}} */
 
 
 
@@ -45,8 +47,8 @@
 
 
 
-      color: red;
 
+      color: red; /* BUG: cannot test for injected lang here */
 
 
 
@@ -64,12 +66,12 @@
 
 
 
-    }
 
+    } /* {{POPCONTEXT}} */
 
-  </style>
-  <body>
 
+  </style> <!-- {{POPCONTEXT}} -->
+  <body> <!-- {{CONTEXT}} -->
 
 
 
@@ -80,7 +82,8 @@
 
 
 
-    <main>
+    <!-- {{CURSOR}} -->
+    <main> <!-- {{CONTEXT}} -->
 
 
 
@@ -91,29 +94,29 @@
 
 
 
+      <!-- {{CURSOR}} -->
+    </main> <!-- {{POPCONTEXT}} -->
 
-    </main>
 
 
 
 
-
-    <ul>
+    <ul> <!-- {{CONTEXT}} -->
       <li></li>
-      <li>
+      <li> <!-- {{CONTEXT}} -->
 
 
 
 
 
 
+        <!-- {{CURSOR}} -->
 
-
-      </li>
+      </li> <!-- {{POPCONTEXT}} -->
       <li></li>
-    </ul>
-  </body>
-  <script>
+    </ul> <!-- {{POPCONTEXT}} -->
+  </body> <!-- {{POPCONTEXT}} -->
+  <script> // {{CONTEXT}}
     var a = 1;
 
 
@@ -121,7 +124,7 @@
 
 
 
-
+    // {{CURSOR}}
 
 
 

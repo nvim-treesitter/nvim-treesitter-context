@@ -1,4 +1,4 @@
-def Xform "thing"
+def Xform "thing" // {{CONTEXT}}
 {
 
 
@@ -6,7 +6,7 @@ def Xform "thing"
 
 
 
-
+    // {{CURSOR}}
     def "thing" {}
 
 

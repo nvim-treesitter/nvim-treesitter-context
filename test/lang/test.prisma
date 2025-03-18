@@ -14,12 +14,14 @@ client {
 
 }
 
-enum
+enum // {{CONTEXT}}
 Role {
 
   USER
 
   ADMIN
+
+  // {{CURSOR}}
 }
 
 

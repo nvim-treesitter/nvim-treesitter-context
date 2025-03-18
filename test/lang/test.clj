@@ -1,33 +1,35 @@
-[:name "clojure"
+;; {{TEST}}
+[:name "clojure" ;; {{CONTEXT}}
 
  ;; a comment
  :extras []
 
- :conflicts []
+ :conflicts [] ;; {{CURSOR}}
 
- :inline [:_kwd_leading_slash
+ :inline [:_kwd_leading_slash ;; {{CONTEXT}}
           :_kwd_just_slash
           :_kwd_qualified
           :_kwd_unqualified
           :_kwd_marker
-          :_sym_qualified
-          :_sym_unqualified]
+          :_sym_qualified ;; {{CURSOR}}
+          :_sym_unqualified] ;; {{POPCONTEXT}}
 
  :_tokens
- {:WHITESPACE_CHAR
-  [:regex "["
+ {:WHITESPACE_CHAR ;; {{CONTEXT}}
+  [:regex "[" ;; {{CONTEXT}}
           "\\f\\n\\r\\t, "
           "\\u000B\\u001C\\u001D\\u001E\\u001F"
           "\\u2028\\u2029\\u1680"
           "\\u2000\\u2001\\u2002\\u2003\\u2004\\u2005\\u2006\\u2008\\u2009"
           "\\u200a\\u205f\\u3000"
-          "]"]
-
+          "]"] ;; {{CURSOR}}
+  ;; {{POPCONTEXT}}
+  ;; {{POPCONTEXT}}
   :WHITESPACE [:token [:repeat1 :WHITESPACE_CHAR]]
 
-  :COMMENT [:token [:regex "(;|#!)"
+  :COMMENT [:token [:regex "(;|#!)" ;; {{CONTEXT}}
                            ".*"
-                           "\\n?"]]
+                           "\\n?"]] ;; BUG: cursor here is not detected
 
   :DIGIT [:regex "[0-9]"]
 

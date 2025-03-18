@@ -1,9 +1,10 @@
-0000000000000012 <engine::world::World::initialize()> (File Offset: 0x82):
+0000000000000012 <engine::world::World::initialize{{CONTEXT}}()> (File Offset: 0x82):
 _ZN6engine5world5World10initializeEv():
 /home/selecaoone/repositories/jumpy/engine/src/lib/world.cpp:22
+
   12:	55                                                    	push   rbp
   13:	53                                                    	push   rbx
-  14:	48 83 ec 08                                           	sub    rsp,0x8
+  14:	48 83 ec 08                                           	sub    rsp,0x8 {{CURSOR}}
 _ZN9__gnu_cxx17__normal_iteratorIPSt10unique_ptrIN6engine7systems6SystemESt14default_deleteIS4_EESt6vectorIS7_SaIS7_EEEC4ERKS8_():
 /opt/rh/devtoolset-9/root/usr/include/c++/9/bits/stl_iterator.h:807
   18:	48 8b 5f 60                                           	mov    rbx,QWORD PTR [rdi+0x60]

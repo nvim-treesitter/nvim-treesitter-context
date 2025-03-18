@@ -1,6 +1,7 @@
-namespace hello_world
+// # {{TEST}}
+namespace hello_world // {{CONTEXT}}
 {
-    interface IInterface
+    interface IInterface // {{CONTEXT}}
     {
 
 
@@ -10,10 +11,10 @@ namespace hello_world
 
 
 
-
+        // {{CURSOR}}
     }
-
-    public enum Direction
+    // {{POPCONTEXT}}
+    public enum Direction // {{CONTEXT}}
     {
         Left,
         Right,
@@ -21,13 +22,13 @@ namespace hello_world
         Down
 
 
-
+        // {{CURSOR}}
     }
-
-    class Cls
+    // {{POPCONTEXT}}
+    class Cls // {{CONTEXT}}
     {
         // Constructor
-        public Cls ()
+        public Cls () // {{CONTEXT}}
         {
 
 
@@ -40,11 +41,11 @@ namespace hello_world
 
 
 
-
+            // {{CURSOR}}
         }
-
+        // {{POPCONTEXT}}
         // Destructor
-        ~Cls()
+        ~Cls() // {{CONTEXT}}
         {
 
 
@@ -57,11 +58,29 @@ namespace hello_world
 
 
 
+            // {{CURSOR}}
+        } // {{POPCONTEXT}}
+    } // {{POPCONTEXT}}
 
-        }
-    }
+    record Record // {{CONTEXT}}
+    {
 
-    record Record
+
+
+
+
+
+
+
+
+
+
+
+
+        // {{CURSOR}}
+    } // {{POPCONTEXT}}
+
+    record struct RecordStruct // {{CONTEXT}}
     {
 
 
@@ -77,33 +96,15 @@ namespace hello_world
 
 
 
-    }
 
-    record struct RecordStruct
+        // {{CURSOR}}
+    } // {{POPCONTEXT}}
+
+    public struct Test // {{CONTEXT}}
     {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-    public struct Test
-    {
-        public void Test1()
+        public void Test1() // {{CONTEXT}}
         {
-            if (true)
+            if (true) // {{CONTEXT}}
             {
 
 
@@ -117,7 +118,7 @@ namespace hello_world
 
 
 
-
+                // {{CURSOR}}
             }
             else
             {
@@ -131,11 +132,11 @@ namespace hello_world
                 Console.WriteLine();
                 Console.WriteLine();
                 Console.WriteLine();
-                Console.WriteLine();
-            }
+                Console.WriteLine(); // {{CURSOR}}
+            } // {{POPCONTEXT}}
             var arr = new[] { 1, 2, 3 };
 
-            foreach (var item in arr)
+            foreach (var item in arr) // {{CONTEXT}}
             {
 
 
@@ -143,12 +144,12 @@ namespace hello_world
 
 
 
+                // {{CURSOR}}
+            } // {{POPCONTEXT}}
 
-            }
-
-            for (int i = 0; i < arr.Length; i++)
+            for (int i = 0; i < arr.Length; i++) // {{CONTEXT}}
             {
-                try
+                try // {{CONTEXT}}
                 {
                     Console.WriteLine();
                     Console.WriteLine();
@@ -182,7 +183,7 @@ namespace hello_world
                     Console.WriteLine();
                     Console.WriteLine();
                     Console.WriteLine();
-                    Console.WriteLine();
+                    Console.WriteLine(); // {{CURSOR}}
                     Console.WriteLine();
                     Console.WriteLine();
                     Console.WriteLine();
@@ -192,7 +193,7 @@ namespace hello_world
                     Console.WriteLine();
                     Console.WriteLine();
                 }
-                catch
+                catch // {{CONTEXT}}
                 {
 
 
@@ -206,10 +207,10 @@ namespace hello_world
 
 
 
+                    // {{CURSOR}}
 
-
-                }
-                finally
+                } // {{POPCONTEXT}}
+                finally // {{CONTEXT}}
                 {
 
 
@@ -223,16 +224,17 @@ namespace hello_world
 
 
 
+                    // {{CURSOR}}
 
 
+                } // {{POPCONTEXT}}
+            // {{POPCONTEXT}}
+            } // {{POPCONTEXT}}
+        } // {{POPCONTEXT}}
 
-                }
-            }
-        }
-
-        int Switch(int key)
+        int Switch(int key) // {{CONTEXT}}
         {
-            switch (key)
+            switch (key) // {{CONTEXT}}
             {
                 case 0:
 
@@ -248,7 +250,7 @@ namespace hello_world
 
 
 
-                    return 1;
+                    return 1; // {{CURSOR}}
                 case 1:
 
 
@@ -258,7 +260,7 @@ namespace hello_world
 
 
 
-                    return 2;
+                    return 2; // {{CURSOR}}
                 case 2:
 
 
@@ -307,11 +309,9 @@ namespace hello_world
 
 
                     return 1234444;
-                default: throw new Exception();
+                default: throw new Exception(); // {{CURSOR}}
 
-            }
-
-
+            } // {{POPCONTEXT}}
 
 
 
@@ -324,6 +324,8 @@ namespace hello_world
 
 
 
+
+            // {{CURSOR}}
 
         }
     }

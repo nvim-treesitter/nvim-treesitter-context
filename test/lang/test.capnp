@@ -1,13 +1,13 @@
-enum TestEnum {
+# {{TEST}}
+enum TestEnum { # {{CONTEXT}}
 
 
 
 
 
+  # {{CURSOR}}
 
-
-
-  foo @0;
+  foo @0; 
 
 
 
@@ -79,8 +79,8 @@ enum TestEnum {
 }
 
 
-
-struct TestAllTypes {
+# {{TEST}}
+struct TestAllTypes { # {{CONTEXT}}
   voidField      @0  : Void;
 
 
@@ -101,7 +101,7 @@ struct TestAllTypes {
 
 
 
-  int32Field     @4  : Int32;
+  int32Field     @4  : Int32; # {{CURSOR}}
 
 
 
@@ -253,13 +253,13 @@ struct TestAllTypes {
 
 }
 
-struct TestInterleavedGroups {
+# {{TEST}}
+struct TestInterleavedGroups { # {{CONTEXT}}
 
 
 
-
-
-  group1 :group {
+  # {{CURSOR}}
+  group1 :group { # {{CONTEXT}}}
 
 
 
@@ -275,9 +275,9 @@ struct TestInterleavedGroups {
 
 
 
+    # {{CURSOR}}
 
-
-    union {
+    union { # {{CONTEXT}}}
 
 
 
@@ -287,9 +287,9 @@ struct TestInterleavedGroups {
 
 
 
+      # {{CURSOR}}
 
-
-      corge :group {
+      corge :group { # {{CONTEXT}}}
 
 
 
@@ -301,7 +301,7 @@ struct TestInterleavedGroups {
 
 
 
-        garply @8 :UInt16;
+        garply @8 :UInt16; # {{CURSOR}}
 
 
 
@@ -330,8 +330,8 @@ struct TestInterleavedGroups {
 
 
 
-
-      fred @12 :Text;
+      # {{POPCONTEXT}}
+      fred @12 :Text; # {{CURSOR}}
 
 
 
@@ -348,8 +348,8 @@ struct TestInterleavedGroups {
 
 
 
-
-    waldo @10 :Text;
+  # {{POPCONTEXT}}
+    waldo @10 :Text; # {{CURSOR}}
 
 
 
@@ -360,14 +360,13 @@ struct TestInterleavedGroups {
 
 
 
+  # {{POPCONTEXT}}
 
 
 
 
 
-
-
-  group2 :group {
+  group2 :group { # {{CONTEXT}}
 
 
 
@@ -382,10 +381,11 @@ struct TestInterleavedGroups {
     bar @3 :UInt64;
 
 
+    # {{CURSOR}}
 
 
 
-    union {
+    union { # {{CONTEXT}}
 
 
 
@@ -395,9 +395,9 @@ struct TestInterleavedGroups {
 
 
 
+      # {{CURSOR}}
 
-
-      corge :group {
+      corge :group { # {{CONTEXT}}
 
 
 
@@ -426,7 +426,7 @@ struct TestInterleavedGroups {
 
 
 
-
+        # {{CURSOR}}
       }
 
 
@@ -437,9 +437,8 @@ struct TestInterleavedGroups {
 
 
 
-
-
-      fred @13 :Text;
+      # {{POPCONTEXT}}
+      fred @13 :Text; # {{CURSOR}}
 
 
 
@@ -456,8 +455,8 @@ struct TestInterleavedGroups {
 
 
 
-
-    waldo @11 :Text;
+    # {{POPCONTEXT}}
+    waldo @11 :Text; # {{CURSOR}}
 
 
 
@@ -467,11 +466,12 @@ struct TestInterleavedGroups {
 
 
 
-
-
+  # {{POPCONTEXT}}
+  # {{CURSOR}}
 }
 
-struct TestDefaults {
+# {{TEST}}
+struct TestDefaults { # {{CONTEXT}}
 
 
 
@@ -481,7 +481,7 @@ struct TestDefaults {
 
 
 
-  boolField      @1  : Bool    = true;
+  boolField      @1  : Bool    = true; # {{CURSOR}}
 
 
 
@@ -546,7 +546,7 @@ struct TestDefaults {
 
 
 
-  structField    @14 : TestAllTypes = (
+  structField    @14 : TestAllTypes = ( # {{CONTEXT}}
 
 
 
@@ -556,7 +556,7 @@ struct TestDefaults {
 
 
 
-      boolField      = true,
+      boolField      = true, # {{CURSOR}}
 
 
 
@@ -750,6 +750,7 @@ struct TestDefaults {
 
       # interfaceList can't have a default
       );
+    # {{POPCONTEXT}}
 
 
 
@@ -839,7 +840,7 @@ struct TestDefaults {
 
 
 
-  structList    @31 : List(TestAllTypes) = [
+  structList    @31 : List(TestAllTypes) = [ # {{CONTEXT}}
 
 
 
@@ -849,12 +850,12 @@ struct TestDefaults {
 
 
 
-      (textField = "structlist 2"),
+      (textField = "structlist 2"), # {{CURSOR}}
 
 
 
 
-      (textField = "structlist 3")];
+      (textField = "structlist 3")]; # {{POPCONTEXT}}
 
 
 
@@ -867,12 +868,12 @@ struct TestDefaults {
   interfaceList @33 : List(Void);  # TODO
 
 
-
+  # {{CURSOR}}
 
 }
 
-
-struct TestUseGenerics $TestGenerics(Text, Data).ann("foo") {
+# {{TEST}}
+struct TestUseGenerics $TestGenerics(Text, Data).ann("foo") { # {{CONTEXT}}
 
 
 
@@ -922,23 +923,23 @@ struct TestUseGenerics $TestGenerics(Text, Data).ann("foo") {
 
 
 
-  default @5 :TestGenerics(TestAllTypes, Text) =
+  default @5 :TestGenerics(TestAllTypes, Text) = # {{CONTEXT}}
 
 
 
 
-      (foo = (int16Field = 123), rev = (foo = "text", rev = (foo = (int16Field = 321))));
+      (foo = (int16Field = 123), rev = (foo = "text", rev = (foo = (int16Field = 321)))); # {{CURSOR}}
+  # {{POPCONTEXT}}
+
+
+
+  defaultInner @6 :TestGenerics(TestAllTypes, Text).Inner = # {{CONTEXT}}
 
 
 
 
-  defaultInner @6 :TestGenerics(TestAllTypes, Text).Inner =
-
-
-
-
-      (foo = (int16Field = 123), bar = "text");
-
+      (foo = (int16Field = 123), bar = "text"); # {{CURSOR}}
+  # {{POPCONTEXT}}
 
 
 
@@ -947,23 +948,23 @@ struct TestUseGenerics $TestGenerics(Text, Data).ann("foo") {
 
 
 
-  defaultWrapper @9 :TestGenericsWrapper(Text, TestAllTypes) =
+  defaultWrapper @9 :TestGenericsWrapper(Text, TestAllTypes) = # {{CONTEXT}}
 
 
 
 
-      (value = (foo = "text", rev = (foo = (int16Field = 321))));
+      (value = (foo = "text", rev = (foo = (int16Field = 321)))); # {{CURSOR}}
+  # {{POPCONTEXT}}
+
+
+
+  defaultWrapper2 @10 :TestGenericsWrapper2 = # {{CONTEXT}}
 
 
 
 
-  defaultWrapper2 @10 :TestGenericsWrapper2 =
 
-
-
-
-      (value = (value = (foo = "text", rev = (foo = (int16Field = 321)))));
-
+      (value = (value = (foo = "text", rev = (foo = (int16Field = 321))))); # {{CURSOR}}
 
 
 
@@ -982,7 +983,7 @@ struct TestUseGenerics $TestGenerics(Text, Data).ann("foo") {
 
 
 
-      = (foo = (int16Field = 123));
+      = (foo = (int16Field = 123)); # BUG: putting cursor here causes incorrect context
 
 
 

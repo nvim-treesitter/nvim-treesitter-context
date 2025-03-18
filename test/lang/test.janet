@@ -1,12 +1,12 @@
-
-@(:ant :bee
-
-
+# {{TEST}}
+@(:ant :bee # {{CONTEXT}}
 
 
 
 
-  :cat :dog
+
+
+  :cat :dog # {{CURSOR}}
 
 
 
@@ -35,8 +35,8 @@
 
 
   :iguana :janet)
-
-@["Archimedes" "Bohm"
+# {{TEST}}
+@["Archimedes" "Bohm" # {{CONTEXT}}
 
 
 
@@ -56,7 +56,7 @@
 
 
 
-  "Erdos" "Feynman"
+  "Erdos" "Feynman" # {{CURSOR}}
 
 
 
@@ -72,17 +72,19 @@
 
 
   "Ishikawa" "Janet"]
-
-{"Ada"
+# {{TEST}}
+{"Ada" # {{CONTEXT}}
  {:file-extensions [".adb" ".ads"]
   :people ["Jean Ichbiah"]
   :year 1983}
 
  "Bash"
- {:file-extensions [".sh"]
+ {:file-extensions [".sh"] # {{CONTEXT}}
   :people ["Brian Fox"
            "Chet Ramey"]
-  :year 1989}
+
+  # {{CURSOR}}
+  :year 1989} # {{POPCONTEXT}}
 
  "C"
  {:file-extensions [".c" ".h"]
@@ -114,8 +116,8 @@
   :year 2009}
 
  "Haskell"
- {:file-extensions [".hs" ".lhs"]
-  :people ["Lennart Augustsson"
+ {:file-extensions [".hs" ".lhs"] # {{CONTEXT}}
+  :people ["Lennart Augustsson" # {{CONTEXT}}
            "Dave Barton"
            "Brian Boutel"
            "Warren Burton"
@@ -129,7 +131,7 @@
            "Simon Peyton Jones"
            "John Launchbury"
            "Erik Meijer"
-           "John Peterson"
+           "John Peterson" # {{CURSOR}}
            "Alastair Reid"
            "Colin Runciman"
            "Philip Wadler"]
@@ -145,13 +147,13 @@
   :people ["Calvin Rose"]
   :year 2017}
 }
-
-~@{:main
+# {{TEST}}
+~@{:main # {{CONTEXT}}
    (some :input)
    #
    :input
    (choice :non-form
-           :form)
+           :form) # {{CURSOR}}
    #
    :non-form
    (choice :whitespace
@@ -200,26 +202,31 @@
              :form)
    #
    :unquote
-   (sequence ","
+   (sequence "," # {{CONTEXT}}
              (any :non-form)
-             :form)
+
+
+             # {{CURSOR}}
+             :form) # {{POPCONTEXT}}
    #
    :literal
-   (choice :number
+   (choice :number # {{CONTEXT}}
            :constant
            :buffer
            :string
            :long-buffer
            :long-string
-           :keyword
-           :symbol)
+           :keyword # {{CURSOR}}
+           :symbol) # {{POPCONTEXT}}
    #
    :collection
-   (choice :array
+   (choice :array # {{CONTEXT}}
            :bracket-array
            :tuple
            :bracket-tuple
            :table
+
+           # {{CURSOR}}
            :struct)
    #
    :number

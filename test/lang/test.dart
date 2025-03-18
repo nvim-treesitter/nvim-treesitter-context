@@ -1,5 +1,6 @@
-@Deprecated('')
-abstract 
+// {{TEST}}
+@Deprecated('') // {{CONTEXT}}
+abstract // BUG: there should be context here
 class User 
     extends 
       Object {
@@ -15,9 +16,9 @@ class User
 
 
 
+  // {{CURSOR}}
 
-
-  void printAge() {
+  void printAge() { // {{CONTEXT}}
   
 
 
@@ -32,15 +33,15 @@ class User
 
 
 
-    print(age);
+    print(age); // {{CURSOR}}
   }
 
 }
-
+// {{TEST}}
 String(
   int magicalNumber,
-) {
-  if (magicalNumber == "69"
+) { // {{CONTEXT}
+  if (magicalNumber == "69" // {{CONTEXT}}
       // --
       ||
       magicalNumber == "420") {
@@ -48,8 +49,8 @@ String(
 
 
 
-
-  } else if (magicalNumber == "420" // -
+    // {{CURSOR}}
+  } else if (magicalNumber == "420" // {{CONTEXT}}
       &&
       magicalNumber == "69") {
 
@@ -74,14 +75,15 @@ String(
 
 
 
-    return 'pretty high';
-  }
-  return 'just decent';
+    return 'pretty high'; // {{CURSOR}}
+  } // {{POPCONTEXT}}
+
+  return 'just decent'; // BUG: should mark cursor here
 }
 
-
-void catching() {
-  try 
+// {{TEST}}
+void catching() { // {{CONTEXT}}
+  try // {{CONTEXT}}
     // --
   {
 
@@ -97,7 +99,7 @@ void catching() {
 
 
 
-
+    // {{CURSOR}}
   } catch (e) {
 
 
@@ -107,7 +109,7 @@ void catching() {
 
 
 
-
+    // {{CURSOR}}
 
   } finally {
 
@@ -120,13 +122,13 @@ void catching() {
 
 
 
-
+    // {{CURSOR}}
 
   }
 }
-
-void foring() {
-  for (int i = 0; // -
+// {{TEST}}
+void foring() { // {{CONTEXT}}
+  for (int i = 0; // {{CONTEXT}}
         i < 10;
         i++) {
 
@@ -142,10 +144,10 @@ void foring() {
 
 
 
+    // {{CURSOR}}
+  } // {{POPCONTEXT}}
 
-  }
-
-  while (true // -- 
+  while (true // {{CONTEXT}}
   == false) {
 
 
@@ -163,14 +165,11 @@ void foring() {
 
 
 
+    // {{CURSOR}}
 
+} // {{POPCONTEXT}}
 
-}
-
-  do {
-
-
-
+  do { // {{CONTEXT}}
 
 
 
@@ -182,10 +181,13 @@ void foring() {
 
 
 
+
+
+  // {{CURSOR}}
 } while (true);
 }
-
-extension ext 
+// {{TEST}}
+extension ext // {{CONTEXT}}
 on int {
 
 
@@ -195,5 +197,5 @@ on int {
 
 
 
-
+  // {{CURSOR}}
 }

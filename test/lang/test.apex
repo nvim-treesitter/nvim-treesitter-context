@@ -1,36 +1,38 @@
+// {{TEST}}
 public class MyClass {
 
 
 
 
 
-    public void my_method(Integer param) {
+    public void my_method(Integer param) { // {{CONTEXT}}
 
 
 
 
-        if (true) {
+        if (true) { // {{CONTEXT}}
 
 
 
 
-            for (Integer i = 0; i < 10; i++) {
+            for (Integer i = 0; i < 10; i++) { // {{CONTEXT}}
                 
 
 
 
-                for (Integer v : values) {
+                for (Integer v : values) { // {{CONTEXT}}
                     
 
 
 
-                    System.
+                    System. // {{CONTEXT}}
 
 
 
-                        debug('a message');
+                        debug('a message'); // {{CURSOR}}
                 }
             }
         }
     }
 }
+// vim: ft=apex

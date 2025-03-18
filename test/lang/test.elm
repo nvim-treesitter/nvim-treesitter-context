@@ -4,13 +4,14 @@ import Html exposing (div, text)
 
 
 main : Html.Html msg
-main =
+-- {{TEST}}
+main = -- {{CONTEXT}}
     let
         test =
             "Test content"
     in
-    case test of
-        "Hello" ->
+    case test of -- {{CONTEXT}}
+        "Hello" -> -- {{CONTEXT}}
             div []
                 [ text "Hello, World!"
                 , -- Generate some lines
@@ -29,7 +30,7 @@ main =
                   -- Generate some lines
                   -- Generate some lines
                   -- Generate some lines
-                  -- Generate some lines
+                  -- Generate some lines {{CURSOR}}
                   -- Generate some lines
                   -- Generate some lines
                   -- Generate some lines
@@ -67,7 +68,7 @@ main =
                     , text "Some more lines"
                     , text "Some more lines"
                     , text "Some more lines"
-                    , text "Some more lines"
+                    , text "Some more lines" -- {{CURSOR}}
                     , text "Some more lines"
                     , text "Some more lines"
                     , text "Some more lines"
@@ -78,7 +79,7 @@ main =
                     , text "Some more lines"
                     , text "Some more lines"
                     ]
-                ]
+                ] -- {{POPCONTEXT}}
 
         _ ->
-            text "Default"
+            text "Default" -- {{CURSOR}}

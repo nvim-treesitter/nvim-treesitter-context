@@ -1,4 +1,4 @@
-interface User {
+interface User { // {{CONTEXT}}
   name: string;
 
 
@@ -7,7 +7,7 @@ interface User {
 
 
 
-
+  // {{CURSOR}}
 }
  
 class UserAccount {

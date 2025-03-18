@@ -1,13 +1,13 @@
 $sizes: 40px, 50px, 80px;
 
-.foo-container {
-  .foo-item {
+.foo-container { // {{CONTEXT}}
+  .foo-item { // {{CONTEXT}}
     color: red;
 
 
 
 
-
+    // {{CURSOR}}
   }
   .foo-image {
     width: 100%;

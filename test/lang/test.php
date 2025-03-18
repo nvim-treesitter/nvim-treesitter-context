@@ -1,21 +1,21 @@
 <?php
 /*
- * comment
+ * {{TEST}}
  */
 #[ReturnTypeWillChange]
-function foo($a, $b) {
+function foo($a, $b) { // {{CONTEXT}}
   //loop, between low & high
-  while ($a <= $b) {
+  while ($a <= $b) { // {{CONTEXT}}
     // comment
     $index = $low + floor(($high - $low) * $delta);
     // comment
     $indexValue = $a;
-    if ($indexValue === $a) {
-      // comment
+    if ($indexValue === $a) { // {{CONTEXT}}
+
 
 
       $position = $index;
-      return (int) $position;
+      return (int) $position; // {{CURSOR}}
     }
     if ($indexValue < $key) {
       // comment

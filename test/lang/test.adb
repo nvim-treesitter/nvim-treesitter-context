@@ -1,6 +1,7 @@
 with Ada.Text_IO; use Ada.Text_IO;
 
-package Week is
+-- {{TEST}}
+package Week is -- {{CONTEXT}}
 
    Mon : constant String := "Monday";
    Tue : constant String := "Tuesday";
@@ -8,17 +9,18 @@ package Week is
    Thu : constant String := "Thursday";
    Fri : constant String := "Friday";
    Sat : constant String := "Saturday";
-   Sun : constant String := "Sunday";
+   Sun : constant String := "Sunday"; -- {{CURSOR}}
 
 
 
 end Week;
 
-package Months
+-- {{TEST}}
+package Months -- {{CONTEXT}}
 is
 
    Jan : constant String := "January";
-   Feb : constant String := "February";
+   Feb : constant String := "February"; -- {{CURSOR}}
 
 
 
@@ -31,21 +33,23 @@ is
 
 end Months;
 
-procedure Show_Increment is
+-- {{TEST}}
+procedure Show_Increment is -- {{CONTEXT}}
    A, B, C : Integer;
 
-   procedure Display_Result is
+   procedure Display_Result is -- {{CONTEXT}}
    begin
       Put_Line ("Increment of "
                 & Integer'Image (A)
                 & " with "
                 & Integer'Image (B)
                 & " is "
-                & Integer'Image (C));
+                & Integer'Image (C)); -- {{CURSOR}}
 
 
    end Display_Result;
 
+   -- {{POPCONTEXT}}
 begin
    A := 10;
    B := 3;
@@ -53,12 +57,13 @@ begin
    Display_Result;
    A := 20;
    B := 5;
-   C := Increment_By (A, B);
+   C := Increment_By (A, B); -- {{CURSOR}}
    Display_Result;
 end Show_Increment;
 
 
-type Date is
+-- {{TEST}}
+type Date is -- {{CONTEXT}}
   record
   Day : Integer range 1 .. 31;
 
@@ -66,10 +71,11 @@ type Date is
 
 
 
-
+  -- {{CURSOR}}
 end record;
 
-procedure Greet is
+-- {{TEST}}
+procedure Greet is -- {{CONTEXT}}
 begin
 
   X := 2;
@@ -77,47 +83,48 @@ begin
   Ada.Text_IO.Put_Line ("Hello");
 
 
-  for N in 1 .. 5 loop
+  for N in 1 .. 5 loop -- {{CONTEXT}}
 
 
     Put_Line("Hi");
 
-
+    -- {{CURSOR}}
   end loop;
-
+  -- {{POPCONTEXT}}
   Y := 1;
-  loop
+  loop -- {{CONTEXT}}
 
 
     exit when Y = 5;
 
-
+    -- {{CURSOR}}
   end loop;
-
-  while Y >= 0 loop
+  -- {{POPCONTEXT}}
+  while Y >= 0 loop -- {{CONTEXT}}
     Y := Y - 1;
 
 
 
-
+    -- {{CURSOR}}
   end loop;
 
 
-
-  case Y is
+  -- {{POPCONTEXT}}
+  case Y is -- {{CONTEXT}}
     when 0 .. 10 =>
       Put_Line("foo");
 
 
 
     when others =>
-      Put_Line("bar");
+      Put_Line("bar"); -- {{CURSOR}}
   end case;
 
 end Greet;
 
 
-function Foo
+-- {{TEST}}
+function Foo -- {{CONTEXT}}
   (I : Integer := 0;)
   return Integer is
 begin
@@ -126,7 +133,7 @@ begin
 
 
 
-  return I + 1;
+  return I + 1; -- {{CURSOR}}
 end Foo;
 
 

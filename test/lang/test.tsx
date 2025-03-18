@@ -1,6 +1,6 @@
 /** @jsx Object */
 
-interface User {
+interface User { // {{CONTEXT}}
   name: string;
 
 
@@ -8,7 +8,7 @@ interface User {
   id: number;
 
 
-
+  // {{CURSOR}}
 
 }
  
