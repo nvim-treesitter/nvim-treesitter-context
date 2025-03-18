@@ -1,10 +1,10 @@
-<template>
-  <main>
+<template> <!-- {{CONTEXT}} -->
+  <main> <!-- {{CONTEXT}} -->
 
 
 
 
-
+    <!-- {{CURSOR}} -->
     <ul v-for="(button, index) in buttonList">
 
 

@@ -1,8 +1,8 @@
-const
+const # {{CONTEXT}}
 
 
 
-  C = 5
+  C = 5 # {{CURSOR}}
 var
 
 

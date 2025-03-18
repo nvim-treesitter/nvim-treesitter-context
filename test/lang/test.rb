@@ -3,7 +3,11 @@
 module Bar
   class Foo
     class << self
-      def run
+      def run # {{CONTEXT}}
+
+
+
+        # {{CURSOR}}
         if false
           (20..30).each do |element|
             block.call(element)

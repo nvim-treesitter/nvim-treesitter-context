@@ -1,6 +1,6 @@
 package main
-
-import (
+// {{TEST}}
+import ( // {{CONTEXT}}
 
 
 
@@ -9,10 +9,10 @@ import (
 
 
 
-	"encoding/json"
+	"encoding/json" // {{CURSOR}}
 )
-
-jsonVal: json.Marshal({
+// {{TEST}}
+jsonVal: json.Marshal({ // {{CONTEXT}}
 
 
 
@@ -25,13 +25,14 @@ jsonVal: json.Marshal({
 
 
 	list: [1, 2]
-	nested: foo: "bar"
+	nested: foo: "bar" // {{CURSOR}}
 })
 
 apps: ["nginx", "express", "postgres"]
 #labels: [string]: string
-stack: {
-	let local = {
+// {{TEST}}
+stack: { // {{CONTEXT}}
+	let local = { // {{CONTEXT}}
 
 
 
@@ -41,8 +42,8 @@ stack: {
 
 		name: "Alice"
 
-
-	}
+	    // {{CURSOR}}
+	} // {{POPCONTEXT}}
 	local	
 
 	injected: _ @tag(inj, type=int)

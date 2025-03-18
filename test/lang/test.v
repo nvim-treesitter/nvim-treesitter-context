@@ -29,11 +29,12 @@ wire s_19;
 wire s_20;
 wire s_21;
 
+// {{TEST}}
 genvar i;
 generate
-for (i = 0; i < 10; i = i + 1)
+for (i = 0; i < 10; i = i + 1) // {{CONTEXT}}
 begin : gen_loop
-    test uut (
+    test uut ( // {{CONTEXT}}
         .i_1  (s_1  ),
         .i_2  (s_2  ),
         .i_3  (s_3  ),
@@ -46,7 +47,7 @@ begin : gen_loop
         .i_10 (s_10 ),
         .i_11 (s_11 ),
         .i_12 (s_12 ),
-        .i_13 (s_13 ),
+        .i_13 (s_13 ), // {{CURSOR}}
         .i_14 (s_14 ),
         .i_15 (s_15 ),
         .i_16 (s_16 ),
@@ -59,8 +60,9 @@ begin : gen_loop
 end
 endgenerate
 
-always @(posedge i_clk) begin
-    if (s_1) begin
+// {{TEST}}
+always @(posedge i_clk) begin // {{CONTEXT}}
+    if (s_1) begin // {{CONTEXT}}
         s_a[0]  <= s_1;
         s_a[1]  <= s_2;
         s_a[2]  <= s_3;
@@ -74,7 +76,7 @@ always @(posedge i_clk) begin
         s_a[10] <= s_11;
         s_a[11] <= s_12;
         s_a[12] <= s_13;
-        s_a[13] <= s_14;
+        s_a[13] <= s_14; // {{CURSOR}}
         s_a[14] <= s_15;
         s_a[15] <= s_16;
         s_a[16] <= s_17;

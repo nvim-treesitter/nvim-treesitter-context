@@ -1,74 +1,75 @@
-struct S
+// {{TEST}}
+struct S // {{CONTEXT}}
 {
 
 
 
-    int i;
+    int i; // {{CURSOR}}
+}
+// {{TEST}}
+template t(T: int) { // {{CONTEXT}}
+
+
+
+    // {{CURSOR}}
+}
+// {{TEST}}
+unittest { // {{CONTEXT}}
+
+
+
+    // {{CURSOR}}
 }
 
-template t(T: int) {
-
-
-
-    // stuff
-}
-
-unittest {
-
-
-
-    // test stuff
-}
-
-
-enum Things {
+// {{TEST}}
+enum Things { // {{CONTEXT}}
     A,
 
 
     B,
-    C,
+    C, // {{CURSOR}}
 }
-
-union U
+// {{TEST}}
+union U // {{CONTEXT}}
 {
     ubyte i;
 
 
 
 
-    char c;
+    char c; // {{CURSOR}}
 }
-
-interface Bar
+// {{TEST}}
+interface Bar // {{CONTEXT}}
 {
 
 
 
-    // things
+    // {{CURSOR}}
 }
-
-class Foo : Bar
+// {{TEST}}
+class Foo : Bar // {{CONTEXT}}
 {
 
 
 
-
-    void bar (int a,
+    // {{CURSOR}}
+    void bar (int a, // {{CONTEXT}}
         int b)
     {
 
-    try {
+    try { // {{CONTEXT}}
 
 
 
-        // something
-    } catch (Exception e) {
+        // {{CURSOR}}
+    } catch (Exception e) { // {{CONTEXT}}
 
 
 
-        // something
+        // {{CURSOR}}
     }
-
+    // BUG: Should keep class context
     asm
     {
 

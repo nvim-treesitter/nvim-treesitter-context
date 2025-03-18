@@ -1,4 +1,8 @@
-<script>
+<script> // {{CONTEXT}}
+
+
+
+    // {{CURSOR}}
   function items(x) {
     let ret = [];
 

@@ -1,10 +1,11 @@
-struct Struct {
+// {{TEST}}
+struct Struct { // {{CONTEXT}}
     int *f1;
     int *f2;
 
 
 
-    // cursor position 1
+    // {{CURSOR}}
 };
 
 
@@ -13,14 +14,14 @@ struct Struct {
 
 
 
-
-class Class {
+// {{TEST}}
+class Class { // {{CONTEXT}}
     int *f1;
     int *f2;
 
 
 
-    // cursor position 2
+    // {{CURSOR}}
 };
 
 
@@ -29,14 +30,14 @@ class Class {
 
 
 
-
-typedef enum {
+// {{TEST}}
+typedef enum { // {{CONTEXT}}
   E1,
   E2,
   E3
 
 
-  // cursor position 3
+  // {{CURSOR}}
 } myenum;
 
 
@@ -44,51 +45,51 @@ typedef enum {
 
 
 
-
-__global__ void kernel(int *a, int *b, int *c) {
+// {{TEST}}
+__global__ void kernel(int *a, int *b, int *c) { // {{CONTEXT}}
   int i = threadIdx.x;
   c[i] = a[i] + b[i];
 
 
 
-  // cursor position 6
+  // {{CURSOR}}
 }
 
 
-
-int main(int arg1,
+// {{TEST}}
+int main(int arg1, // {{CONTEXT}}
          char **arg2,
          char **arg3
          )
 {
-  if (arg1 == 4
+  if (arg1 == 4 // {{CONTEXT}}
       && arg2 == arg3) {
-    for (int i = 0; i < arg1; i++) {
-      while (1) {
+    for (int i = 0; i < arg1; i++) { // {{CONTEXT}}
+      while (1) { // {{CONTEXT}}
 
 
 
 
 
-        // cursor position 4
-      }
-    }
-  }
+        // {{CURSOR}}
+      } // {{POPCONTEXT}}
+    } // {{POPCONTEXT}}
+  } // {{POPCONTEXT}}
 
 
 
 
+  // {{CURSOR}}
 
-
-  do {
+  do { // {{CONTEXT}}
     int array[1];
-    for (auto value : array) {
+    for (auto value : array) { // {{CONTEXT}}
 
 
 
 
 
-      // cursor position 5
+      // {{CURSOR}}
     }
   } while (1);
 }

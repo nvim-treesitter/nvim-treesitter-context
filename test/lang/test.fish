@@ -1,7 +1,8 @@
 #!/usr/bin/env fish
-function foo
+# {{TEST}}
+function foo # {{CONTEXT}}
 
-  while true
+  while true # {{CONTEXT}}
 
 
 
@@ -9,13 +10,17 @@ function foo
     echo 'foo'
 
 
+    # {{CURSOR}}
+  end # {{POPCONTEXT}}
 
-  end
+  switch (uname) # {{CONTEXT}}
+    case 'Linux' # {{CONTEXT}}
 
-  switch (uname)
-    case 'Linux'
-      echo 'Linux'
-    case 'Darwin'
+
+
+      echo 'Linux' # {{CURSOR}}
+    # {{POPCONTEXT}}
+    case 'Darwin' # {{CONTEXT}}
       echo 'Mac'
 
 
@@ -25,30 +30,43 @@ function foo
 
 
 
-
+      # {{CURSOR}}
 
 
     otherwise
-      echo 'Windows'
-  end
-
-  if grep fish /etc/shells
-    echo Found fish
-  else if grep bash /etc/shells
 
 
 
+      echo 'Windows' # {{CURSOR}}
+    # {{POPCONTEXT}}
+  end # {{POPCONTEXT}}
+
+  if grep fish /etc/shells # {{CONTEXT}}
+
+
+
+    echo Found fish # {{CURSOR}}
+  else if grep bash /etc/shells # {{CONTEXT}}
 
 
 
 
 
-    echo Found bash
-  else
-    echo Got nothing
-  end
 
-  for file in *.txt
+
+
+    echo Found bash # {{CURSOR}}
+    # {{POPCONTEXT}}
+  else # {{CONTEXT}}
+
+
+
+
+    echo Got nothing # {{CURSOR}}
+  end # {{POPCONTEXT}}
+  # {{POPCONTEXT}}
+
+  for file in *.txt # {{CONTEXT}}
 
 
 
@@ -63,7 +81,7 @@ function foo
 
 
 
-
+    # {{CURSOR}}
   end
 end
 
