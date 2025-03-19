@@ -73,7 +73,7 @@ local function display_window(winid, context_winid, width, height, col, ty, hl)
       style = 'minimal',
       noautocmd = true,
       zindex = config.zindex,
-      border = sep and { '', '', '', '', sep, sep, sep, '' } or nil,
+      border = sep and { '', '', '', '', sep, sep, sep, '' } or 'none',
     })
     vim.w[context_winid][ty] = true
     vim.wo[context_winid].wrap = false
