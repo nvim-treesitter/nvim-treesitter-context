@@ -1,6 +1,6 @@
 
 {
-  output =
+  output = # {{CONTEXT}}
  
 
 
@@ -9,7 +9,7 @@
 
 
 
-
+    # {{CURSOR}}
    let
       l = {
         a = false;

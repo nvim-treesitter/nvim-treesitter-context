@@ -1,11 +1,11 @@
 # (for)
-for (x in 1:10) {
+for (x in 1:10) { # {{CONTEXT}}
 
 
 
 
 
-  print(x)
+  print(x) # {{CURSOR}}
 }
 
 # (while)

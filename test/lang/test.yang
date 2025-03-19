@@ -1,6 +1,9 @@
-module test { /* originally iana-if-type, per standards, renamed to have same filename */
+module test { /* {{CONTEXT}} */ /* originally iana-if-type, per standards, renamed to have same filename */
   namespace "urn:ietf:params:xml:ns:yang:iana-if-type";
   prefix ianaift;
+
+
+  // {{CURSOR}}
 
   import ietf-interfaces {
     prefix if;

@@ -134,7 +134,7 @@ describe('ts_context', function()
 
     it('rust', function()
       install_langs('rust')
-      cmd('edit test/lang/test.rs')
+      cmd('edit test/snapshots/snapshot.rs')
       exec_lua([[vim.treesitter.start()]])
       feed('20<C-e>')
 
@@ -270,7 +270,7 @@ describe('ts_context', function()
       requires_nvim10()
 
       install_langs('cpp')
-      cmd('edit test/lang/test.cpp')
+      cmd('edit test/snapshots/snapshot.cpp')
       exec_lua([[vim.treesitter.start()]])
       feed('<C-e>')
 
@@ -347,7 +347,7 @@ describe('ts_context', function()
 
     it('php', function()
       install_langs('php')
-      cmd('edit test/lang/test.php')
+      cmd('edit test/snapshots/snapshot.php')
       exec_lua([[vim.treesitter.start()]])
 
       feed('7<C-e>')
@@ -420,7 +420,7 @@ describe('ts_context', function()
 
     it('typescript', function()
       install_langs('typescript')
-      cmd('edit test/lang/test.ts')
+      cmd('edit test/snapshots/snapshot.ts')
       exec_lua([[vim.treesitter.start()]])
       feed('<C-e>')
 
@@ -476,7 +476,7 @@ describe('ts_context', function()
       requires_nvim10()
 
       install_langs({ 'markdown', 'markdown_inline', 'html' })
-      cmd('edit test/lang/test.md')
+      cmd('edit test/snapshots/snapshot.md')
       exec_lua([[vim.treesitter.start()]])
 
       feed('3<C-e>')
@@ -528,7 +528,7 @@ describe('ts_context', function()
       requires_nvim10()
 
       install_langs({ 'markdown', 'markdown_inline' })
-      cmd('edit test/lang/test.md')
+      cmd('edit test/snapshots/snapshot.md')
       exec_lua([[vim.treesitter.start()]])
 
       feed('47<C-e>')

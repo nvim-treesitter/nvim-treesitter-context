@@ -21,10 +21,11 @@
               (values i t.mal-nil)))
  "boolean" (Cmt (C (* (+ (P "false") (P "true"))
                       (- (V "name-char"))))
-                (fn [s i a]
+                (fn [s i a] ; {{CONTEXT}}
                   (values i (if (= a "true")
                               t.mal-true
-                              t.mal-false))))
+
+                              t.mal-false)))) ; {{CURSOR}}
  "number" (Cmt (C (^ (- (P 1)
                         (S " \f\n\r\t,[]{}()'`~^@\";"))
                      1))

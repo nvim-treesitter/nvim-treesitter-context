@@ -1,4 +1,4 @@
-
+# {{TEST}}
 # Initiate a response handler with pre-filled values.
 # @category Internet
 # @method content_type Set `"Content-Type"` header
@@ -11,18 +11,18 @@
 # @method http_version Set http protocol version
 # @method status_code Set response status code
 # @method status_message Set response status message
-def http.response(
+def http.response( # {{CONTEXT}}
   ~http_version="1.1",
   ~status_code=null(),
   ~status_message=null(),
   ~headers=[],
   ~content_type=null(),
-  ~data=getter("")
+  ~data=getter("") # {{CURSOR}}
 ) =
   status_code =
     status_code
       ??
-        if
+        if # {{CONTEXT}}
           http_version == "1.1"
         and
           headers["expect"] == "100-continue"
@@ -31,8 +31,8 @@ def http.response(
         then
           100
         else
-          200
-        end
+          200 # {{CURSOR}}
+        end # {{POPCONTEXT}}
 
   http_version = ref(http_version)
   status_code = ref(status_code)
@@ -45,63 +45,64 @@ def http.response(
   data_sent = ref(false)
   response_ended = ref(false)
 
-  def mk_status() =
+  # {{CURSOR}}
+  def mk_status() = # {{CONTEXT}}
     status_sent := true
     http_version = http_version()
     status_code = status_code()
     status_code =
-      if
+      if # {{CONTEXT}}
         status_code == 100 and getter.get(data()) != ""
       then
         200
       else
-        status_code
-      end
+        status_code # {{CURSOR}}
+      end # {{POPCONTEXT}}
 
     status_message = status_message() ?? http.codes[status_code]
     "HTTP/#{http_version} #{status_code} #{status_message}\r\n"
-  end
+  end # {{POPCONTEXT}}
 
-  def mk_headers() =
+  def mk_headers() = # {{CONTEXT}}
     headers_sent := true
     headers = headers()
     content_type = content_type()
     data = data()
     headers =
-      if
+      if # {{CONTEXT}}
         getter.is_constant(data)
       then
         data = getter.get(data)
-        if
+        if # {{CONTEXT}}
           data != ""
         then
           ("Content-Length", "#{string.length(data)}")::headers
         else
-          headers
-        end
+          headers # {{CURSOR}}
+        end # {{POPCONTEXT}}
       else
-        ("Transfer-Encoding", "chunked")::headers
-      end
+        ("Transfer-Encoding", "chunked")::headers # {{CURSOR}}
+      end # {{POPCONTEXT}}
 
     headers =
-      if
+      if # {{CONTEXT}}
         null.defined(content_type) and null.get(content_type) != ""
       then
         ("Content-type", null.get(content_type))::headers
       else
-        headers
-      end
+        headers # {{CURSOR}}
+      end # {{POPCONTEXT}}
 
     headers = list.map(fun (v) -> "#{fst(v)}: #{snd(v)}", headers)
     headers = string.concat(separator="\r\n", headers)
     headers = if headers != "" then "#{headers}\r\n" else "" end
     "#{headers}\r\n"
-  end
+  end # {{POPCONTEXT}}
 
-  def mk_data() =
+  def mk_data() = # {{CONTEXT}}
     data_sent := true
     data = data()
-    if
+    if # {{CONTEXT}}
       getter.is_constant(data)
     then
       response_ended := true
@@ -109,34 +110,34 @@ def http.response(
     else
       data = getter.get(data)
       response_ended := data == ""
-      "#{string.hex_of_int(string.length(data))}\r\n#{data}\r\n"
-    end
-  end
+      "#{string.hex_of_int(string.length(data))}\r\n#{data}\r\n" # {{CURSOR}}
+    end # {{POPCONTEXT}}
+  end # {{POPCONTEXT}}
 
-  def response() =
-    if
+  def response() = # {{CONTEXT}}
+    if # {{CONTEXT}}
       response_ended()
     then
       ""
     elsif not status_sent() then mk_status()
     elsif not headers_sent() then mk_headers()
     else
-      mk_data()
-    end
-  end
+      mk_data() # {{CURSOR}}
+    end # {{POPCONTEXT}}
+  end # {{POPCONTEXT}}
 
-  def attr_method(sent, attr) =
-    def set(v) =
-      if
+  def attr_method(sent, attr) = # {{CONTEXT}}
+    def set(v) = # {{CONTEXT}}
+      if # {{CONTEXT}}
         sent()
       then
         error.raise(
           error.invalid, "HTTP response has already been sent for this value!"
-        )
-      end
+        ) # {{CURSOR}}
+      end # {{POPCONTEXT}}
 
       attr := v
-    end
+    end # {{POPCONTEXT}}
 
     def get() =
       attr()

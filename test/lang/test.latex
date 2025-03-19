@@ -1,0 +1,21 @@
+\documentclass{article}
+\title{Sample LaTeX Document}
+\author{Author Name}
+\date{\today}
+
+\begin{document} % {{CONTEXT}}
+
+\maketitle
+
+\section{Introduction} % BUG: should have context
+
+
+
+This is a sample section in a LaTeX document. LaTeX is a document preparation system that is widely used for scientific and technical documents.
+
+
+% {{CURSOR}}
+
+
+\end{document}
+

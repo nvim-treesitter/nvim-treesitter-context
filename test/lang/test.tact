@@ -1,9 +1,10 @@
-struct S {
+// vim: ft=tact
+struct S { // {{CONTEXT}}
 
 
 
 
-    // comment
+    // {{CURSOR}}
 }
 
 message M {

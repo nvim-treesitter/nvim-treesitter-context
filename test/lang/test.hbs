@@ -1,13 +1,15 @@
-<div>
+{{! {{TEST}}
+<div> {{! {{CONTEXT}}
 
 
 
 
 
 
-
+{{! {{CURSOR}}
 </div>
-<div>
+{{! {{TEST}}
+<div> {{! {{CONTEXT}}
 
 
 
@@ -37,21 +39,21 @@
 
 
 
-
-  <ul>
+  {{! {{CURSOR}}
+  <ul> {{! {{CONTEXT}}
     <li></li>
-    <li>
+    <li> {{! {{CONTEXT}}
 
 
 
 
 
 
+      {{! {{CURSOR}}
 
-
-    </li>
+    </li> {{! {{POPCONTEXT}}
     <li></li>
-  </ul>
+  </ul> {{! {{POPCONTEXT}}
 
 
 
@@ -59,16 +61,8 @@
 
 
 
-  {{#if this.test}}
-    <div>
-
-
-
-
-
-
-
-
+  {{#if this.test}} {{! {{CONTEXT}}
+    <div> {{! {{CONTEXT}}
 
 
 
@@ -84,9 +78,17 @@
 
 
 
-    </div>
+
+
+
+
+
+
+
+      {{! {{CURSOR}}
+    </div> {{! {{POPCONTEXT}}
   {{else}}
-    <div>
+    <div> {{! {{CONTEXT}}
 
 
 
@@ -108,7 +110,7 @@
 
 
 
-
+      {{! {{CURSOR}}
 
     </div>
   {{/if}}

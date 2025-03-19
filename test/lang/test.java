@@ -3,40 +3,40 @@ package mymod;
 import stuff1;
 import stuff2;
 
-@class_annot_1
+@class_annot_1 // {{CONTEXT}}
 @class_annot_2
 public class MyClass {
 
 
 
-
-    @method_annot_1
+    // {{CURSOR}}
+    @method_annot_1 // {{CONTEXT}}
     @method_annot_2
     public void my_method(int param) {
 
 
 
-
-        if (true) {
-
-
+        // {{CURSOR}}
+        if (true) { // {{CONTEXT}}
 
 
-            for (int i = 0; i < 10; i++) {
+
+            // {{CURSOR}}
+            for (int i = 0; i < 10; i++) { // {{CONTEXT}}
                 
 
 
-
-                for (int var : iterable) {
+                // {{CURSOR}}
+                for (int var : iterable) { // {{CONTEXT}}
                     
 
 
+                    // {{CURSOR}}
+                    System. // {{CONTEXT}}
 
-                    System.
 
 
-
-                        out.println("a message");
+                        out.println("a message"); // {{CURSOR}}
                 }
             }
         }

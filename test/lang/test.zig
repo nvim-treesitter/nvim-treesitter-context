@@ -1,9 +1,9 @@
-test "stuff" {
-    while (i < 3 &&
+test "stuff" { // {{CONTEXT}}
+    while (i < 3 && // {{CONTEXT}}
         j > 4) {
         i += 1;
 
-
+        // {{CURSOR}}
         if (i == 2
         && j == 3) {
             // stuff

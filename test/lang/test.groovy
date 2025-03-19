@@ -1,16 +1,22 @@
-pipeline {
+// {{TEST}}
+pipeline { // {{CONTEXT}}
 
-    agent {
+    agent { // {{CONTEXT}}
         label "docker"
-    }
 
-    options {
+
+        // {{CURSOR}}
+    } // {{POPCONTEXT}}
+
+    options { // {{CONTEXT}}
         ansiColor('xterm')
         timeout(time: 60, unit: 'MINUTES')
         timestamps()
-    }
 
-    environment {
+        // {{CURSOR}}
+    } // {{POPCONTEXT}}
+
+    environment { // {{CONTEXT}}
 
         // Kubernetes deploy (default)
         KUBERNETES_CONFIG = 'kube.yaml'
@@ -19,63 +25,65 @@ pipeline {
 
         // Docker
         HOME = "$WORKSPACE"
-        DOCKER_WORKSPACE = "/workdir"
+        DOCKER_WORKSPACE = "/workdir" // {{CURSOR}}
 
-        GIT_COMMIT = sh(
+        GIT_COMMIT = sh( // {{CONTEXT}}
             script: "printf \$(git rev-parse --short HEAD)",
             returnStdout: true
-        )
+
+            // {{CURSOR}}
+        ) // {{POPCONTEXT}}
         GIT_BRANCH = sh(
             script: "printf \$(git rev-parse --abbrev-ref HEAD)",
             returnStdout: true
         )
 
-        GIT_TAG = sh(
+        GIT_TAG = sh( // {{CONTEXT}}
             script: "git tag --points-at ${env.GIT_COMMIT}",
             returnStdout: true
 
 
 
-        // ...
+        // {{CURSOR}}
 
 
 
 
 
 
-        )?.trim()
+        )?.trim() // {{POPCONTEXT}}
 
         TAG_NAME = "${GIT_TAG}"
 
 
 
-        // ....
+        // {{CURSOR}}
 
 
 
-    }
+    } // {{POPCONTEXT}}
 
-    stages {
+    stages { // {{CONTEXT}}
 
-        stage ('Checkout') {
+        stage ('Checkout') { // {{CONTEXT}}
 
-            steps {
+            steps { // {{CONTEXT}}
 
                 checkout scm
                 sh 'git rev-parse --abbrev-ref HEAD'
                 sh 'git rev-parse --short HEAD'
                 sh 'echo ${GIT_COMMIT}'
                 sh 'echo ${GIT_BRANCH}'
-                stash name: "source"
+                stash name: "source" // {{CURSOR}}
 
-                script {
+                script { // {{CONTEXT}}
                     env.VERSION = env.TAG_NAME  // will be NULL when empty
                     sh "echo 'Found version ${env.VERSION}'"
 
 
 
 
-                    // ...
+                    // {{CURSOR}}
 
 
 
@@ -84,7 +92,7 @@ pipeline {
 
 
 
-                } // script
+                } // {{POPCONTEXT}}
 
 
 
@@ -92,7 +100,7 @@ pipeline {
 
 
 
-                // ...
+                // {{CURSOR}}
 
 
 

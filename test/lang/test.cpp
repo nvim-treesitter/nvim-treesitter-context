@@ -1,10 +1,27 @@
-struct Struct {
+// # {{TEST}}
+struct Struct { // {{CONTEXT}}
     int *f1;
     int *f2;
 
 
 
-    // cursor position 1
+    // {{CURSOR}}
+};
+
+
+
+
+
+
+
+// {{TEST}}
+class Class { // {{CONTEXT}}
+    int *f1;
+    int *f2;
+
+
+
+    // {{CURSOR}}
 };
 
 
@@ -14,29 +31,14 @@ struct Struct {
 
 
 
-class Class {
-    int *f1;
-    int *f2;
-
-
-
-    // cursor position 2
-};
-
-
-
-
-
-
-
-
-typedef enum {
+// {{TEST}}
+typedef enum { // {{CONTEXT}}
   E1,
   E2,
   E3
 
 
-  // cursor position 3
+  // {{CURSOR}}
 } myenum;
 
 
@@ -47,40 +49,40 @@ typedef enum {
 
 
 
-
-int main(int arg1,
-         char **arg2,
+// {{TEST}}
+int main(int arg1, // {{CONTEXT}}
+         char **arg2, // BUG: marking context here does not work
          char **arg3
          )
 {
-  if (arg1 == 4
+  if (arg1 == 4 // {{CONTEXT}}
       && arg2 == arg3) {
-    for (int i = 0; i < arg1; i++) {
-      while (1) {
+    for (int i = 0; i < arg1; i++) { // {{CONTEXT}}
+      while (1) { // {{CONTEXT}}
 
 
 
 
 
-        // cursor position 4
+        // {{CURSOR}}
       }
     }
   }
+  // {{POPCONTEXT}}
+  // {{POPCONTEXT}}
+  // {{POPCONTEXT}}
 
 
 
-
-
-
-  do {
+  do { // {{CONTEXT}}
     int array[1];
-    for (auto value : array) {
+    for (auto value : array) { // {{CONTEXT}}
 
 
 
 
 
-      // cursor position 5
+      // {{CURSOR}}
     }
   } while (1);
 }

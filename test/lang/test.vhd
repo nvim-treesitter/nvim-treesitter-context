@@ -3,7 +3,11 @@
 --+-------------------------------
 
 -- (architecture_definition)
-architecture Behavioral of MyEntity is
+architecture Behavioral of MyEntity is -- {{CONTEXT}}
+
+
+
+    -- {{CURSOR}}
     -- (architecture_head)
     signal clk: std_logic;
 begin

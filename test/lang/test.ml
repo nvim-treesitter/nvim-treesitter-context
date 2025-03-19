@@ -1,6 +1,6 @@
 
-
-let foo_let = function
+(* {{TEST}} *)
+let foo_let = function (* {{CONTEXT}} *)
   | A -> "a"
 
 
@@ -13,7 +13,7 @@ let foo_let = function
 
 
 
-  | D -> "d"
+  | D -> "d" (* {{CURSOR}} *)
 
 
 

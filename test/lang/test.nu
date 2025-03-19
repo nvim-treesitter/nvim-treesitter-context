@@ -1,7 +1,10 @@
 #!/usr/bin/env nu
 
-def foo [] {
-  # comment
+def foo [] { # {{CONTEXT}}
+
+
+
+  # {{CURSOR}}
 }
 
 module bar {
