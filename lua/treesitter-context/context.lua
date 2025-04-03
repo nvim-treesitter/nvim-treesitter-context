@@ -215,6 +215,8 @@ local function get_parent_langtrees(bufnr, range)
     return {}
   end
 
+  --- @diagnostic disable-next-line:redundant-parameter added in 0.11
+  root_tree:parse(range, function(...) end)
   local ret = { root_tree }
 
   while true do
