@@ -24,11 +24,11 @@ $(NVIM_TS):
 
 FILTER=.*
 
-export NVIM_TEST_VERSION ?= v0.10.2
-export NVIM_RUNNER_VERSION ?= v0.10.2
+export NVIM_TEST_VERSION ?= v0.11.0
+export NVIM_RUNNER_VERSION ?= v0.11.0
 
 NVIM_TEST := deps/nvim-test
-NVIM_TEST_REV = v1.1.0
+NVIM_TEST_REV = v1.1.1
 
 .PHONY: nvim-test
 nvim-test: $(NVIM_TEST)
@@ -67,7 +67,7 @@ else
     LUALS_ARCH ?= x64
 endif
 
-LUALS_VERSION := 3.13.6
+LUALS_VERSION := 3.13.9
 LUALS := deps/lua-language-server-$(LUALS_VERSION)-$(shell uname -s)-$(LUALS_ARCH)
 LUALS_TARBALL := $(LUALS).tar.gz
 LUALS_URL := https://github.com/LuaLS/lua-language-server/releases/download/$(LUALS_VERSION)/$(notdir $(LUALS_TARBALL))
