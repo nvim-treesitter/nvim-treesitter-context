@@ -114,6 +114,34 @@ for _, lang in ipairs(langs_with_queries) do
       setup(function()
         cmd([[let $XDG_CACHE_HOME='scratch/cache']])
         install_langs(lang)
+        cmd('edit ' .. test_file)
+        local bufnr = api.nvim_get_current_buf()
+        exec_lua(
+          [[
+            local bufnr, lang = ...
+            local root_parser = vim.treesitter.get_parser(bufnr, lang)
+            local line_count = vim.api.nvim_buf_line_count(bufnr)
+            root_parser:parse({ 0, line_count })
+            local langs_to_iterate = vim.tbl_keys(root_parser:children())
+            while #langs_to_iterate > 0 do
+              local current_lang = table.remove(langs_to_iterate, 1)
+              require('nvim-treesitter.configs').setup({
+                ensure_installed = current_lang,
+                sync_install = true,
+              })
+              local ok, current_parser = pcall(vim.treesitter.get_parser, bufnr, current_lang)
+              if ok then
+                current_parser:parse({ 0, line_count })
+                local child_langs = vim.tbl_keys(current_parser:children())
+                for _, child in ipairs(child_langs) do
+                  table.insert(langs_to_iterate, child)
+                end
+              end
+            end
+          ]],
+          bufnr,
+          lang
+        )
       end)
 
       for cursor_row, context_rows in pairs(contexts) do
