@@ -136,7 +136,11 @@ for _, lang in ipairs(langs_with_queries) do
 
           local act_context_rows = {} --- @type integer[]
           for _, r in ipairs(ranges) do
-            table.insert(act_context_rows, r[1])
+            local start_row = r[1]
+            local end_row = r[3]
+            for i = start_row, end_row - 1 do
+              table.insert(act_context_rows, i)
+            end
           end
 
           helpers.eq(
