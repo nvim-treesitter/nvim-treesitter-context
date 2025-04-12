@@ -54,6 +54,63 @@ local function parse_directives(filename)
   return contexts
 end
 
+--- Install the root treesitter language for the given file and injected languages.
+--- @param filename string
+--- @param root_lang string
+local function install_langs_for_file(filename, root_lang)
+  cmd('edit ' .. filename)
+  local bufnr = api.nvim_get_current_buf()
+  local line_count = api.nvim_buf_line_count(bufnr)
+  --- @type table<string,boolean>
+  local seen_langs = {}
+  --- @type string[]
+  local langs_to_check = { root_lang }
+  while #langs_to_check > 0 do
+    local current_lang = table.remove(langs_to_check, 1)
+    -- We might encounter recursion, so check if we've traversed this language before.
+    if seen_langs[current_lang] then
+      goto continue
+    end
+    install_langs(current_lang)
+
+    -- Query for injections in the current language, and queue them for installation.
+    --- @diagnostic disable-next-line: redefined-local Not actually redefining locals
+    langs_to_check = exec_lua(function(bufnr, current_lang, line_count, langs_to_check)
+      local current_parser = vim.treesitter.get_parser(bufnr, current_lang)
+      if not current_parser then
+        return langs_to_check
+      end
+      -- Parsing the whole file is a simple way to get all injections for the file.
+      local tree_map = current_parser:parse({ 0, line_count })
+      if not tree_map then
+        return langs_to_check
+      end
+      local injection_query = vim.treesitter.query.get(current_lang, 'injections')
+      if not injection_query then
+        return langs_to_check
+      end
+      for _, tree in pairs(tree_map) do
+        local root = tree:root()
+        for id, node, metadata in injection_query:iter_captures(root, bufnr, 0, line_count) do
+          -- The name of the injection language is either available through metadata or the text
+          -- content of the `injection.language` capture.
+          if metadata['injection.language'] then
+            table.insert(langs_to_check, metadata['injection.language'])
+          end
+          local capture_name = injection_query.captures[id]
+          if capture_name == 'injection.language' then
+            local node_text = vim.treesitter.get_node_text(node, bufnr)
+            table.insert(langs_to_check, node_text)
+          end
+        end
+      end
+      return langs_to_check
+    end, bufnr, current_lang, line_count, langs_to_check)
+    seen_langs[current_lang] = true
+    ::continue::
+  end
+end
+
 local langs = get_langs()
 local langs_with_queries = {} --- @type string[]
 for _, lang in ipairs(langs) do
@@ -111,9 +168,9 @@ for _, lang in ipairs(langs_with_queries) do
         return
       end
 
-      setup(function()
+      lazy_setup(function()
         cmd([[let $XDG_CACHE_HOME='scratch/cache']])
-        install_langs(lang)
+        install_langs_for_file(test_file, lang)
       end)
 
       for cursor_row, context_rows in pairs(contexts) do
