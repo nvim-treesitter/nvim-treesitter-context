@@ -1,27 +1,13 @@
-```html
-<html>
-  <body>
+```html <!-- {{CONTEXT}} -->
+<html> <!-- {{CONTEXT}} -->
+  <body> <!-- {{CONTEXT}} -->
 
 
 
 
 
 
-    <script>
-
-
-
-
-
-
-
-
-
-
-
-
-      function test() {
-        if test != "" {
+    <script> <!-- {{CONTEXT}} -->
 
 
 
@@ -34,16 +20,30 @@
 
 
 
+      function test() { // {{CONTEXT}}
+        if test != "" { // {{CONTEXT}}
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+          // {{CURSOR}}
         }
       }
     </script>
   </body>
 </html>
 ```
-
+{{TEST}}
 # Title {{CONTEXT}}
 
 
