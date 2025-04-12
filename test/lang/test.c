@@ -21,19 +21,27 @@ typedef enum { // {{CONTEXT}}
 // {{TEST}}
 
 int main(int arg1, // {{CONTEXT}}
-         char **arg2,
-         char **arg3)
-{
+         char **arg2, // {{CONTEXT}}
+         char **arg3) // {{CONTEXT}}
+{ // {{CONTEXT}}
 
   if (arg1 == 4 // {{CONTEXT}}
-      && arg2 == arg3) {
+      && arg2 == arg3) { // {{CONTEXT}}
+
+
+
 
     // {{CURSOR}}
 
     for (int i = 0; i < arg1; i++) { // {{CONTEXT}}
 
+
+
+
       // {{CURSOR}}
       while (1) { // {{CONTEXT}}
+
+
 
 
         // {{CURSOR}}

@@ -15,13 +15,13 @@ struct Foo{T} # {{CONTEXT}}
 end
 # {{TEST}}
 function myfunc( # {{CONTEXT}}
-    x::Vector,
-    y::Int,
-)
+    x::Vector, # {{CONTEXT}}
+    y::Int, # {{CONTEXT}}
+) # {{CONTEXT}}
     @assert y > 0
     for i in 1:y # {{CONTEXT}}
         if i == 0 && # {{CONTEXT}}
-           i == 0 # Unnecessary condition to go over 2 lines.
+            i == 0 # {{CONTEXT}}
             println("zero")
             # comment
             # comment
@@ -43,6 +43,7 @@ function myfunc( # {{CONTEXT}}
             # comment
             # {{CURSOR}}
         end # {{POPCONTEXT}}
+        # {{POPCONTEXT}}
     end # {{POPCONTEXT}}
     # comment
     # comment
@@ -51,7 +52,7 @@ function myfunc( # {{CONTEXT}}
     # {{CURSOR}}
     foo = y
     while foo > 0 && # {{CONTEXT}}
-        foo > 0 # Unnecessary condition to go over 2 lines.
+        foo > 0 # {{CONTEXT}}
         println(foo)
         foo -= 1
         # comment
@@ -60,7 +61,7 @@ function myfunc( # {{CONTEXT}}
         # comment
         # {{CURSOR}}
     end # {{POPCONTEXT}}
-    # comment
+    # {{POPCONTEXT}}
     # comment
     # comment
     # comment

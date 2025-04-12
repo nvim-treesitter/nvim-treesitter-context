@@ -6,7 +6,7 @@ var list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 switch i { // {{CONTEXT}}
 
 case let x // {{CONTEXT}}
-where x > 0:
+where x > 0: // {{CONTEXT}}
 
 
 

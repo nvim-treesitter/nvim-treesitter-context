@@ -1,4 +1,4 @@
-.class public Lbaksmali/test/class;
+.class public Lbaksmali/test/class; # BUG: The contexts here are extremely buggy and include too many newlines
 .super Ljava/lang/Object;
 
 .source "baksmali_test_class.smali"
@@ -85,7 +85,7 @@
     return-void
 .end method
 
-.method public testMethod(ILjava/lang/String;)Ljava/lang/String; # {{CONTEXT}}
+.method public testMethod(ILjava/lang/String;)Ljava/lang/String;
     .registers 3
     .annotation runtime Lorg/junit/Test;
     .end annotation
@@ -96,7 +96,7 @@
 
 	const-string v0, "testing\n123"
 
-	goto switch: # {{CURSOR}}
+	goto switch:
 
 	sget v0, Lbaksmali/test/class;->staticField:I
 

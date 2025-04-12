@@ -12,12 +12,12 @@ import ( // {{CONTEXT}}
 // {{TEST}}
 
 func (r *rect) area(a int, // {{CONTEXT}}
-b int) int {
+b int) int { // {{CONTEXT}}
     return r.width * r.height
 
+
+
 // {{CURSOR}}
-
-
 }
 
 var b
@@ -27,8 +27,8 @@ var b
 // {{TEST}}
 
 func foo(a int, // {{CONTEXT}}
-  b int) (int,
-  int) {
+  b int) (int, // {{CONTEXT}}
+  int) { // {{CONTEXT}}
 
     i := 1
 
@@ -38,9 +38,9 @@ func foo(a int, // {{CONTEXT}}
     case msg2 := <-c2: // {{CONTEXT}}
 
 
+
+
       // {{CURSOR}}
-
-
       fmt.Println("received", msg2)
   }
 
