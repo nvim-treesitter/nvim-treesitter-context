@@ -77,11 +77,7 @@ setup(function()
     --- @type string
     local treesitter_lang = exec_lua(
       [[
-    local ok, parser = pcall(vim.treesitter.get_parser, ...)
-    if not ok then
-      return nil
-    end
-    return parser:lang()
+    return require('nvim-treesitter.parsers').get_buf_lang(...)
     ]],
       bufnr
     )
@@ -111,7 +107,7 @@ for _, lang in ipairs(langs_with_queries) do
         return
       end
 
-      setup(function()
+      lazy_setup(function()
         cmd([[let $XDG_CACHE_HOME='scratch/cache']])
         install_langs(lang)
       end)
