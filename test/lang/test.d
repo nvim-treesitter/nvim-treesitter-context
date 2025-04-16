@@ -1,6 +1,6 @@
 // {{TEST}}
 struct S // {{CONTEXT}}
-{
+{ // {{CONTEXT}}
 
 
 
@@ -31,7 +31,7 @@ enum Things { // {{CONTEXT}}
 }
 // {{TEST}}
 union U // {{CONTEXT}}
-{
+{ // {{CONTEXT}}
     ubyte i;
 
 
@@ -41,7 +41,7 @@ union U // {{CONTEXT}}
 }
 // {{TEST}}
 interface Bar // {{CONTEXT}}
-{
+{ // {{CONTEXT}}
 
 
 
@@ -49,14 +49,14 @@ interface Bar // {{CONTEXT}}
 }
 // {{TEST}}
 class Foo : Bar // {{CONTEXT}}
-{
+{ // {{CONTEXT}}
 
 
 
     // {{CURSOR}}
     void bar (int a, // {{CONTEXT}}
-        int b)
-    {
+        int b) // {{CONTEXT}}
+    { // {{CONTEXT}}
 
     try { // {{CONTEXT}}
 

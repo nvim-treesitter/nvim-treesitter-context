@@ -1,10 +1,13 @@
 % {{TEST}}
 if x < 0 && % {{CONTEXT}}
-  y < 0
+  y < 0 % {{CONTEXT}}
+
 
 
   y = 0; % {{CURSOR}}
 elseif x < 1 % {{CONTEXT}}
+
+
 
 
   y = x; % {{CURSOR}}
@@ -12,8 +15,9 @@ elseif x < 1 % {{CONTEXT}}
 else % {{CONTEXT}}
 
 
+
   y = 1; % {{CURSOR}}
-end % {{POPCONTEXT}}
+end
 
 % {{TEST}}
 while x < 5 % {{CONTEXT}}
@@ -54,15 +58,18 @@ end % {{POPCONTEXT}}
 
 % {{TEST}}
 function [C] = myMatMult(A, % {{CONTEXT}}
-  B)
+  B) % {{CONTEXT}}
     [m,n] = size(A);
     [p,q] = size(B);
     if n ~= % {{CONTEXT}}
-      p
+      p % {{CONTEXT}}
         error('Inner matrix dimensions must agree.');
+
+
 
       % {{CURSOR}}
     end % {{POPCONTEXT}}
+    % {{POPCONTEXT}}
     C = zeros(m,q); % {{CURSOR}}
     for i =
       1:m

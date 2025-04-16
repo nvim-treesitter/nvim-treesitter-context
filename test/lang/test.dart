@@ -1,9 +1,9 @@
 // {{TEST}}
 @Deprecated('') // {{CONTEXT}}
-abstract // BUG: there should be context here
-class User 
-    extends 
-      Object {
+abstract // {{CONTEXT}}
+class User // {{CONTEXT}}
+    extends // {{CONTEXT}}
+      Object { // {{CONTEXT}}
   User(this.age);
   int age;
 
@@ -40,19 +40,19 @@ class User
 // {{TEST}}
 String(
   int magicalNumber,
-) { // {{CONTEXT}
+) { // {{CONTEXT}}
   if (magicalNumber == "69" // {{CONTEXT}}
-      // --
-      ||
-      magicalNumber == "420") {
+      // {{CONTEXT}}
+      || // {{CONTEXT}}
+      magicalNumber == "420") { // {{CONTEXT}}
     return 'pretty nice';
 
 
 
     // {{CURSOR}}
   } else if (magicalNumber == "420" // {{CONTEXT}}
-      &&
-      magicalNumber == "69") {
+      && // {{CONTEXT}}
+      magicalNumber == "69") { // {{CONTEXT}}
 
 
 
@@ -84,7 +84,7 @@ String(
 // {{TEST}}
 void catching() { // {{CONTEXT}}
   try // {{CONTEXT}}
-    // --
+    // {{CONTEXT}}
   {
 
 
@@ -129,8 +129,8 @@ void catching() { // {{CONTEXT}}
 // {{TEST}}
 void foring() { // {{CONTEXT}}
   for (int i = 0; // {{CONTEXT}}
-        i < 10;
-        i++) {
+        i < 10; // {{CONTEXT}}
+        i++) { // {{CONTEXT}}
 
 
 
@@ -146,9 +146,11 @@ void foring() { // {{CONTEXT}}
 
     // {{CURSOR}}
   } // {{POPCONTEXT}}
+  // {{POPCONTEXT}}
+  // {{POPCONTEXT}}
 
   while (true // {{CONTEXT}}
-  == false) {
+  == false) { // {{CONTEXT}}
 
 
 
@@ -168,6 +170,7 @@ void foring() { // {{CONTEXT}}
     // {{CURSOR}}
 
 } // {{POPCONTEXT}}
+// {{POPCONTEXT}}
 
   do { // {{CONTEXT}}
 
@@ -188,7 +191,7 @@ void foring() { // {{CONTEXT}}
 }
 // {{TEST}}
 extension ext // {{CONTEXT}}
-on int {
+on int { // {{CONTEXT}}
 
 
 

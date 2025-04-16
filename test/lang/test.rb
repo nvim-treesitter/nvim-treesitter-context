@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-module Bar
+module Bar # BUG: The contexts here include too many newlines
   class Foo
     class << self
-      def run # {{CONTEXT}}
+      def run
 
 
 
-        # {{CURSOR}}
+
         if false
           (20..30).each do |element|
             block.call(element)
@@ -40,11 +40,15 @@ module Bar
   end
 end
 
-RSpec.describe 'foo' do
-  context 'bar' do
-    shared_context 'shared context' do
-      it 'test' do
-        expect(1).to eq(1)
+RSpec.describe 'foo' do # {{CONTEXT}}
+  context 'bar' do # {{CONTEXT}}
+    shared_context 'shared context' do # {{CONTEXT}}
+      it 'test' do # {{CONTEXT}}
+
+
+
+
+        expect(1).to eq(1) # {{CURSOR}}
       end
     end
 

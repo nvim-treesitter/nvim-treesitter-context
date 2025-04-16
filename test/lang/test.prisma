@@ -15,7 +15,7 @@ client {
 }
 
 enum // {{CONTEXT}}
-Role {
+Role { // {{CONTEXT}}
 
   USER
 

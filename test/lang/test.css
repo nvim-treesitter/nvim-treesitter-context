@@ -23,7 +23,7 @@
     } /* {{POPCONTEXT}} */
 
     @color-profile /* {{CONTEXT}} */
-    --swop5c { /* BUG: marking context here does not work */
+    --swop5c { /* {{CONTEXT}} */
 
 
 
@@ -37,7 +37,7 @@
         /* {{CURSOR}} */
 
     } /* {{POPCONTEXT}} */
-
+    /* {{POPCONTEXT}} */
 
 
 
@@ -80,14 +80,16 @@
 
 /* {{TEST}} */
 @media ( /* {{CONTEXT}} */
+/* {{CONTEXT}} */
+prefers-reduced-motion: reduce) { /* {{CONTEXT}} */
 
-prefers-reduced-motion: reduce) {
+
 
 
   /* {{CURSOR}} */
   *, /* {{CONTEXT}} */
-  *::before,
-  *::after {
+  *::before, /* {{CONTEXT}} */
+  *::after { /* {{CONTEXT}} */
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -109,8 +111,8 @@ prefers-reduced-motion: reduce) {
     /* {{CURSOR}} */
 
   } /* {{POPCONTEXT}} */
-
-
+  /* {{POPCONTEXT}} */
+  /* {{POPCONTEXT}} */
 
 
 

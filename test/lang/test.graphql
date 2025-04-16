@@ -1,7 +1,7 @@
 # {{TEST}}
 interface # {{CONTEXT}}
-  Foo
-{
+  Foo # {{CONTEXT}}
+{ # {{CONTEXT}}
   id: ID!
   name: String
 
@@ -9,14 +9,16 @@ interface # {{CONTEXT}}
 }
 # {{TEST}}
 input # {{CONTEXT}}
-  Stuff {
+  Stuff { # {{CONTEXT}}
   limit: Int
   since_id: ID
+
+
   # {{CURSOR}}
 }
 # {{TEST}}
 type Bar # {{CONTEXT}}
-  implements Foo {
+  implements Foo { # {{CONTEXT}}
   age: Int
 
 
@@ -63,9 +65,9 @@ query GetSearchResults { # {{CONTEXT}}
 }
 # {{TEST}}
 mutation # {{CONTEXT}}
-  CreateBar {
+  CreateBar { # {{CONTEXT}}
   addBar(name: "AAAA", # {{CONTEXT}}
-    age: 42) {
+    age: 42) { # {{CONTEXT}}
     name
     foo {
       age

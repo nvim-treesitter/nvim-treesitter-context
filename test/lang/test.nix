@@ -1,20 +1,22 @@
 
 {
   output = # {{CONTEXT}}
- 
-
-
-
-
-
-
-
-    # {{CURSOR}}
-   let
-      l = {
+    # {{CONTEXT}}
+    # {{CONTEXT}}
+    # {{CONTEXT}}
+    # {{CONTEXT}}
+    # {{CONTEXT}}
+    # {{CONTEXT}}
+    # {{CONTEXT}}
+    # {{CONTEXT}}
+    # {{CONTEXT}}
+   let # {{CONTEXT}}
+      l = { # {{CONTEXT}}
         a = false;
         b = false;
         c = false;
+
+        # {{CURSOR}}
       }; #Succe
       m = {
         a = false;

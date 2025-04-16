@@ -64,7 +64,7 @@ end Show_Increment;
 
 -- {{TEST}}
 type Date is -- {{CONTEXT}}
-  record
+  record -- {{CONTEXT}}
   Day : Integer range 1 .. 31;
 
   Month : Months := Jan;
