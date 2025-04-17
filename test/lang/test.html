@@ -48,7 +48,7 @@
 
 
 
-      color: red; /* BUG: cannot test for injected lang here */
+      color: red; /* {{CURSOR}} */
 
 
 
@@ -133,8 +133,14 @@
 
 
     var b = 2;
-    function test() {
+    function test() { // {{CONTEXT}}
       let test = "asdasd";
+
+
+
+
+
+      // {{CURSOR}}
     }
 
     var c = a + b;
