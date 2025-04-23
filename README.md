@@ -45,6 +45,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `fennel`
   - [x] `fish`
   - [x] `fortran`
+  - [x] `gleam`
   - [x] `gdscript`
   - [x] `glimmer`
   - [x] `glsl`
@@ -174,7 +175,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `gitattributes`
   - [ ] `gitcommit`
   - [ ] `gitignore`
-  - [ ] `gleam`
   - [ ] `glimmer_javascript`
   - [ ] `glimmer_typescript`
   - [ ] `gn`
