@@ -24,11 +24,11 @@ $(NVIM_TS):
 
 FILTER=.*
 
-export NVIM_TEST_VERSION ?= v0.10.2
-export NVIM_RUNNER_VERSION ?= v0.10.2
+export NVIM_TEST_VERSION ?= v0.11.0
+export NVIM_RUNNER_VERSION ?= v0.11.0
 
 NVIM_TEST := deps/nvim-test
-NVIM_TEST_REV = v1.1.0
+NVIM_TEST_REV = v1.1.1
 
 .PHONY: nvim-test
 nvim-test: $(NVIM_TEST)
