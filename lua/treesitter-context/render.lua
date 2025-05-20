@@ -419,6 +419,11 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
         end_row = offset + (mend_row - ctx_srow)
       end
 
+      local virt_text_pos = opts.virt_text_pos
+      if virt_text_pos == 'win_col' then
+        virt_text_pos = nil
+      end
+
       -- Use pcall incase fields from opts are inconsistent with opts in
       -- nvim_buf_set_extmark
       pcall(add_extmark, ctx_bufnr, start_row, col, {
@@ -433,7 +438,7 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
         hl_eol = opts.hl_eol,
         virt_text = opts.virt_text,
         virt_text_hide = opts.virt_text_hide,
-        virt_text_pos = opts.virt_text_pos,
+        virt_text_pos = virt_text_pos,
         virt_text_repeat_linebreak = opts.virt_text_repeat_linebreak,
         virt_text_win_col = opts.virt_text_win_col,
         hl_mode = opts.hl_mode,
