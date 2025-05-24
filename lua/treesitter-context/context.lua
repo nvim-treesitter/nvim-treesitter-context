@@ -341,7 +341,11 @@ function M.get(bufnr, winid)
     for parents, query in iter_context_parents(bufnr, line_range) do
       for _, parent in ipairs(parents) do
         local parent_start_row = parent:range()
-        local contexts_end_row = top_row + math.min(max_lines, contexts_height)
+
+        -- NOTE: this avoids covering up context by separator line
+        local separator_offset = config.separator and 1 or 0
+
+        local contexts_end_row = top_row + separator_offset + math.min(max_lines, contexts_height)
 
         -- Only process the parent if it is not in view.
         if parent_start_row < contexts_end_row then
