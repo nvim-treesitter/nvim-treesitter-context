@@ -46,9 +46,28 @@ local function get_parent_nodes(langtree, range)
 end
 
 --- @param winid integer
+--- @param percent string
+--- @return integer
+local function max_lines_from_string(winid, percent)
+  local win_height = api.nvim_win_get_height(winid)
+  local percent_s = percent:match('^(%d+)%%$')
+  local percent = percent_s and tonumber(percent_s, 10) or 0
+  return math.ceil((percent / 100.0) * win_height)
+end
+
+--- @param winid integer
 --- @return integer
 local function calc_max_lines(winid)
-  local max_lines = config.max_lines == 0 and -1 or config.max_lines
+  local max_lines --- @type integer
+
+  if type(config.max_lines) == 'string' then
+    max_lines = max_lines_from_string(winid, config.max_lines)
+  else
+    max_lines = config.max_lines --- @type integer
+  end
+
+  -- ensure we never have zero as max lines
+  max_lines = max_lines == 0 and -1 or max_lines
 
   local wintop = fn.line('w0', winid)
   local cursor = fn.line('.', winid)

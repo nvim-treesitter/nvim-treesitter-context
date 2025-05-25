@@ -27,6 +27,7 @@ not required.
       multiwindow = false,
 
       -- How many lines the window should span. Values <= 0 mean no limit.
+      -- Can be '<int>%' like '30%' - to specify percentage of win.height
       max_lines = 0,
 
       -- Minimum editor window height to enable context. Values <= 0 mean no
