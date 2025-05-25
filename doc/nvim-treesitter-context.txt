@@ -116,12 +116,32 @@ enable()                                      *nvim-treesitter-context-enable()*
 
 go_to_context({depth})                 *nvim-treesitter-context-go_to_context()*
 
-    Jump to the context at {depth}.
+    Jump to parent scope within the context window at {depth}.
+
+    A depth of 1 implies nearest, 2 second nearest and so on. Set to
+    `vim.v.count1` to support motions with counts as depth.
+
+    Example use in a keymap:
+>lua
+        vim.keymap.set("n", "[C", function()
+          require("treesitter-context").go_to_context(vim.v.count1)
+        end, { silent = true })
+<
+
+    Parameters: ~
+        {depth} (`integer`, default: `1`) Depth to jump to.
+
+go_to_parent({depth})                 *nvim-treesitter-context-go_to_parent()*
+
+    Jump to parent scope at {depth}.
+
+    A depth of 1 implies nearest, 2 second nearest and so on. Set to
+    `vim.v.count1` to support motions with counts as depth.
 
     Example use in a keymap:
 >lua
         vim.keymap.set("n", "[c", function()
-          require("treesitter-context").go_to_context(vim.v.count1)
+          require("treesitter-context").go_to_parent(vim.v.count1)
         end, { silent = true })
 <
 

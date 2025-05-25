@@ -190,7 +190,7 @@ end
 --- @param bufnr integer
 --- @return Range4, string[]
 local function get_text_for_range(range, bufnr)
-  local start_row, end_row, end_col = range[1], range[3], range[4]
+  local start_row, start_col, end_row, end_col = range[1], range[2], range[3], range[4]
 
   if end_col == 0 then
     end_row = end_row - 1
@@ -218,7 +218,7 @@ local function get_text_for_range(range, bufnr)
     end_row = end_row + 1
   end
 
-  return { start_row, 0, end_row, end_col }, lines
+  return { start_row, start_col, end_row, end_col }, lines
 end
 
 local M = {}
@@ -313,9 +313,11 @@ local function range_is_valid(range)
 end
 
 --- @param winid? integer
+--- @param full_context? boolean default false
 --- @return Range4[]?, string[]?
-function M.get(winid)
+function M.get(winid, full_context)
   winid = winid or api.nvim_get_current_win()
+  full_context = full_context or false
   local bufnr = api.nvim_win_get_buf(winid)
 
   -- vim.treesitter.get_parser() calls bufload(), but we don't actually want to load the buffer:
@@ -369,8 +371,9 @@ function M.get(winid)
 
         local contexts_end_row = top_row + separator_offset + num_context_lines
 
-        -- Only process the parent if it is not in view.
-        if parent_start_row < contexts_end_row then
+        -- Only process the parent if it is not in view
+        -- noteable exception when full_context is true
+        if parent_start_row < contexts_end_row or full_context then
           local range0 = context_range(parent, bufnr, query)
           if range0 and range_is_valid(range0) then
             local range, lines = get_text_for_range(range0, bufnr)

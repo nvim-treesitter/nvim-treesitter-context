@@ -301,30 +301,53 @@ function M.setup(options)
   end
 end
 
---- @param depth integer? default 1
-function M.go_to_context(depth)
-  depth = depth or 1
+--- @param depth integer
+--- @param ranges Range4[]
+local function go_to(depth, ranges)
   local line = api.nvim_win_get_cursor(0)[1]
-  local context = nil
-  local contexts = require('treesitter-context.context').get() or {}
+  local range = nil
 
-  for idx = #contexts, 1, -1 do
-    local c = contexts[idx]
+  for idx = #ranges, 1, -1 do
+    local c = ranges[idx]
     if depth == 0 then
       break
     end
     if c[1] + 1 < line then
-      context = c
+      range = c
       depth = depth - 1
     end
   end
 
-  if not context then
+  if not range then
     return
   end
 
-  vim.cmd([[ normal! m' ]]) -- add current cursor position to the jump list
-  api.nvim_win_set_cursor(0, { context[1] + 1, context[2] })
+  vim.cmd([[normal! m']]) -- add current cursor position to the jump list
+  api.nvim_win_set_cursor(0, { range[1] + 1, range[2] })
+end
+
+--- Jump to parent scope at depth.
+---
+--- A depth of 1 implies nearest, 2 second nearest and so on. Set to
+--- `vim.v.count1` to support motions with counts as depth.
+---
+--- @param depth integer? default 1
+function M.go_to_parent(depth)
+  depth = depth or 1
+  local ranges = require('treesitter-context.context').get(nil, true) or {}
+  go_to(depth, ranges)
+end
+
+--- Jump to parent scope within the context window at depth.
+---
+--- A depth of 1 implies nearest, 2 second nearest and so on. Set to
+--- `vim.v.count1` to support motions with counts as depth.
+---
+--- @param depth integer? default 1
+function M.go_to_context(depth)
+  depth = depth or 1
+  local ranges = require('treesitter-context.context').get() or {}
+  go_to(depth, ranges)
 end
 
 return M
