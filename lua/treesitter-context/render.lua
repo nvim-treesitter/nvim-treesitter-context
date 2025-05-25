@@ -495,7 +495,7 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
   window_contexts[winid] = window_contexts[winid] or {}
   local window_context = window_contexts[winid]
 
-  if config.line_numbers and (vim.wo[winid].number or vim.wo[winid].relativenumber) then
+  if gutter_width > 0 then
     window_context.gutter_winid = display_window(
       winid,
       window_context.gutter_winid,
@@ -505,8 +505,10 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
       'treesitter_context_line_number',
       'TreesitterContextLineNumber'
     )
-
-    if api.nvim_win_is_valid(window_context.gutter_winid) then
+    if
+      api.nvim_win_is_valid(window_context.gutter_winid)
+      and (vim.wo[winid].number or vim.wo[winid].relativenumber)
+    then
       render_lno(winid, api.nvim_win_get_buf(window_context.gutter_winid), ctx_ranges, gutter_width)
     end
   else
