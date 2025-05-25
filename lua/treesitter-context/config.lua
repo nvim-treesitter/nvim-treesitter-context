@@ -1,7 +1,7 @@
 --- @class (exact) TSContext.Config
 --- @field enable boolean
 --- @field multiwindow boolean
---- @field max_lines integer
+--- @field max_lines integer | string
 --- @field min_window_height integer
 --- @field line_numbers boolean
 --- @field multiline_threshold integer
@@ -20,7 +20,8 @@
 --- @field multiwindow? boolean
 ---
 --- How many lines the window should span. Values <= 0 mean no limit.
---- @field max_lines? integer
+--- Can be '<int>%' like '30%' - to specify percentage of win.height.
+--- @field max_lines? integer | string
 ---
 --- Minimum editor window height to enable context. Values <= 0 mean no limit.
 --- @field min_window_height? integer
