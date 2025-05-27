@@ -449,11 +449,11 @@ end
 
 local M = {}
 
---- @param bufnr integer
 --- @param winid integer
 --- @param ctx_ranges Range4[]
 --- @param ctx_lines string[]
-function M.open(bufnr, winid, ctx_ranges, ctx_lines)
+function M.open(winid, ctx_ranges, ctx_lines)
+  local bufnr = api.nvim_win_get_buf(winid)
   local gutter_width = get_gutter_width(winid)
   local win_width = math.max(1, api.nvim_win_get_width(winid) - gutter_width)
 
