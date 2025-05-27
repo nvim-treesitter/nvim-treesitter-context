@@ -37,20 +37,6 @@ local function create_or_get_buf()
   return buf
 end
 
-local function delete_excess_buffers()
-  if fn.getcmdwintype() ~= '' then
-    -- Can't delete buffers when the command-line window is open.
-    return
-  end
-
-  while #buffer_pool > MAX_BUFFER_POOL_SIZE do
-    local buf = table.remove(buffer_pool, #buffer_pool)
-    if api.nvim_buf_is_valid(buf) then
-      api.nvim_buf_delete(buf, { force = true })
-    end
-  end
-end
-
 --- @param winid integer
 --- @param context_winid integer?
 --- @param width integer
@@ -138,11 +124,13 @@ local function get_hl(buf_query, capture)
 end
 
 --- Is a position a after another position b?
---- @param a [integer, integer] [row, col]
---- @param b [integer, integer] [row, col]
+--- @param arow integer
+--- @param acol integer
+--- @param brow integer
+--- @param bcol integer
 --- @return boolean
-local function is_after(a, b)
-  return a[1] > b[1] or (a[1] == b[1] and a[2] > b[2])
+local function is_after(arow, acol, brow, bcol)
+  return arow > brow or (arow == brow and acol > bcol)
 end
 
 --- @param bufnr integer
@@ -182,10 +170,10 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
         local nsrow, nscol, nerow, necol = range[1], range[2], range[4], range[5]
 
         if nsrow >= start_row then
-          if is_after({ nsrow, nscol }, { end_row, end_col }) then
+          if is_after(nsrow, nscol, end_row, end_col) then
             -- Node range begins after the context range, skip it
             break
-          elseif is_after({ nerow, necol }, { end_row, end_col }) then
+          elseif is_after(nerow, necol, end_row, end_col) then
             -- Node range extends beyond the context range, clip it
             nerow, necol = end_row, end_col
           end
@@ -355,18 +343,28 @@ end
 --- @param context_winid? integer
 local function close(context_winid)
   vim.schedule(function()
-    if context_winid == nil or not api.nvim_win_is_valid(context_winid) then
+    if not context_winid or not api.nvim_win_is_valid(context_winid) then
       return
     end
 
     local bufnr = api.nvim_win_get_buf(context_winid)
     api.nvim_win_close(context_winid, true)
-    if bufnr ~= nil and api.nvim_buf_is_valid(bufnr) then
-      -- We can't delete the buffer in-place if the pool is full and the command-line window is open.
-      -- Instead, add the buffer to the pool and let delete_excess_buffers() address this situation.
-      table.insert(buffer_pool, bufnr)
+
+    -- Add the buffer back to the pool for reuse.
+    if bufnr and api.nvim_buf_is_valid(bufnr) then
+      buffer_pool[#buffer_pool + 1] = bufnr
     end
-    delete_excess_buffers()
+
+    -- Delete excess buffers in the pool.
+    -- Can't delete buffers when the command-line window is open.
+    if fn.getcmdwintype() == '' then
+      while #buffer_pool > MAX_BUFFER_POOL_SIZE do
+        local buf = table.remove(buffer_pool, #buffer_pool)
+        if api.nvim_buf_is_valid(buf) then
+          api.nvim_buf_delete(buf, { force = true })
+        end
+      end
+    end
   end)
 end
 
@@ -400,18 +398,15 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
     )
 
     for _, m in ipairs(extmarks) do
-      local id = m[1]
-      local row = m[2]
-      local col = m[3] --[[@as integer]]
+      local id, row, col = m[1], m[2], m[3]
       local opts = m[4] --[[@as vim.api.keyset.extmark_details]]
-
       local start_row = offset + (row - ctx_srow)
 
       local end_row --- @type integer?
       local end_col = opts.end_col
       local mend_row = opts.end_row
       if mend_row then
-        if is_after({ mend_row, end_col }, { ctx_erow, ctx_ecol }) then
+        if is_after(mend_row, assert(end_col), ctx_erow, ctx_ecol) then
           mend_row = ctx_erow
           end_col = ctx_ecol
         end
@@ -453,34 +448,6 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
 end
 
 local M = {}
-
--- Contexts may sometimes leak due to reasons like the use of 'noautocmd'.
--- In these cases, affected windows might remain visible, and even ToggleContext
--- won't resolve the issue, as contexts are identified using parent windows.
--- Therefore, it's essential to occasionally perform garbage collection to
--- clean up these leaked contexts.
-function M.close_leaked_contexts()
-  local all_wins = api.nvim_list_wins()
-
-  for parent_winid, window_context in pairs(window_contexts) do
-    if not vim.tbl_contains(all_wins, parent_winid) then
-      close(window_context.context_winid)
-      close(window_context.gutter_winid)
-      window_contexts[parent_winid] = nil
-    end
-  end
-end
-
---- @param winid integer The only window for which the context should be displayed.
-function M.close_other_contexts(winid)
-  for parent_winid, window_context in pairs(window_contexts) do
-    if parent_winid ~= winid then
-      close(window_context.context_winid)
-      close(window_context.gutter_winid)
-      window_contexts[parent_winid] = nil
-    end
-  end
-end
 
 --- @param bufnr integer
 --- @param winid integer
@@ -544,24 +511,23 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
   horizontal_scroll_contexts(winid, window_context.context_winid)
 end
 
---- @param winid? integer
+--- @param exclude_winids integer[] The only window for which the context should be displayed.
+function M.close_contexts(exclude_winids)
+  for winid in pairs(window_contexts) do
+    if not vim.tbl_contains(exclude_winids, winid) then
+      M.close(winid)
+    end
+  end
+end
+
+--- @param winid integer
 function M.close(winid)
-  -- Can't close other windows when the command-line window is open
-  if fn.getcmdwintype() ~= '' then
-    return
-  end
-
-  if winid == nil then
-    return
-  end
-
   local window_context = window_contexts[winid]
   if window_context then
     close(window_context.context_winid)
     close(window_context.gutter_winid)
+    window_contexts[winid] = nil
   end
-
-  window_contexts[winid] = nil
 end
 
 return M

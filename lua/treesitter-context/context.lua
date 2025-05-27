@@ -51,19 +51,17 @@ end
 local function max_lines_from_string(winid, percent)
   local win_height = api.nvim_win_get_height(winid)
   local percent_s = percent:match('^(%d+)%%$')
-  local percent = percent_s and tonumber(percent_s, 10) or 0
-  return math.ceil((percent / 100.0) * win_height)
+  local percent1 = percent_s and tonumber(percent_s, 10) or 0
+  return math.ceil((percent1 / 100) * win_height)
 end
 
 --- @param winid integer
 --- @return integer
 local function calc_max_lines(winid)
-  local max_lines --- @type integer
+  local max_lines = config.max_lines
 
-  if type(config.max_lines) == 'string' then
-    max_lines = max_lines_from_string(winid, config.max_lines)
-  else
-    max_lines = config.max_lines --- @type integer
+  if type(max_lines) == 'string' then
+    max_lines = max_lines_from_string(winid, max_lines)
   end
 
   -- ensure we never have zero as max lines

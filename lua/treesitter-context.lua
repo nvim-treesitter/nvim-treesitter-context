@@ -74,17 +74,14 @@ local attached = {} --- @type table<integer,true>
 
 --- @param args table
 local function au_close(args)
-  if args.event == 'WinClosed' then
-    -- Closing current window instead of intended window may lead to context window flickering.
-    Render.close(tonumber(args.match))
-  else
-    Render.close(api.nvim_get_current_win())
-  end
+  -- Closing current window instead of intended window may lead to context window flickering.
+  local winid = args.event == 'WinClosed' and tonumber(args.match) or api.nvim_get_current_win()
+  Render.close(winid)
 end
 
---- @param bufnr integer
 --- @param winid integer
-local function cannot_open(bufnr, winid)
+local function cannot_open(winid)
+  local bufnr = api.nvim_win_get_buf(winid)
   return not attached[bufnr]
     or vim.bo[bufnr].filetype == ''
     or vim.bo[bufnr].buftype ~= ''
@@ -93,14 +90,14 @@ local function cannot_open(bufnr, winid)
 end
 
 --- @param winid integer
-local update_single_context = throttle_by_id(function(winid)
+local update_win = throttle_by_id(function(winid)
   -- Remove leaked contexts firstly.
-  local current_win = api.nvim_get_current_win()
-  if config.multiwindow then
-    Render.close_leaked_contexts()
-  else
-    Render.close_other_contexts(current_win)
-  end
+  -- Contexts may sometimes leak due to reasons like the use of 'noautocmd'.
+  -- In these cases, affected windows might remain visible, and even ToggleContext
+  -- won't resolve the issue, as contexts are identified using parent windows.
+  -- Therefore, it's essential to occasionally perform garbage collection to
+  -- clean up these leaked contexts.
+  Render.close_contexts(config.multiwindow and api.nvim_list_wins() or { winid })
 
   -- Since the update is performed asynchronously, the window may be closed at this moment.
   -- Therefore, we need to check if it is still valid.
@@ -108,12 +105,12 @@ local update_single_context = throttle_by_id(function(winid)
     return
   end
 
-  local bufnr = api.nvim_win_get_buf(winid)
-
-  if cannot_open(bufnr, winid) or not config.multiwindow and winid ~= current_win then
+  if cannot_open(winid) or not config.multiwindow and winid ~= api.nvim_get_current_win() then
     Render.close(winid)
     return
   end
+
+  local bufnr = api.nvim_win_get_buf(winid)
 
   local context_ranges, context_lines = require('treesitter-context.context').get(bufnr, winid)
   all_contexts[bufnr] = context_ranges
@@ -133,14 +130,13 @@ local multiwindow_events = {
 
 --- @param event? string
 local function update(event)
-  if config.multiwindow and multiwindow_events[event] then
-    -- Resizing a single window may cause many resizes in different windows,
-    -- so it is necessary to iterate over all windows when a WinResized event is received.
-    for _, winid in pairs(api.nvim_list_wins()) do
-      update_single_context(winid)
-    end
-  else
-    update_single_context(api.nvim_get_current_win())
+  -- Resizing a single window may cause many resizes in different windows,
+  -- so it is necessary to iterate over all windows when a WinResized event is received.
+  local wins = (config.multiwindow and multiwindow_events[event]) and api.nvim_list_wins()
+    or { api.nvim_get_current_win() }
+
+  for _, win in ipairs(wins) do
+    update_win(win)
   end
 end
 
@@ -295,6 +291,7 @@ local did_init = false
 function M.setup(options)
   -- NB: setup  may be called several times.
   if options then
+    --- @diagnostic disable-next-line: undefined-field
     config.update(options)
   end
 

@@ -68,11 +68,10 @@ function M.update(cfg)
   config = vim.tbl_deep_extend('force', config, cfg)
 end
 
---- @type TSContext.Config
 setmetatable(M, {
   __index = function(_, k)
     return config[k]
   end,
 })
 
-return M
+return M --[[@as TSContext.Config]]
