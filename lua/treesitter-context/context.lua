@@ -396,6 +396,14 @@ function M.get(bufnr, winid)
     end
   end
 
+  -- Do not show the context window if all contexts are below the top row.
+  local all_contexts_below_top_row =
+    not vim.tbl_contains(context_ranges, function(range) --- @param range Range4
+      return range[1] < top_row
+    end, { predicate = true })
+  if all_contexts_below_top_row then
+    return
+  end
   local trim = contexts_height - max_lines
   if trim > 0 then
     trim_contexts(context_ranges, context_lines, trim, config.trim_scope == 'outer')
