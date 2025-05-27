@@ -361,10 +361,13 @@ function M.get(bufnr, winid)
       for _, parent in ipairs(parents) do
         local parent_start_row = parent:range()
 
-        -- NOTE: this avoids covering up context by separator line
-        local separator_offset = config.separator and 1 or 0
+        local num_context_lines = math.min(max_lines, contexts_height)
 
-        local contexts_end_row = top_row + separator_offset + math.min(max_lines, contexts_height)
+        -- NOTE: this avoids covering up context by separator line
+        --  but only when there is a context to display
+        local separator_offset = (num_context_lines > 0 and config.separator) and 1 or 0
+
+        local contexts_end_row = top_row + separator_offset + num_context_lines
 
         -- Only process the parent if it is not in view.
         if parent_start_row < contexts_end_row then
