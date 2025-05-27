@@ -23,9 +23,6 @@ end
 --- @module 'treesitter-context.render'
 local Render = defer_require('treesitter-context.render')
 
---- @type table<integer, Range4[]>
-local all_contexts = {}
-
 --- Schedule a function to run on the next event loop iteration.
 --- If the function is called again within 150ms, it will be scheduled
 --- again to run on the next event loop iteration. This means that
@@ -110,17 +107,14 @@ local update_win = throttle_by_id(function(winid)
     return
   end
 
-  local bufnr = api.nvim_win_get_buf(winid)
-
-  local context_ranges, context_lines = require('treesitter-context.context').get(bufnr, winid)
-  all_contexts[bufnr] = context_ranges
+  local context_ranges, context_lines = require('treesitter-context.context').get(winid)
 
   if not context_ranges or #context_ranges == 0 then
     Render.close(winid)
     return
   end
 
-  Render.open(bufnr, winid, context_ranges, assert(context_lines))
+  Render.open(winid, context_ranges, assert(context_lines))
 end)
 
 local multiwindow_events = {
@@ -312,8 +306,7 @@ function M.go_to_context(depth)
   depth = depth or 1
   local line = api.nvim_win_get_cursor(0)[1]
   local context = nil
-  local bufnr = api.nvim_get_current_buf()
-  local contexts = all_contexts[bufnr] or {}
+  local contexts = require('treesitter-context.context').get() or {}
 
   for idx = #contexts, 1, -1 do
     local c = contexts[idx]
@@ -326,7 +319,7 @@ function M.go_to_context(depth)
     end
   end
 
-  if context == nil then
+  if not context then
     return
   end
 

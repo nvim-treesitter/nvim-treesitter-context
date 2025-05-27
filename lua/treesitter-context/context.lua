@@ -312,10 +312,12 @@ local function range_is_valid(range)
   return true
 end
 
---- @param bufnr integer
---- @param winid integer
+--- @param winid? integer
 --- @return Range4[]?, string[]?
-function M.get(bufnr, winid)
+function M.get(winid)
+  winid = winid or api.nvim_get_current_win()
+  local bufnr = api.nvim_win_get_buf(winid)
+
   -- vim.treesitter.get_parser() calls bufload(), but we don't actually want to load the buffer:
   -- this method is called during plugin init, before other plugins or the user's config
   -- have a chance to initialize.

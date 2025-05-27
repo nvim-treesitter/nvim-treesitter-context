@@ -176,20 +176,15 @@ for _, lang in ipairs(langs_with_queries) do
       for cursor_row, context_rows in pairs(contexts) do
         it(('line %s in %s'):format(cursor_row, test_file), function()
           cmd('edit ' .. test_file)
-          local bufnr = api.nvim_get_current_buf()
           local winid = api.nvim_get_current_win()
           api.nvim_win_set_cursor(winid, { cursor_row + 1, 0 })
           assert(fn.getline('.'):match('{{CURSOR}}'))
           feed(string.format('zt%d<C-y>', #context_rows + 2))
 
           --- @type [integer,integer,integer,integer][]
-          local ranges = exec_lua(
-            [[
-          return require('treesitter-context.context').get(...)
-        ]],
-            bufnr,
-            winid
-          )
+          local ranges = exec_lua(function(...)
+            return assert(require('treesitter-context.context').get(...))
+          end, winid)
 
           local act_context_rows = {} --- @type integer[]
           for _, r in ipairs(ranges) do
