@@ -453,6 +453,7 @@ local M = {}
 --- @param winid integer
 --- @param ctx_ranges Range4[]
 --- @param ctx_lines string[]
+--- @return WindowContext?
 function M.open(bufnr, winid, ctx_ranges, ctx_lines)
   local gutter_width = get_gutter_width(winid)
   local win_width = math.max(1, api.nvim_win_get_width(winid) - gutter_width)
@@ -501,7 +502,7 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
 
   if not set_lines(ctx_bufnr, ctx_lines) then
     -- Context didn't change, can return here
-    return
+    return window_context
   end
 
   api.nvim_buf_clear_namespace(ctx_bufnr, -1, 0, -1)
@@ -509,6 +510,7 @@ function M.open(bufnr, winid, ctx_ranges, ctx_lines)
   copy_extmarks(bufnr, ctx_bufnr, ctx_ranges)
   highlight_bottom(ctx_bufnr, win_height - 1, 'TreesitterContextBottom')
   horizontal_scroll_contexts(winid, window_context.context_winid)
+  return window_context
 end
 
 --- @param exclude_winids integer[] The only window for which the context should be displayed.
