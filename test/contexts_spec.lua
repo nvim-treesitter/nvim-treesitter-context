@@ -134,11 +134,7 @@ setup(function()
     --- @type string
     local treesitter_lang = exec_lua(
       [[
-    local ok, parser = pcall(vim.treesitter.get_parser, ...)
-    if not ok then
-      return nil
-    end
-    return parser:lang()
+    return require('nvim-treesitter.parsers').get_buf_lang(...)
     ]],
       bufnr
     )
