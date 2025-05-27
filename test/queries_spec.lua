@@ -1,8 +1,6 @@
 --- Test the query for each language is valid and update the README.
 local helpers = require('nvim-test.helpers')
-local clear = helpers.clear
 local exec_lua = helpers.exec_lua
-local cmd = helpers.api.nvim_command
 
 local tc_helpers = require('test.helpers')
 local install_langs = tc_helpers.install_langs
@@ -12,11 +10,8 @@ describe('query:', function()
   local readme_lines = {} --- @type string[]
 
   setup(function()
-    clear()
-    cmd([[set runtimepath+=.,./deps/nvim-treesitter]])
-    -- Required to load custom predicates
-    exec_lua([[require'nvim-treesitter'.setup()]])
-    cmd([[let $XDG_CACHE_HOME='scratch/cache']])
+    helpers.clear()
+    exec_lua(tc_helpers.setup)
 
     local f = assert(io.open('README.md', 'r'))
     for l in f:lines() do
@@ -56,7 +51,7 @@ describe('query:', function()
         table.insert(readme_lines, last_lang_index, ('  - [ ] `%s`'):format(lang))
         pending('no queries/' .. lang .. '/context.scm')
       else
-        install_langs(lang)
+        exec_lua(install_langs, lang)
         local ok = exec_lua([[return pcall(vim.treesitter.query.get, ...)]], lang, 'context')
         table.insert(
           readme_lines,

@@ -22,7 +22,6 @@ Note: support for specific languages is strictly community maintained and can br
 <details>
 <summary>Supported (click to expand)</summary
 
-  - [x] `org`
   - [x] `ada`
   - [x] `apex`
   - [x] `bash`
@@ -69,7 +68,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `matlab`
   - [x] `nim`
   - [x] `nix`
-  - [x] `norg`
   - [x] `nu`
   - [x] `objdump`
   - [x] `ocaml`
@@ -127,8 +125,11 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `bibtex`
   - [ ] `bicep`
   - [ ] `bitbake`
+  - [ ] `blade`
   - [ ] `blueprint`
   - [ ] `bp`
+  - [ ] `brightscript`
+  - [ ] `caddy`
   - [ ] `cairo`
   - [ ] `chatito`
   - [ ] `circom`
@@ -149,6 +150,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `dtd`
   - [ ] `earthfile`
   - [ ] `ebnf`
+  - [ ] `ecma`
   - [ ] `editorconfig`
   - [ ] `eds`
   - [ ] `eex`
@@ -199,6 +201,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `hlsplaylist`
   - [ ] `hocon`
   - [ ] `hoon`
+  - [ ] `html_tags`
   - [ ] `htmldjango`
   - [ ] `http`
   - [ ] `hurl`
@@ -208,13 +211,16 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `inko`
   - [ ] `ipkg`
   - [ ] `ispc`
+  - [ ] `javadoc`
   - [ ] `jinja`
   - [ ] `jinja_inline`
   - [ ] `jq`
   - [ ] `jsdoc`
   - [ ] `json5`
   - [ ] `jsonc`
+  - [ ] `jsx`
   - [ ] `just`
+  - [ ] `kcl`
   - [ ] `kconfig`
   - [ ] `kotlin`
   - [ ] `koto`
@@ -312,6 +318,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `systemtap`
   - [ ] `t32`
   - [ ] `tablegen`
+  - [ ] `tera`
   - [ ] `textproto`
   - [ ] `thrift`
   - [ ] `tiger`

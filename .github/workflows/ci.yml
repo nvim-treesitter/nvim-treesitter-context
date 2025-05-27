@@ -51,8 +51,7 @@ jobs:
       fail-fast: false
       matrix:
         neovim_version:
-          - 'v0.9.5'
-          - 'v0.10.2'
+          - 'v0.11.1'
 
     env:
       NVIM_TEST_VERSION: ${{ matrix.neovim_version }}

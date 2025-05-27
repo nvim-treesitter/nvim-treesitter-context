@@ -6,7 +6,7 @@ export XDG_DATA_HOME ?= $(HOME)/.data
 # nvim-treesitter
 # ------------------------------------------------------------------------------
 
-NVIM_TS_SHA ?= 2cade9e
+NVIM_TS_SHA ?= 61b0a05e
 NVIM_TS := deps/nvim-treesitter
 
 .PHONY: nvim-treesitter
@@ -24,8 +24,8 @@ $(NVIM_TS):
 
 FILTER=.*
 
-export NVIM_TEST_VERSION ?= v0.10.2
-export NVIM_RUNNER_VERSION ?= v0.10.2
+export NVIM_TEST_VERSION ?= v0.11.1
+export NVIM_RUNNER_VERSION ?= v0.11.1
 
 NVIM_TEST := deps/nvim-test
 NVIM_TEST_REV = v1.1.0
@@ -52,7 +52,7 @@ test: $(NVIM_TEST) $(NVIM_TS)
 .PHONY: parsers
 parsers: $(NVIM_TEST) $(NVIM_TS)
 	$(XDG_DATA_HOME)/nvim-test/nvim-runner-$(NVIM_RUNNER_VERSION)/bin/nvim \
-		--clean -u NONE -c 'source install_parsers.lua'
+		-l test/helpers.lua install
 
 lint:
 	luacheck lua

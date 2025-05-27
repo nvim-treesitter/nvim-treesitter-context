@@ -1,5 +1,4 @@
 local helpers = require('nvim-test.helpers')
-local clear = helpers.clear
 local exec_lua = helpers.exec_lua
 local cmd = helpers.api.nvim_command
 local feed = helpers.feed
@@ -71,7 +70,7 @@ local function install_langs_for_file(filename, root_lang)
     if seen_langs[current_lang] then
       goto continue
     end
-    install_langs(current_lang)
+    exec_lua(install_langs, current_lang)
 
     -- Query for injections in the current language, and queue them for installation.
     --- @diagnostic disable-next-line: redefined-local Not actually redefining locals
@@ -121,28 +120,24 @@ end
 
 local lang_to_test_files = {} --- @type table<string,string[]>
 setup(function()
-  clear()
-  cmd([[set runtimepath+=.,./deps/nvim-treesitter]])
+  helpers.clear()
+  exec_lua(tc_helpers.setup)
 
-  -- Required to load custom predicates
-  exec_lua([[require'nvim-treesitter'.setup()]])
+  exec_lua(install_langs, 'lua')
 
   local test_files = fn.globpath('test/lang', '*', true, true) --- @type string[]
   for _, test_file in ipairs(test_files) do
     cmd('edit ' .. test_file)
     local bufnr = api.nvim_get_current_buf()
     --- @type string
-    local treesitter_lang = exec_lua(
-      [[
-    local ok, parser = pcall(vim.treesitter.get_parser, ...)
-    if not ok then
-      return nil
-    end
-    return parser:lang()
-    ]],
-      bufnr
-    )
-    if treesitter_lang ~= vim.NIL and treesitter_lang ~= '' then
+    local treesitter_lang = exec_lua(function(...)
+      local ok, parser = pcall(vim.treesitter.get_parser, ...)
+      if not ok then
+        return nil
+      end
+      return parser:lang()
+    end, bufnr)
+    if treesitter_lang ~= nil and treesitter_lang ~= '' then
       if not lang_to_test_files[treesitter_lang] then
         lang_to_test_files[treesitter_lang] = {}
       end
