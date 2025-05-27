@@ -1,25 +1,12 @@
-local helpers = require('nvim-test.helpers')
-local exec_lua = helpers.exec_lua
-
 local M = {}
 
 function M.install_langs(langs)
   if type(langs) == 'string' then
     langs = { langs }
   end
-  exec_lua(
-    [[
-  local langs = ...
-  require'nvim-treesitter.configs'.setup {
-    ensure_installed = langs,
-    sync_install = true,
-  }
-
-  -- Clear the message "<lang> has been installed".
-  print(' ')
-  ]],
-    langs
-  )
+  require('nvim-treesitter').install(langs):wait()
+  -- Dirty hack to clear ext_messages
+  vim.cmd.normal(':<esc>')
 end
 
 local langs --- @type string[]?
@@ -41,9 +28,10 @@ function M.get_langs()
   end
   f:close()
 
-  f = assert(io.open('deps/nvim-treesitter/lockfile.json', 'r'))
+  ---@type table<string, table>
+  local parsers = require('deps/nvim-treesitter/lua/nvim-treesitter/parsers')
 
-  for k in vim.spairs(vim.json.decode(f:read('*a'))) do
+  for k in vim.spairs(parsers) do
     langs[#langs + 1] = k
     if readme_langs[k] then
       readme_langs[k] = nil
@@ -53,6 +41,27 @@ function M.get_langs()
     print('Invalid languages in README:', table.concat(vim.tbl_keys(readme_langs), ', '))
   end
   return langs
+end
+
+function M.setup()
+  -- Do not pull in parsers from /usr/local/share/ as they may
+  -- be the wrong ABI
+  vim.opt.runtimepath = {
+    vim.env.VIMRUNTIME,
+    '.',
+    './deps/nvim-treesitter',
+  }
+  require('nvim-treesitter').setup({
+    install_dir = vim.fs.joinpath('deps', 'nvim-treesitter-data'),
+  })
+
+  vim.env.XDG_CACHE_HOME = 'scratch/cache'
+  vim.opt.packpath = ''
+end
+
+if arg[0] == 'test/helpers.lua' and arg[1] == 'install' then
+  M.setup()
+  M.install_langs(M.get_langs())
 end
 
 return M
