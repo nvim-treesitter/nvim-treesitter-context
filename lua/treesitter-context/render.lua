@@ -397,6 +397,21 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
       { details = true }
     )
 
+    local namespaces = {} --- @type table<integer, true>
+    for nm, id in pairs(api.nvim_get_namespaces()) do
+      -- Only copy extmarks from core as they are the only ones we can update
+      -- reliably.
+      if vim.startswith(nm, 'nvim.') then
+        namespaces[id] = true
+      end
+    end
+
+    --- @param e vim.api.keyset.get_extmark_item
+    extmarks = vim.tbl_filter(function(e)
+      local opts = e[4] --[[@as vim.api.keyset.extmark_details]]
+      return namespaces[opts.ns_id]
+    end, extmarks)
+
     for _, m in ipairs(extmarks) do
       local id, row, col = m[1], m[2], m[3]
       local opts = m[4] --[[@as vim.api.keyset.extmark_details]]
@@ -452,7 +467,8 @@ local M = {}
 --- @param winid integer
 --- @param ctx_ranges Range4[]
 --- @param ctx_lines string[]
-function M.open(winid, ctx_ranges, ctx_lines)
+--- @param force_hl_update? boolean
+function M.open(winid, ctx_ranges, ctx_lines, force_hl_update)
   local bufnr = api.nvim_win_get_buf(winid)
   local gutter_width = get_gutter_width(winid)
   local win_width = math.max(1, api.nvim_win_get_width(winid) - gutter_width)
@@ -499,16 +515,16 @@ function M.open(winid, ctx_ranges, ctx_lines)
 
   local ctx_bufnr = api.nvim_win_get_buf(window_context.context_winid)
 
-  if not set_lines(ctx_bufnr, ctx_lines) then
-    -- Context didn't change, can return here
-    return
-  end
+  local changed = set_lines(ctx_bufnr, ctx_lines)
 
-  api.nvim_buf_clear_namespace(ctx_bufnr, -1, 0, -1)
-  highlight_contexts(bufnr, ctx_bufnr, ctx_ranges)
-  copy_extmarks(bufnr, ctx_bufnr, ctx_ranges)
-  highlight_bottom(ctx_bufnr, win_height - 1, 'TreesitterContextBottom')
-  horizontal_scroll_contexts(winid, window_context.context_winid)
+  if changed or force_hl_update then
+    -- Update highlights
+    api.nvim_buf_clear_namespace(ctx_bufnr, -1, 0, -1)
+    highlight_contexts(bufnr, ctx_bufnr, ctx_ranges)
+    copy_extmarks(bufnr, ctx_bufnr, ctx_ranges)
+    highlight_bottom(ctx_bufnr, win_height - 1, 'TreesitterContextBottom')
+    horizontal_scroll_contexts(winid, window_context.context_winid)
+  end
 end
 
 --- @param exclude_winids integer[] The only window for which the context should be displayed.

@@ -87,7 +87,8 @@ local function cannot_open(winid)
 end
 
 --- @param winid integer
-local update_win = throttle_by_id(function(winid)
+--- @param force_hl_update? boolean
+local update_win = throttle_by_id(function(winid, force_hl_update)
   -- Remove leaked contexts firstly.
   -- Contexts may sometimes leak due to reasons like the use of 'noautocmd'.
   -- In these cases, affected windows might remain visible, and even ToggleContext
@@ -114,12 +115,17 @@ local update_win = throttle_by_id(function(winid)
     return
   end
 
-  Render.open(winid, context_ranges, assert(context_lines))
+  Render.open(winid, context_ranges, assert(context_lines), force_hl_update)
 end)
 
 local multiwindow_events = {
   WinResized = true,
   User = true,
+}
+
+local force_hl_events = {
+  DiagnosticChanged = true,
+  LspRequest = true,
 }
 
 --- @param event? string
@@ -130,7 +136,7 @@ local function update(event)
     or { api.nvim_get_current_win() }
 
   for _, win in ipairs(wins) do
-    update_win(win)
+    update_win(win, force_hl_events[event])
   end
 end
 
@@ -226,15 +232,13 @@ function M.enable()
   autocmd('User', au_close, { pattern = 'SessionSavePre' })
   autocmd('User', au_update, { pattern = 'SessionSavePost' })
 
-  if vim.fn.has('nvim-0.10') == 1 then
-    autocmd('LspRequest', function(args)
-      if is_semantic_tokens_request(args.data.request) then
-        vim.schedule(function()
-          au_update(args)
-        end)
-      end
-    end)
-  end
+  autocmd('LspRequest', function(args)
+    if is_semantic_tokens_request(args.data.request) then
+      vim.schedule(function()
+        au_update(args)
+      end)
+    end
+  end)
 
   update()
 
