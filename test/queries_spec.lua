@@ -3,8 +3,6 @@ local helpers = require('nvim-test.helpers')
 local exec_lua = helpers.exec_lua
 
 local tc_helpers = require('test.helpers')
-local install_langs = tc_helpers.install_langs
-local get_langs = tc_helpers.get_langs
 
 describe('query:', function()
   local readme_lines = {} --- @type string[]
@@ -20,7 +18,7 @@ describe('query:', function()
     f:close()
   end)
 
-  for _, lang in ipairs(get_langs()) do
+  for _, lang in ipairs(tc_helpers.get_langs()) do
     it(lang, function()
       local lang_index --- @type integer
       local last_supported_lang_index --- @type integer
@@ -50,16 +48,18 @@ describe('query:', function()
       if not vim.uv.fs_stat('queries/' .. lang .. '/context.scm') then
         table.insert(readme_lines, last_lang_index, ('  - [ ] `%s`'):format(lang))
         pending('no queries/' .. lang .. '/context.scm')
-      else
-        exec_lua(install_langs, lang)
-        local ok = exec_lua([[return pcall(vim.treesitter.query.get, ...)]], lang, 'context')
-        table.insert(
-          readme_lines,
-          last_supported_lang_index,
-          ('  - [x] `%s`%s'):format(lang, ok and '' or ' (broken)')
-        )
-        assert(ok)
+        return
       end
+      exec_lua(tc_helpers.install_langs, lang)
+      local ok = exec_lua(function(...)
+        return (pcall(vim.treesitter.query.get, ...))
+      end, lang, 'context')
+      table.insert(
+        readme_lines,
+        last_supported_lang_index,
+        ('  - [x] `%s`%s'):format(lang, ok and '' or ' (broken)')
+      )
+      assert(ok)
     end)
   end
 

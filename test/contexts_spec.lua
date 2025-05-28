@@ -6,8 +6,6 @@ local api = helpers.api
 local fn = helpers.fn
 
 local tc_helpers = require('test.helpers')
-local install_langs = tc_helpers.install_langs
-local get_langs = tc_helpers.get_langs
 
 --- @param line string
 --- @return string?
@@ -70,7 +68,7 @@ local function install_langs_for_file(filename, root_lang)
     if seen_langs[current_lang] then
       goto continue
     end
-    exec_lua(install_langs, current_lang)
+    exec_lua(tc_helpers.install_langs, current_lang)
 
     -- Query for injections in the current language, and queue them for installation.
     --- @diagnostic disable-next-line: redefined-local Not actually redefining locals
@@ -110,7 +108,7 @@ local function install_langs_for_file(filename, root_lang)
   end
 end
 
-local langs = get_langs()
+local langs = tc_helpers.get_langs()
 local langs_with_queries = {} --- @type string[]
 for _, lang in ipairs(langs) do
   if vim.uv.fs_stat('queries/' .. lang .. '/context.scm') then
@@ -122,8 +120,7 @@ local lang_to_test_files = {} --- @type table<string,string[]>
 setup(function()
   helpers.clear()
   exec_lua(tc_helpers.setup)
-
-  exec_lua(install_langs, 'lua')
+  exec_lua(tc_helpers.install_langs, 'lua')
 
   local test_files = fn.globpath('test/lang', '*', true, true) --- @type string[]
   for _, test_file in ipairs(test_files) do

@@ -43,7 +43,8 @@ function M.get_langs()
   return langs
 end
 
-function M.setup()
+--- @param opts? TSContext.UserConfig
+function M.setup(opts)
   -- Do not pull in parsers from /usr/local/share/ as they may
   -- be the wrong ABI
   vim.opt.runtimepath = {
@@ -54,6 +55,10 @@ function M.setup()
   require('nvim-treesitter').setup({
     install_dir = vim.fs.joinpath('deps', 'nvim-treesitter-data'),
   })
+
+  require('treesitter-context').setup(opts)
+  -- Need to source plugin to define highlights for screen tests
+  vim.cmd.source(vim.api.nvim_get_runtime_file('plugin/treesitter-context.lua', false)[1])
 
   vim.env.XDG_CACHE_HOME = 'scratch/cache'
   vim.opt.packpath = ''
