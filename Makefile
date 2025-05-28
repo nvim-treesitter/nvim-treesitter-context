@@ -54,9 +54,6 @@ parsers: $(NVIM_TEST) $(NVIM_TS)
 	$(XDG_DATA_HOME)/nvim-test/nvim-runner-$(NVIM_RUNNER_VERSION)/bin/nvim \
 		-l test/helpers.lua install
 
-lint:
-	luacheck lua
-
 # ------------------------------------------------------------------------------
 # LuaLS
 # ------------------------------------------------------------------------------
