@@ -98,7 +98,7 @@ endif
 # Stylua
 # ------------------------------------------------------------------------------
 
-STYLUA_VERSION := v2.0.2
+STYLUA_VERSION := v2.1.0
 STYLUA_ZIP := stylua-$(STYLUA_PLATFORM).zip
 STYLUA_URL := https://github.com/JohnnyMorganz/StyLua/releases/download/$(STYLUA_VERSION)/$(STYLUA_ZIP)
 STYLUA := deps/stylua
@@ -126,4 +126,4 @@ stylua-check: $(STYLUA)
 .PHONY: stylua-run
 stylua-run: $(STYLUA)
 	$(STYLUA) $(LUA_FILES)
-	sed -i -r 's/---@/--- @/g' $(LUA_FILES)
+	perl -pi -e 's/---@/--- @/g' $(LUA_FILES)
