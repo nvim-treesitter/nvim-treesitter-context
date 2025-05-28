@@ -81,7 +81,6 @@ local function cannot_open(winid)
   local bufnr = api.nvim_win_get_buf(winid)
   return not attached[bufnr]
     or vim.bo[bufnr].filetype == ''
-    or vim.bo[bufnr].buftype ~= ''
     or vim.wo[winid].previewwindow
     or api.nvim_win_get_height(winid) < config.min_window_height
 end
