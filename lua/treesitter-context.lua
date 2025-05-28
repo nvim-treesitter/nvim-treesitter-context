@@ -3,7 +3,6 @@ local api = vim.api
 local config = require('treesitter-context.config')
 
 local augroup = api.nvim_create_augroup
-local command = api.nvim_create_user_command
 
 local enabled = false
 
@@ -266,24 +265,6 @@ function M.enabled()
   return enabled
 end
 
-local function init()
-  command('TSContextEnable', M.enable, {})
-  command('TSContextDisable', M.disable, {})
-  command('TSContextToggle', M.toggle, {})
-
-  api.nvim_set_hl(0, 'TreesitterContext', { link = 'NormalFloat', default = true })
-  api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
-  api.nvim_set_hl(0, 'TreesitterContextBottom', { link = 'NONE', default = true })
-  api.nvim_set_hl(
-    0,
-    'TreesitterContextLineNumberBottom',
-    { link = 'TreesitterContextBottom', default = true }
-  )
-  api.nvim_set_hl(0, 'TreesitterContextSeparator', { link = 'FloatBorder', default = true })
-end
-
-local did_init = false
-
 --- @param options? TSContext.UserConfig
 function M.setup(options)
   -- NB: setup  may be called several times.
@@ -296,11 +277,6 @@ function M.setup(options)
     M.enable()
   else
     M.disable()
-  end
-
-  if not did_init then
-    init()
-    did_init = true
   end
 end
 

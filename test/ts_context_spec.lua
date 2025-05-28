@@ -58,12 +58,12 @@ describe('ts_context', function()
   end)
 
   it('load the plugin', function()
-    exec_lua([[require'treesitter-context'.setup{}]])
+    exec_lua(tc_helpers.setup)
   end)
 
   it('edit a file', function()
     exec_lua(install_langs, 'lua')
-    exec_lua([[require'treesitter-context'.setup{}]])
+    exec_lua(tc_helpers.setup)
     cmd('edit test/test_file.lua')
     exec_lua([[vim.treesitter.start()]])
     feed('<C-e>')
@@ -107,9 +107,9 @@ describe('ts_context', function()
 
   describe('language:', function()
     before_each(function()
-      exec_lua([[require'treesitter-context'.setup{
+      exec_lua(tc_helpers.setup, {
         mode = 'topline',
-      }]])
+      })
       cmd('set scrolloff=5')
       cmd('set nowrap')
     end)

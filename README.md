@@ -378,7 +378,7 @@ require'treesitter-context'.setup{
 
 ## Commands
 
-`TSContextEnable`, `TSContextDisable` and `TSContextToggle`.
+`TSContext` with subcommands `enable`, `disable` and `toggle`.
 
 ## Appearance
 

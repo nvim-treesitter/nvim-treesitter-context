@@ -64,7 +64,7 @@ not required.
 ==============================================================================
 COMMANDS                                      *nvim-treesitter-context-commands*
 
-`TSContextEnable`, `TSContextDisable` and `TSContextToggle`.
+`TSContext` with subcommands `enable`, `disable` and `toggle`
 
 ==============================================================================
 HIGHLIGHTS                                  *nvim-treesitter-context-highlights*
