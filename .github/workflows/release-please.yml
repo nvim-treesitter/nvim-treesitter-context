@@ -1,8 +1,8 @@
 on:
   push:
     branches:
-      - main
-    workflow_dispatch:
+      - master
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -15,5 +15,3 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4
-        with:
-          release-type: simple
