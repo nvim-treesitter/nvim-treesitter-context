@@ -312,7 +312,9 @@ local function set_lines(bufnr, lines)
   end
 
   if redraw then
+    vim.bo[bufnr].modifiable = true
     api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    vim.bo[bufnr].modifiable = false
     vim.bo[bufnr].modified = false
   end
 
