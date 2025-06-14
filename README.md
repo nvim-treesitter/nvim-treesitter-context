@@ -60,6 +60,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `jsonnet`
   - [x] `julia`
   - [x] `kdl`
+  - [x] `kotlin`
   - [x] `latex`
   - [x] `liquidsoap`
   - [x] `lua`
@@ -222,7 +223,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `just`
   - [ ] `kcl`
   - [ ] `kconfig`
-  - [ ] `kotlin`
   - [ ] `koto`
   - [ ] `kusto`
   - [ ] `lalrpop`
