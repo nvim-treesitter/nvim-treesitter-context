@@ -105,6 +105,15 @@ describe('ts_context', function()
     })
   end)
 
+  it('#627', function()
+    exec_lua(install_langs, { 'vimdoc' })
+    exec_lua(tc_helpers.setup, { multiwindow = true })
+    cmd('edit test/snapshots/snapshot.md')
+    cmd('set splitkeep=screen')
+    cmd('help')
+    cmd('sleep 100m')
+  end)
+
   describe('language:', function()
     before_each(function()
       exec_lua(tc_helpers.setup, {

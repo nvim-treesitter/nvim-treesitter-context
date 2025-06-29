@@ -168,6 +168,9 @@ local function trim_contexts(context_ranges, context_lines, trim, top)
   while trim > 0 do
     local idx = top and 1 or #context_ranges
     local context_to_trim = context_ranges[idx]
+    if not context_to_trim then
+      return
+    end
 
     local height = util.get_range_height(context_to_trim)
 
