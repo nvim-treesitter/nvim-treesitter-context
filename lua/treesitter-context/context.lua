@@ -377,18 +377,19 @@ function M.get(winid)
           local range0 = context_range(parent, bufnr, query)
           if range0 and range_is_valid(range0) then
             local range, lines = get_text_for_range(range0, bufnr)
-            if range_is_valid(range) then
-              local last_context = context_ranges[#context_ranges]
-              if last_context and parent_start_row == last_context[1] then
-                -- If there are multiple contexts on the same row, then prefer the inner
-                contexts_height = contexts_height - util.get_range_height(last_context)
-                context_ranges[#context_ranges] = nil
-                context_lines[#context_lines] = nil
+            if range[1] < contexts_end_row then
+              if range_is_valid(range) then
+                local last_context = context_ranges[#context_ranges]
+                if last_context and parent_start_row == last_context[1] then
+                  -- If there are multiple contexts on the same row, then prefer the inner
+                  contexts_height = contexts_height - util.get_range_height(last_context)
+                  context_ranges[#context_ranges] = nil
+                  context_lines[#context_lines] = nil
+                end
+                contexts_height = contexts_height + util.get_range_height(range)
+                context_ranges[#context_ranges + 1] = range
+                context_lines[#context_lines + 1] = lines
               end
-
-              contexts_height = contexts_height + util.get_range_height(range)
-              context_ranges[#context_ranges + 1] = range
-              context_lines[#context_lines + 1] = lines
             end
           end
         end
