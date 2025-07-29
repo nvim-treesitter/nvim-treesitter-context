@@ -6,9 +6,7 @@
   body: (_) @context.end
 ) @context
 
-(do_statement
-  body: (_) @context.end
-) @context
+(do_statement) @context
 
 (function_definition
   parameters: (_)
