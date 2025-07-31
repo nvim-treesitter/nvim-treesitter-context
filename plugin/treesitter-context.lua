@@ -1,3 +1,5 @@
+require('treesitter-context').setup()
+
 vim.api.nvim_create_user_command('TSContext', function(args)
   require('treesitter-context.cli').run(args.fargs)
 end, {
