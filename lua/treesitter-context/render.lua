@@ -217,9 +217,10 @@ end
 --- @field start integer
 
 --- @param ctx_node_line_num integer
+--- @param win integer
 --- @return integer
-local function get_relative_line_num(ctx_node_line_num)
-  local cursor_line_num = fn.line('.')
+local function get_relative_line_num(ctx_node_line_num, win)
+  local cursor_line_num = fn.line('.', win)
   local num_folded_lines = 0
   -- Find all folds between the context node and the cursor
   local current_line = ctx_node_line_num
@@ -255,7 +256,7 @@ local function build_lno_str(win, lnum, width)
   end
   local relnum --- @type integer?
   if vim.wo[win].relativenumber then
-    relnum = get_relative_line_num(lnum)
+    relnum = get_relative_line_num(lnum, win)
   end
   return string.format('%' .. width .. 'd', relnum or lnum)
 end
