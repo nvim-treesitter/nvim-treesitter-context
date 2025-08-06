@@ -3,6 +3,12 @@
 ) @context
 
 (method_declaration
+  type: (_) @context.start
+  body: (_) @context.end
+) @context
+
+(constructor_declaration
+  name: (_) @context.start
   body: (_) @context.end
 ) @context
 
@@ -15,6 +21,7 @@
 ) @context
 
 (class_declaration
+  name: (_) @context.start
   body: (_) @context.end
 ) @context
 
