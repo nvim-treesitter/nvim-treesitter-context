@@ -115,3 +115,8 @@
 (macro_definition
   name: (_) @context.end
 ) @context
+
+; let = {}
+(let_declaration
+  value: (block (_) @context.end)
+) @context
