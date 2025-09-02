@@ -218,3 +218,23 @@ union Bar {
     c: u32,
 
 }
+
+// {{TEST}}
+fn letblock() { // {{CONTEXT}}
+
+    let _foo = { // {{CONTEXT}}
+
+
+
+
+
+
+
+
+
+
+
+        // {{CURSOR}}
+    }
+
+}
