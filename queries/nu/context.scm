@@ -32,10 +32,6 @@
   (_) @context.end
 ) @context
 
-(ctrl_do
-  (_) @context.end
-) @context
-
 (match_arm) @context
 (pipe_element) @context
 (block) @context
