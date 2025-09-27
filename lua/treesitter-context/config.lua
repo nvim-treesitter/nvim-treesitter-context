@@ -10,6 +10,7 @@
 --- @field mode 'cursor'|'topline'
 --- @field separator? string
 --- @field on_attach? fun(buf: integer): boolean
+--- @field hide_lines? string
 
 --- @class (exact) TSContext.UserConfig : TSContext.Config
 ---
@@ -45,6 +46,10 @@
 ---
 --- Callback when attaching. Return false to disable attaching
 --- @field on_attach? fun(buf: integer): boolean
+---
+--- Regular expression for hiding undesired lines in the context window, like single '{'.
+--- Lines that match regex will be hidden.
+--- @field hide_lines? string
 
 --- @type TSContext.Config
 local default_config = {
@@ -57,6 +62,7 @@ local default_config = {
   trim_scope = 'outer',
   zindex = 20,
   mode = 'cursor',
+  hide_lines = nil,
 }
 
 local config = vim.deepcopy(default_config)

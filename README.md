@@ -373,6 +373,7 @@ require'treesitter-context'.setup{
   separator = nil,
   zindex = 20, -- The Z-index of the context window
   on_attach = nil, -- (fun(buf: integer): boolean) return false to disable attaching
+  hide_lines = nil, -- Lines matching the regex will not be displayed. Example for hiding single '{': "^%s*{%s*$"
 }
 ```
 

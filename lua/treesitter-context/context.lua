@@ -224,6 +224,28 @@ local function get_text_for_range(range, bufnr)
   return { start_row, 0, end_row, end_col }, lines
 end
 
+--- In-place drop lines that match `config.hide_lines`.
+--- @param range Range4
+--- @param lines string[]
+local function line_filter(range, lines)
+  local regex = config.hide_lines
+  if regex == nil then
+    return
+  end
+  local no_dropped = 0
+  for i, line in ipairs(lines) do
+    if line:match(regex) then
+      no_dropped = no_dropped + 1
+    else
+      lines[i - no_dropped] = lines[i]
+    end
+  end
+  for i = 1, no_dropped do
+    lines[#lines] = nil
+  end
+  range[3] = range[3] - no_dropped
+end
+
 local M = {}
 
 --- @param bufnr integer
@@ -377,6 +399,7 @@ function M.get(winid)
           local range0 = context_range(parent, bufnr, query)
           if range0 and range_is_valid(range0) then
             local range, lines = get_text_for_range(range0, bufnr)
+            line_filter(range, lines)
             if range_is_valid(range) then
               local last_context = context_ranges[#context_ranges]
               if last_context and parent_start_row == last_context[1] then
