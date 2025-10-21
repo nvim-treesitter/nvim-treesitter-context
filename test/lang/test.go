@@ -20,6 +20,47 @@ b int) int { // {{CONTEXT}}
 // {{CURSOR}}
 }
 
+// {{TEST}}
+var bigstruct = struct{ // {{CONTEXT}}
+  a, b, c, d, e, f, g, h, i, j, k, l, m, n int // {{CONTEXT}}
+}{ // {{CONTEXT}}
+  a: 0,
+  b: 0,
+  c: 0,
+  d: 0,
+  e: 0,
+  f: 0,
+  g: 0,
+  h: 0,
+  i: 0,
+  j: 0,
+  k: 0,
+  l: 0,
+  m: 0,
+  // {{CURSOR}}
+  n: 0,
+}
+
+// {{TEST}}
+var bigslice = []int{ // {{CONTEXT}}
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  // {{CURSOR}}
+  15,
+}
+
 var b
   ,c
   ,d int = 1, 2

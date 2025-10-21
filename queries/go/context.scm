@@ -33,3 +33,7 @@
   communication: (_)
   (_) @context.end
 ) @context
+
+(composite_literal
+  body: (literal_value (_) @context.end)
+) @context
