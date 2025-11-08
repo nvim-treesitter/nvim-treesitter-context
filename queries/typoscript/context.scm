@@ -1,4 +1,4 @@
 [
-    (configuration_block)
-    (condition_block)
-]@context
+  (configuration_block)
+  (condition_block)
+] @context

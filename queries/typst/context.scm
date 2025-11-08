@@ -1,1 +1,1 @@
-((section) @context)
+(section) @context

@@ -1,4 +1,4 @@
-([
+[
   (module_binding)
   (class_binding)
   (class_type_binding)
@@ -6,4 +6,4 @@
   (type_binding)
   (let_binding)
   (function_expression)
-] @context)
+] @context
