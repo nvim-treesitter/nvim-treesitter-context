@@ -6,7 +6,7 @@ export XDG_DATA_HOME ?= $(HOME)/.data
 # nvim-treesitter
 # ------------------------------------------------------------------------------
 
-NVIM_TS_SHA ?= 61b0a05e
+NVIM_TS_SHA ?= d97d226c
 NVIM_TS := deps/nvim-treesitter
 
 .PHONY: nvim-treesitter
