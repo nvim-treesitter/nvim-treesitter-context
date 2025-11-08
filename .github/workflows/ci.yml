@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download stylua
         run: make stylua
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - uses: lewis6991/gh-actions-lua@master
         with:
@@ -44,6 +44,24 @@ jobs:
       - name: LuaLS
         run: make luals-check
 
+  tsqueryls:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Download tsqueryls
+        run: make tsqueryls
+
+      - name: Lint
+        run: make tsqueryls-lint
+
+      - name: Format
+        if: always()
+        run: |
+          make tsqueryls-format
+          git diff --exit-code
+
   test:
     runs-on: ubuntu-latest
 
@@ -51,14 +69,14 @@ jobs:
       fail-fast: false
       matrix:
         neovim_version:
-          - 'v0.11.1'
+          - 'v0.11.5'
 
     env:
       NVIM_TEST_VERSION: ${{ matrix.neovim_version }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - uses: lewis6991/gh-actions-lua@master
         with:
@@ -88,3 +106,10 @@ jobs:
 
       - name: Run Test
         run: make test
+
+      - name: Download tsqueryls
+        run: make tsqueryls
+
+      - name: Validate queries
+        run: make tsqueryls-check
+

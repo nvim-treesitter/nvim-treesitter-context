@@ -24,8 +24,8 @@ $(NVIM_TS):
 
 FILTER=.*
 
-export NVIM_TEST_VERSION ?= v0.11.1
-export NVIM_RUNNER_VERSION ?= v0.11.1
+export NVIM_TEST_VERSION ?= v0.11.5
+export NVIM_RUNNER_VERSION ?= v0.11.5
 
 NVIM_TEST := deps/nvim-test
 NVIM_TEST_REV = v1.1.0
@@ -127,3 +127,39 @@ stylua-check: $(STYLUA)
 stylua-run: $(STYLUA)
 	$(STYLUA) $(LUA_FILES)
 	perl -pi -e 's/---@/--- @/g' $(LUA_FILES)
+
+# ------------------------------------------------------------------------------
+# Tsqueryls
+# ------------------------------------------------------------------------------
+ifeq ($(shell uname -s),Darwin)
+    TSQUERYLS_PLATFORM := aarch64-apple-darwin
+else
+    TSQUERYLS_PLATFORM := x86_64-unknown-linux-gnu
+endif
+
+TSQUERYLS := deps/ts_query_ls-$(TSQUERYLS_PLATFORM)
+TSQUERYLS_TARBALL := $(TSQUERYLS).tar.gz
+TSQUERYLS_URL := https://github.com/ribru17/ts_query_ls/releases/latest/download/$(notdir $(TSQUERYLS_TARBALL))
+
+.PHONY: tsqueryls
+tsqueryls: $(TSQUERYLS)
+
+$(TSQUERYLS):
+	wget --directory-prefix=$(dir $@) $(TSQUERYLS_URL)
+	mkdir -p $@
+	tar -xf $(TSQUERYLS_TARBALL) -C $@
+	rm -rf $(TSQUERYLS_TARBALL)
+
+QUERIES := queries/
+
+.PHONY: tsqueryls-lint
+tsqueryls-lint: $(TSQUERYLS)
+	$(TSQUERYLS)/ts_query_ls lint $(QUERIES)
+
+.PHONY: tsqueryls-format
+tsqueryls-format: $(TSQUERYLS)
+	$(TSQUERYLS)/ts_query_ls format $(QUERIES)
+
+.PHONY: tsqueryls-check
+tsqueryls-check: $(TSQUERYLS)
+	$(TSQUERYLS)/ts_query_ls check $(QUERIES)
