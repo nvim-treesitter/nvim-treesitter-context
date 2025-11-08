@@ -28,7 +28,6 @@
     (subprogram_head)
     (procedure_specification
       (identifier) @context.end)
-    (sequential_block)
     (loop_statement)
     (if_statement_block)
     (if_statement)

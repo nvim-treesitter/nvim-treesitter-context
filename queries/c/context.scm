@@ -48,5 +48,5 @@
 ) @context
 
 (declaration
-  declarator: (_ (_) @content.end)
+  declarator: (_ (_) @context.end)
 ) @context
