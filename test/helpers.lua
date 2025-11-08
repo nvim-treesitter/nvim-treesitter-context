@@ -4,7 +4,7 @@ function M.install_langs(langs)
   if type(langs) == 'string' then
     langs = { langs }
   end
-  require('nvim-treesitter').install(langs):wait()
+  require('nvim-treesitter').install(langs, { summary = true, max_jobs = 10 }):wait()
   -- Dirty hack to clear ext_messages
   vim.cmd.normal(':<esc>')
 end
