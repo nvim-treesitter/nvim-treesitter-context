@@ -39,9 +39,9 @@
 ) @context
 
 (call
-  method: (identifier) @context.identifier
+  method: (identifier) @_identifier
   block: (do_block body: (body_statement) @context.end)
-  (#any-of? @context.identifier
+  (#any-of? @_identifier
    "it"
    "it_behaves_like"
    "include_examples"
