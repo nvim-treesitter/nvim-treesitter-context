@@ -1,4 +1,5 @@
-([(list_lit)
+[
+  (list_lit)
   (map_lit)
   (vec_lit)
-] @context)
+] @context

@@ -1,5 +1,4 @@
-
-([
+[
   (object)
   (pair)
-] @context)
+] @context

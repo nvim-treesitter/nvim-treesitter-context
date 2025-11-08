@@ -1,4 +1,1 @@
-
-([
-  (element)
-  ] @context)
+(element) @context

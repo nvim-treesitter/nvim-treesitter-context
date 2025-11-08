@@ -1,4 +1,4 @@
 [
-    (module)
-    (statement)
-]@context
+  (module)
+  (statement)
+] @context

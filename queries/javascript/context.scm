@@ -1,8 +1,7 @@
 (if_statement
-  consequence: (_) @context.end
-) @context
+  consequence: (_) @context.end) @context
 
-([
+[
   (arrow_function)
   (call_expression)
   (class_declaration)
@@ -21,4 +20,4 @@
   (while_statement)
   (switch_statement)
   (switch_case)
-] @context)
+] @context
