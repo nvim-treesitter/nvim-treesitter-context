@@ -61,7 +61,7 @@ function [C] = myMatMult(A, % {{CONTEXT}}
   B) % {{CONTEXT}}
     [m,n] = size(A);
     [p,q] = size(B);
-    if n ~= % {{CONTEXT}}
+    if n ~= ... % {{CONTEXT}}
       p % {{CONTEXT}}
         error('Inner matrix dimensions must agree.');
 

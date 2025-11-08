@@ -89,6 +89,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `starlark`
   - [x] `svelte`
   - [x] `swift`
+  - [x] `systemverilog`
   - [x] `tact`
   - [x] `tcl`
   - [x] `teal`
@@ -100,7 +101,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `typoscript`
   - [x] `typst`
   - [x] `usd`
-  - [x] `verilog`
   - [x] `vhdl`
   - [x] `vim`
   - [x] `vue`
@@ -210,7 +210,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `idl`
   - [ ] `idris`
   - [ ] `inko`
-  - [ ] `ipkg`
   - [ ] `ispc`
   - [ ] `javadoc`
   - [ ] `jinja`
