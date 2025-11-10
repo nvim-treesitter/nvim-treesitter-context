@@ -1,6 +1,14 @@
 (class_definition
   body: (_) @context.end) @context
 
+; If the function starts with a comment, then use that to end the context.
+;
+; Note: priority of overlapping rules isn't defined, but this one seems to
+; always take precedence over the one below, regardless of the order in which
+; they are defined. Maybe the smallest match wins?
+(function_definition
+  (comment) @context.end) @context
+
 (function_definition
   body: (_) @context.end) @context
 
