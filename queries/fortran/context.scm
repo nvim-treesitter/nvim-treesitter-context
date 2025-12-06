@@ -8,9 +8,10 @@
     (_))
   (_) @context.end) @context
 
-(do_loop_statement
-  (loop_control_expression
-    (_))
+(do_loop
+  (do_statement
+    (loop_control_expression
+      (_)))
   (_) @context.end) @context
 
 (subroutine
