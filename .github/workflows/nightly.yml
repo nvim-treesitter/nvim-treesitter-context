@@ -36,13 +36,15 @@ jobs:
         run: make nvim-treesitter
 
       - name: Parsers Cache
+        id: parsers-cache
         uses: actions/cache@v4
         with:
-          path: ./nvim-treesitter/parser/
+          path: deps/nvim-treesitter-data
           key: parsers-${{ join(matrix.*, '-') }}-${{ hashFiles(
             './deps/nvim-treesitter/lua/nvim-treesitter/parsers.lua') }}
 
       - name: Install parsers
+        if: steps.parsers-cache.outputs.cache-hit != 'true'
         run: make parsers
 
       - name: Run Test
