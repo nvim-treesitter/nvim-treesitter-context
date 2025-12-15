@@ -47,7 +47,11 @@ local function throttle_by_id(f)
             -- r was called again within throttling period; reschedule it.
             waiting[id] = nil
             r(id)
-          else
+          elseif timers[id] then
+            if not timers[id]:is_closing() then
+              timers[id]:stop()
+              timers[id]:close()
+            end
             -- Done - clean up
             timers[id] = nil
           end
