@@ -87,6 +87,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `smali`
   - [x] `solidity`
   - [x] `starlark`
+  - [x] `supercollider`
   - [x] `svelte`
   - [x] `swift`
   - [x] `systemverilog`
@@ -317,7 +318,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `ssh_config`
   - [ ] `strace`
   - [ ] `styled`
-  - [ ] `supercollider`
   - [ ] `superhtml`
   - [ ] `surface`
   - [ ] `sway`
