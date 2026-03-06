@@ -1,10 +1,17 @@
 local M = {}
 
-function M.install_langs(langs)
+--- @param langs string|string[]
+--- @param opts? { force?: boolean }
+function M.install_langs(langs, opts)
   if type(langs) == 'string' then
     langs = { langs }
   end
-  require('nvim-treesitter').install(langs, { summary = true, max_jobs = 10 }):wait()
+
+  require('nvim-treesitter').install(langs, {
+    summary = true,
+    max_jobs = 10,
+    force = opts and opts.force or nil,
+  }):wait()
   -- Dirty hack to clear ext_messages
   vim.cmd.normal(':<esc>')
 end
