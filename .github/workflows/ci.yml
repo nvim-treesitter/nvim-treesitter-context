@@ -107,6 +107,9 @@ jobs:
       - name: Run Test
         run: make test
 
+      - name: README up to date
+        run: git diff --exit-code -- README.md
+
       - name: Download tsqueryls
         run: make tsqueryls
 
