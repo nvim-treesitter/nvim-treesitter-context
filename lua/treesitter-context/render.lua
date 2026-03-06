@@ -5,6 +5,7 @@ local util = require('treesitter-context.util')
 local config = require('treesitter-context.config')
 
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
+local MAX_DEPTH_HIGHLIGHT_GROUPS = 8
 
 --- List of free buffers that can be reused.
 --- @type integer[]
@@ -209,6 +210,36 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
       offset = offset + util.get_range_height(context)
     end
   end)
+end
+
+--- @param depth integer
+--- @return string
+local function get_depth_highlight_group(depth)
+  if depth <= MAX_DEPTH_HIGHLIGHT_GROUPS then
+    local level_hl = string.format('TreesitterContextLevel%d', depth)
+    if fn.hlexists(level_hl) == 1 then
+      return level_hl
+    end
+  end
+  return 'TreesitterContext'
+end
+
+--- @param bufnr integer
+--- @param contexts Range4[]
+local function highlight_depth_backgrounds(bufnr, contexts)
+  local offset = 0
+  for depth, context in ipairs(contexts) do
+    local hl_group = get_depth_highlight_group(depth)
+    local height = util.get_range_height(context)
+    for row = 0, height - 1 do
+      add_extmark(bufnr, offset + row, 0, {
+        end_row = offset + row + 1,
+        hl_group = hl_group,
+        hl_eol = true,
+      })
+    end
+    offset = offset + height
+  end
 end
 
 --- @class StatusLineHighlight
@@ -526,6 +557,7 @@ function M.open(winid, ctx_ranges, ctx_lines, force_hl_update)
     highlight_contexts(bufnr, ctx_bufnr, ctx_ranges)
     copy_extmarks(bufnr, ctx_bufnr, ctx_ranges)
     highlight_bottom(ctx_bufnr, win_height - 1, 'TreesitterContextBottom')
+    highlight_depth_backgrounds(ctx_bufnr, ctx_ranges)
     horizontal_scroll_contexts(winid, window_context.context_winid)
   end
 end

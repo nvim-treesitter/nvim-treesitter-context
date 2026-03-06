@@ -395,6 +395,11 @@ require'treesitter-context'.setup{
 Use the highlight group `TreesitterContext` to change the colors of the
 context. Per default it links to `NormalFloat`.
 
+Use `TreesitterContextLevel1` ... `TreesitterContextLevel8` to apply
+depth-specific highlights for nested context rows. By default each level links
+to `TreesitterContext`. Nesting depths greater than 8 fall back to
+`TreesitterContext`.
+
 Use the highlight group `TreesitterContextLineNumber` to change the colors of the
 context line numbers if `line_numbers` is set. Per default it links to `LineNr`.
 
