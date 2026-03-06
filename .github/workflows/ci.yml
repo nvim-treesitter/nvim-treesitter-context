@@ -84,7 +84,7 @@ jobs:
 
       - uses: leafo/gh-actions-luarocks@v4
 
-      - uses: tree-sitter/setup-action/cli@v1
+      - uses: tree-sitter/setup-action/cli@v2
 
       - name: Download nvim-test
         run: make nvim-test
@@ -112,4 +112,3 @@ jobs:
 
       - name: Validate queries
         run: make tsqueryls-check
-
