@@ -130,6 +130,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `blueprint`
   - [ ] `bp`
   - [ ] `brightscript`
+  - [ ] `c3`
   - [ ] `caddy`
   - [ ] `cairo`
   - [ ] `chatito`
@@ -190,6 +191,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `gowork`
   - [ ] `gpg`
   - [ ] `gren`
+  - [ ] `groq`
   - [ ] `gstlaunch`
   - [ ] `hack`
   - [ ] `hare`
@@ -210,6 +212,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `idl`
   - [ ] `idris`
   - [ ] `inko`
+  - [ ] `ipkg`
   - [ ] `ispc`
   - [ ] `javadoc`
   - [ ] `jinja`
@@ -222,6 +225,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `just`
   - [ ] `kcl`
   - [ ] `kconfig`
+  - [ ] `kitty`
   - [ ] `koto`
   - [ ] `kusto`
   - [ ] `lalrpop`
@@ -254,6 +258,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `perl`
   - [ ] `phpdoc`
   - [ ] `pioasm`
+  - [ ] `pkl`
   - [ ] `po`
   - [ ] `pod`
   - [ ] `poe_filter`
@@ -285,6 +290,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `rego`
   - [ ] `requirements`
   - [ ] `rescript`
+  - [ ] `rifleconf`
   - [ ] `rnoweb`
   - [ ] `robot`
   - [ ] `robots`
@@ -300,10 +306,12 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `slint`
   - [ ] `smithy`
   - [ ] `snakemake`
+  - [ ] `snl`
   - [ ] `soql`
   - [ ] `sosl`
   - [ ] `sourcepawn`
   - [ ] `sparql`
+  - [ ] `sproto`
   - [ ] `sql`
   - [ ] `squirrel`
   - [ ] `ssh_config`
@@ -335,6 +343,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `v`
   - [ ] `vala`
   - [ ] `vento`
+  - [ ] `verilog`
   - [ ] `vhs`
   - [ ] `vimdoc`
   - [ ] `vrl`
@@ -342,12 +351,14 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `wgsl_bevy`
   - [ ] `wing`
   - [ ] `wit`
+  - [ ] `wxml`
   - [ ] `xcompose`
   - [ ] `xresources`
   - [ ] `yuck`
   - [ ] `zathurarc`
   - [ ] `ziggy`
   - [ ] `ziggy_schema`
+  - [ ] `zsh`
 
 </details>
 

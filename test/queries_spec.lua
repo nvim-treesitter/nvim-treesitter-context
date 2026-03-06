@@ -4,6 +4,67 @@ local exec_lua = helpers.exec_lua
 
 local tc_helpers = require('test.helpers')
 
+--- @param line string
+--- @return string? tick
+--- @return string? lang
+local function parse_readme_lang_line(line)
+  return line:match('^%s*%- %[(.)%] `([^`]+)`')
+end
+
+--- @param lines string[]
+--- @param lang string
+--- @return integer?
+local function find_readme_lang_index(lines, lang)
+  for i, line in ipairs(lines) do
+    local _, line_lang = parse_readme_lang_line(line)
+    if line_lang == lang then
+      return i
+    end
+  end
+end
+
+--- Find insertion point for `lang` inside a specific README language block (`x` or space).
+--- @param lines string[]
+--- @param tick string
+--- @param lang string
+--- @return integer
+local function find_readme_insert_index(lines, tick, lang)
+  local last_tick_index --- @type integer?
+
+  for i, line in ipairs(lines) do
+    local line_tick, line_lang = parse_readme_lang_line(line)
+    if line_tick == tick and line_lang then
+      last_tick_index = i
+      if line_lang > lang then
+        return i
+      end
+    end
+  end
+
+  return last_tick_index and (last_tick_index + 1) or (#lines + 1)
+end
+
+--- Remove any existing README entry for `lang` and insert the updated one in order.
+--- @param lines string[]
+--- @param lang string
+--- @param tick string
+--- @param broken boolean?
+local function upsert_readme_lang_line(lines, lang, tick, broken)
+  local existing_index = find_readme_lang_index(lines, lang)
+  if existing_index then
+    table.remove(lines, existing_index)
+  end
+
+  local insert_index = find_readme_insert_index(lines, tick, lang)
+  local line
+  if tick == 'x' then
+    line = ('  - [x] `%s`%s'):format(lang, broken and ' (broken)' or '')
+  else
+    line = ('  - [ ] `%s`'):format(lang)
+  end
+  table.insert(lines, insert_index, line)
+end
+
 describe('query:', function()
   local readme_lines = {} --- @type string[]
 
@@ -12,62 +73,34 @@ describe('query:', function()
     exec_lua(tc_helpers.setup)
 
     local f = assert(io.open('README.md', 'r'))
-    for l in f:lines() do
-      readme_lines[#readme_lines + 1] = l
+    for line in f:lines() do
+      table.insert(readme_lines, line)
     end
     f:close()
   end)
 
   for _, lang in ipairs(tc_helpers.get_langs()) do
     it(lang, function()
-      local lang_index --- @type integer
-      local last_supported_lang_index --- @type integer
-      local last_lang_index --- @type integer
-
-      -- Find the line in the README for this lang
-      for i, l in ipairs(readme_lines) do
-        --- @type string?
-        local tick, lang1 = l:match('%- %[(.)%] `([^`]+)`')
-        if lang1 then
-          if tick == 'x' then
-            last_supported_lang_index = i
-          else
-            last_lang_index = i
-          end
-
-          if lang1 == lang then
-            lang_index = i
-          end
-        end
-      end
-
-      if lang_index then
-        table.remove(readme_lines, lang_index)
-      end
-
       if not vim.uv.fs_stat('queries/' .. lang .. '/context.scm') then
-        table.insert(readme_lines, last_lang_index, ('  - [ ] `%s`'):format(lang))
+        upsert_readme_lang_line(readme_lines, lang, ' ')
         pending('no queries/' .. lang .. '/context.scm')
         return
       end
-      exec_lua(tc_helpers.install_langs, lang)
+
+      exec_lua(tc_helpers.install_langs, lang, { force = true })
       local ok = exec_lua(function(...)
         return (pcall(vim.treesitter.query.get, ...))
       end, lang, 'context')
-      table.insert(
-        readme_lines,
-        last_supported_lang_index,
-        ('  - [x] `%s`%s'):format(lang, ok and '' or ' (broken)')
-      )
+
+      upsert_readme_lang_line(readme_lines, lang, 'x', not ok)
       assert(ok)
     end)
   end
 
   teardown(function()
-    -- Update the README.
     local f = assert(io.open('README.md', 'w'))
-    for _, l in ipairs(readme_lines) do
-      f:write(l)
+    for _, line in ipairs(readme_lines) do
+      f:write(line)
       f:write('\n')
     end
     f:close()
