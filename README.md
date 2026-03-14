@@ -108,6 +108,8 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `yaml`
   - [x] `yang`
   - [x] `zig`
+  - [x] `csv`
+  - [x] `tsv`
 
 </details>
 
@@ -140,7 +142,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `cooklang`
   - [ ] `corn`
   - [ ] `cpon`
-  - [ ] `csv`
   - [ ] `cylc`
   - [ ] `desktop`
   - [ ] `dhall`
@@ -332,7 +333,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `tlaplus`
   - [ ] `tmux`
   - [ ] `todotxt`
-  - [ ] `tsv`
   - [ ] `turtle`
   - [ ] `twig`
   - [ ] `typespec`
