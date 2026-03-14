@@ -11,6 +11,12 @@ end, {
 })
 
 vim.api.nvim_set_hl(0, 'TreesitterContext', { link = 'NormalFloat', default = true })
+for i = 1, 8 do
+  vim.api.nvim_set_hl(0, string.format('TreesitterContextLevel%d', i), {
+    link = 'TreesitterContext',
+    default = true,
+  })
+end
 vim.api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
 vim.api.nvim_set_hl(0, 'TreesitterContextBottom', { link = 'NONE', default = true })
 vim.api.nvim_set_hl(

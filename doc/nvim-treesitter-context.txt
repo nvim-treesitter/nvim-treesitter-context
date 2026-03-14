@@ -75,6 +75,19 @@ HIGHLIGHTS                                  *nvim-treesitter-context-highlights*
 
     Colors of the context.
 
+`TreesitterContextLevel1`                               *hl-TreesitterContextLevel1*
+`TreesitterContextLevel2`                               *hl-TreesitterContextLevel2*
+`TreesitterContextLevel3`                               *hl-TreesitterContextLevel3*
+`TreesitterContextLevel4`                               *hl-TreesitterContextLevel4*
+`TreesitterContextLevel5`                               *hl-TreesitterContextLevel5*
+`TreesitterContextLevel6`                               *hl-TreesitterContextLevel6*
+`TreesitterContextLevel7`                               *hl-TreesitterContextLevel7*
+`TreesitterContextLevel8`                               *hl-TreesitterContextLevel8*
+    (default: links to `TreesitterContext`)
+
+    Depth-specific colors for nested context rows.
+    Depths greater than 8 fall back to `TreesitterContext`.
+
 `TreesitterContextLineNumber`                     *hl-TreesitterContextLineNumber*
     (default: links to `LineNr`)
 
