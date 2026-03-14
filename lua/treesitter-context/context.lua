@@ -329,7 +329,8 @@ function M.get(winid)
     return
   end
 
-  if not pcall(vim.treesitter.get_parser, bufnr) then
+  local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
+  if not ok or not parser then
     return
   end
 
