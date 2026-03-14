@@ -1,35 +1,46 @@
 (class
-  (body_statement) @context.end) @context
+  name: (constant)
+  (_) @context.end) @context
 
 (singleton_class
-  (body_statement) @context.end) @context
+  value: (self) @context.end) @context
 
 (module
-  (body_statement) @context.end) @context
+  name: (constant) @context.end) @context
 
 (method
-  (body_statement) @context.end) @context
+  name: (identifier)
+  parameters: (method_parameters) @context.end) @context
+
+(method
+  name: (identifier) @context.end) @context
 
 (singleton_method
-  (body_statement) @context.end) @context
+  object: (self)
+  name: (identifier)
+  parameters: (method_parameters) @context.end) @context
+
+(singleton_method
+  object: (self)
+  name: (identifier) @context.end) @context
 
 (if
   (then) @context.end) @context
 
 (if
-  (else
-    (_) @context.end)) @context
+  condition: (_) @context.end) @context
+
+(else
+  (_) @context.end) @context
 
 (unless
   (then) @context.end) @context
 
 (unless
-  (else
-    (_) @context.end)) @context
+  condition: (_) @context.end) @context
 
-(_
-  (do_block
-    (body_statement) @context.end)) @context
+(do_block
+  parameters: (block_parameters) @context.end) @context
 
 (call
   method: (identifier) @_identifier
