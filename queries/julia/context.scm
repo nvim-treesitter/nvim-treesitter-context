@@ -12,3 +12,5 @@
   condition: (_) @context.final) @context
 
 (try_statement) @context
+
+(do_clause) @context
