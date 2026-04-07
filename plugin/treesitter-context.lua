@@ -12,7 +12,7 @@ end, {
 
 vim.api.nvim_set_hl(0, 'TreesitterContext', { link = 'NormalFloat', default = true })
 vim.api.nvim_set_hl(0, 'TreesitterContextLineNumber', { link = 'LineNr', default = true })
-vim.api.nvim_set_hl(0, 'TreesitterContextBottom', { link = 'NONE', default = true })
+vim.api.nvim_set_hl(0, 'TreesitterContextBottom', { default = true })
 vim.api.nvim_set_hl(
   0,
   'TreesitterContextLineNumberBottom',
