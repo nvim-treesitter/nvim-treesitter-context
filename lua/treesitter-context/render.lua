@@ -66,6 +66,9 @@ local function display_window(winid, context_winid, width, height, col, ty, hl)
     vim.wo[context_winid].foldenable = false
     vim.wo[context_winid].winhl = 'NormalFloat:' .. hl
     vim.wo[context_winid].conceallevel = vim.wo[winid].conceallevel
+    if fn.exists('&winpinned') == 1 then
+      vim.wo[context_winid].winpinned = true
+    end
   elseif api.nvim_win_is_valid(context_winid) then
     api.nvim_win_set_config(context_winid, {
       win = winid,
