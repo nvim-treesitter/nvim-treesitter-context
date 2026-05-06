@@ -1,0 +1,20 @@
+name {{CONTEXT}},age,city
+Alice,30,Jakarta
+Bob,25,London
+Charlie,35,Paris
+Derin,23,Bilecik
+Eve,42,Berlin
+Frank,31,Sydney
+Grace,27,Mumbai
+Hank,33,Cairo
+Ilkkan,77,Istanbul
+Jack,38,Madrid
+Kate,26,Seoul
+Leo,34,Dublin
+Mary,33,New York
+Nate,23,Lima
+Olivia,44,Vienna
+Pete,36,Athens
+Quinn,30,Lisbon
+Rose,27,Zurich
+Sam {{CURSOR}},41,Prague
