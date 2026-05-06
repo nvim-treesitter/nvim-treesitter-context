@@ -6,6 +6,17 @@
   name: (identifier)
   (_) @context.end) @context
 
+(preproc_else
+  (_) @context.end) @context
+
+(preproc_elif
+  (_)
+  (_) @context.end) @context
+
+(preproc_elifdef
+  (_)
+  (_) @context.end) @context
+
 (function_definition
   body: (_
     (_) @context.end)) @context
