@@ -8,6 +8,7 @@ local clear = helpers.clear
 local exec_lua = helpers.exec_lua
 local cmd = helpers.api.nvim_command
 local feed = helpers.feed
+local eq = helpers.eq
 
 describe('ts_context', function()
   local screen --- @type test.screen
@@ -103,6 +104,19 @@ describe('ts_context', function()
       {6:~                             }|*4
     ]],
     })
+  end)
+
+  it('defines per-depth context highlight groups', function()
+    local level_hls_exist = exec_lua([[
+      for i = 1, 8 do
+        if vim.fn.hlexists('TreesitterContextLevel' .. i) ~= 1 then
+          return false
+        end
+      end
+      return true
+    ]])
+
+    eq(true, level_hls_exist)
   end)
 
   it('#627', function()
