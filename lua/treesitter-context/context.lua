@@ -235,9 +235,9 @@ local function get_parent_langtrees(bufnr, range)
     return {}
   end
 
-  local range_arr = { range } --- @type Range4[]
+  local parse_ranges = vim.version().minor >= 10 and { range } or range
   --- @diagnostic disable-next-line:redundant-parameter added in 0.11
-  root_tree:parse(range_arr, function(...) end)
+  root_tree:parse(parse_ranges, function(...) end)
   local ret = { root_tree }
 
   while true do
