@@ -6,6 +6,8 @@ local config = require('treesitter-context.config')
 
 local ns = api.nvim_create_namespace('nvim-treesitter-context')
 
+local M = {}
+
 --- List of free buffers that can be reused.
 --- @type integer[]
 local buffer_pool = {}
@@ -15,6 +17,7 @@ local MAX_BUFFER_POOL_SIZE = 20
 --- @class WindowContext
 --- @field context_winid integer? The context window ID.
 --- @field gutter_winid integer? The gutter window ID.
+--- @field ctx_ranges Range4[]? The context ranges for the source window.
 
 --- A table mapping window IDs to WindowContext objects.
 --- This table contains mappings for windows where the context is displayed.
@@ -46,6 +49,8 @@ end
 --- @param hl string
 --- @return integer Window ID of context window
 local function display_window(winid, context_winid, width, height, col, ty, hl)
+  local is_context = ty == 'treesitter_context'
+  local ctx_focusable = is_context and config.jump_on_click or false
   if not context_winid then
     local sep = config.separator and { config.separator, 'TreesitterContextSeparator' } or nil
     context_winid = api.nvim_open_win(create_or_get_buf(), false, {
@@ -55,7 +60,7 @@ local function display_window(winid, context_winid, width, height, col, ty, hl)
       height = height,
       row = 0,
       col = col,
-      focusable = false,
+      focusable = ctx_focusable,
       style = 'minimal',
       noautocmd = true,
       zindex = config.zindex,
@@ -66,6 +71,16 @@ local function display_window(winid, context_winid, width, height, col, ty, hl)
     vim.wo[context_winid].foldenable = false
     vim.wo[context_winid].winhl = 'NormalFloat:' .. hl
     vim.wo[context_winid].conceallevel = vim.wo[winid].conceallevel
+    if ctx_focusable then
+      local ctx_winid = context_winid
+      local src_winid = winid
+      local ctx_bufnr = api.nvim_win_get_buf(ctx_winid)
+      local jump = function()
+        M.jump_to_clicked_context_line(ctx_winid, src_winid)
+      end
+      -- <LeftRelease> fires on mouse-up regardless of whether this click also focused the window.
+      vim.keymap.set('n', '<LeftRelease>', jump, { buffer = ctx_bufnr, nowait = true })
+    end
   elseif api.nvim_win_is_valid(context_winid) then
     api.nvim_win_set_config(context_winid, {
       win = winid,
@@ -465,7 +480,48 @@ local function copy_extmarks(bufnr, ctx_bufnr, contexts)
   end
 end
 
-local M = {}
+--- Given a context float window and its source window, jump the source window's
+--- cursor to the source line that corresponds to the clicked row in the float.
+--- @param ctx_winid integer
+--- @param src_winid integer
+function M.jump_to_clicked_context_line(ctx_winid, src_winid)
+  -- Find ctx_ranges for src_winid
+  local window_context = window_contexts[src_winid]
+  if not window_context or not window_context.ctx_ranges then
+    return
+  end
+
+  -- Use getmousepos to get the exact clicked row in the float.
+  local mousepos = vim.fn.getmousepos()
+  -- Guard against stale closures (e.g. buffer pool reuse): verify the click is actually
+  -- inside the expected context float window.
+  if mousepos.winid ~= ctx_winid then
+    return
+  end
+  local float_row = mousepos.winrow -- 1-indexed row within the window
+
+  -- Map float_row to source buffer line via ctx_ranges
+  local range_start_row = 0
+  local source_line --- @type integer?
+  for _, range in ipairs(window_context.ctx_ranges) do
+    local range_height = util.get_range_height(range)
+    if float_row <= range_start_row + range_height then
+      local row_within_range = float_row - range_start_row -- 1-indexed
+      source_line = range[1] + row_within_range -- range[1] is 0-indexed start row
+      break
+    end
+    range_start_row = range_start_row + range_height
+  end
+
+  if not source_line then
+    return
+  end
+
+  -- Jump: set cursor in source window, push to jumplist
+  api.nvim_set_current_win(src_winid)
+  vim.cmd([[ normal! m' ]])
+  api.nvim_win_set_cursor(src_winid, { source_line, 0 })
+end
 
 --- @param winid integer
 --- @param ctx_ranges Range4[]
@@ -480,6 +536,7 @@ function M.open(winid, ctx_ranges, ctx_lines, force_hl_update)
 
   window_contexts[winid] = window_contexts[winid] or {}
   local window_context = window_contexts[winid]
+  window_context.ctx_ranges = ctx_ranges
 
   if gutter_width > 0 then
     window_context.gutter_winid = display_window(

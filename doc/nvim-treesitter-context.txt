@@ -58,6 +58,9 @@ not required.
 
       -- (fun(buf: integer): boolean) return false to disable attaching
       on_attach = nil,
+
+      -- Whether clicking on the context window jumps to that line in the source window.
+      jump_on_click = false,
     })
 <
 

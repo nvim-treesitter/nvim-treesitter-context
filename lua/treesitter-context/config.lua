@@ -10,6 +10,7 @@
 --- @field mode 'cursor'|'topline'
 --- @field separator? string
 --- @field on_attach? fun(buf: integer): boolean
+--- @field jump_on_click boolean
 
 --- @class (exact) TSContext.UserConfig : TSContext.Config
 ---
@@ -45,6 +46,9 @@
 ---
 --- Callback when attaching. Return false to disable attaching
 --- @field on_attach? fun(buf: integer): boolean
+---
+--- Whether clicking on the context window jumps to that line in the source window.
+--- @field jump_on_click? boolean
 
 --- @type TSContext.Config
 local default_config = {
@@ -57,6 +61,7 @@ local default_config = {
   trim_scope = 'outer',
   zindex = 20,
   mode = 'cursor',
+  jump_on_click = false,
 }
 
 local config = vim.deepcopy(default_config)
