@@ -1,4 +1,5 @@
 local api = vim.api
+local uv = vim.uv or vim.loop
 
 local config = require('treesitter-context.config')
 
@@ -40,7 +41,7 @@ local function throttle_by_id(f)
       vim.schedule(function()
         -- Start a timer to check if the function needs to run again
         -- after the throttling period.
-        timers[id] = timers[id] or assert(vim.loop.new_timer())
+        timers[id] = timers[id] or assert(uv.new_timer())
         timers[id]:start(150, 0, function()
           scheduled[id] = nil
           if waiting[id] then
