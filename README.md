@@ -131,6 +131,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `blade`
   - [ ] `blueprint`
   - [ ] `bp`
+  - [ ] `bpftrace`
   - [ ] `brightscript`
   - [ ] `c3`
   - [ ] `caddy`
@@ -217,6 +218,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `javadoc`
   - [ ] `jinja`
   - [ ] `jinja_inline`
+  - [ ] `jjdescription`
   - [ ] `jq`
   - [ ] `jsdoc`
   - [ ] `json5`
@@ -226,6 +228,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `kcl`
   - [ ] `kconfig`
   - [ ] `kitty`
+  - [ ] `kos`
   - [ ] `koto`
   - [ ] `kusto`
   - [ ] `lalrpop`
@@ -294,6 +297,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `rnoweb`
   - [ ] `robot`
   - [ ] `robots`
+  - [ ] `robots_txt`
   - [ ] `roc`
   - [ ] `ron`
   - [ ] `rst`

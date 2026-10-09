@@ -19,13 +19,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
-      - uses: leafo/gh-actions-lua@v11
+      - uses: leafo/gh-actions-lua@v13
         with:
           luaVersion: "5.1.5"
 
-      - uses: leafo/gh-actions-luarocks@v4
+      - uses: leafo/gh-actions-luarocks@v6
 
       - uses: tree-sitter/setup-action/cli@v2
 
@@ -37,10 +37,10 @@ jobs:
 
       - name: Parsers Cache
         id: parsers-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: deps/nvim-treesitter-data
-          key: parsers-${{ join(matrix.*, '-') }}-${{ hashFiles(
+          key: parsers-${{ hashFiles('Makefile',
             './deps/nvim-treesitter/lua/nvim-treesitter/parsers.lua') }}
 
       - name: Install parsers

@@ -7,13 +7,16 @@ function M.install_langs(langs, opts)
     langs = { langs }
   end
 
-  require('nvim-treesitter').install(langs, {
-    summary = true,
-    max_jobs = 10,
-    force = opts and opts.force or nil,
-  }):wait()
-  -- Dirty hack to clear ext_messages
-  vim.cmd.normal(':<esc>')
+  local installed = require('nvim-treesitter')
+    .install(langs, {
+      summary = true,
+      max_jobs = 10,
+      force = opts and opts.force or nil,
+    })
+    :wait()
+  assert(installed, 'Parser installation failed')
+  -- Clear parser installation messages before checking the screen.
+  vim.cmd.normal({ vim.keycode('<C-l>'), bang = true })
 end
 
 local langs --- @type string[]?
