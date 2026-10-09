@@ -403,7 +403,7 @@ separator if `separator` is set. By default it links to `FloatBorder`.
 
 Use the highlight groups `TreesitterContextBottom` and/or
 `TreesitterContextLineNumberBottom` to change the highlight of the last line of
-the context window. By default it links to `NONE`.
+the context window. By default it is cleared.
 However, you can use this to create a border by applying an underline highlight, e.g,
 for an underline across the screen:
 

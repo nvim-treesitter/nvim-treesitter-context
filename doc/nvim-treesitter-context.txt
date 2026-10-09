@@ -86,7 +86,7 @@ HIGHLIGHTS                                  *nvim-treesitter-context-highlights*
     Used for the colors of the separator if `separator` is set.
 
 `TreesitterContextBottom`                             *hl-TreesitterContextBottom*
-    (default: links to `NONE`)
+    (default: cleared)
 
     Use for the last line of the context.
 
