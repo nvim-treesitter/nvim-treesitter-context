@@ -6,7 +6,7 @@ export XDG_DATA_HOME ?= $(HOME)/.data
 # nvim-treesitter
 # ------------------------------------------------------------------------------
 
-NVIM_TS_SHA ?= d72fa25
+NVIM_TS_SHA ?= e289100
 NVIM_TS := deps/nvim-treesitter
 
 .PHONY: nvim-treesitter
@@ -24,11 +24,11 @@ $(NVIM_TS):
 
 FILTER=.*
 
-export NVIM_TEST_VERSION ?= v0.11.5
-export NVIM_RUNNER_VERSION ?= v0.11.5
+export NVIM_TEST_VERSION ?= v0.12.5
+export NVIM_RUNNER_VERSION ?= v0.12.5
 
 NVIM_TEST := deps/nvim-test
-NVIM_TEST_REV = v1.1.0
+NVIM_TEST_REV = v1.4.0
 
 .PHONY: nvim-test
 nvim-test: $(NVIM_TEST)
@@ -64,8 +64,8 @@ else
     LUALS_ARCH ?= x64
 endif
 
-LUALS_VERSION := 3.13.6
-LUALS := deps/lua-language-server-$(LUALS_VERSION)-$(shell uname -s)-$(LUALS_ARCH)
+LUALS_VERSION := 3.19.1
+LUALS := deps/lua-language-server-$(LUALS_VERSION)-$(shell uname -s | tr '[:upper:]' '[:lower:]')-$(LUALS_ARCH)
 LUALS_TARBALL := $(LUALS).tar.gz
 LUALS_URL := https://github.com/LuaLS/lua-language-server/releases/download/$(LUALS_VERSION)/$(notdir $(LUALS_TARBALL))
 
@@ -98,7 +98,7 @@ endif
 # Stylua
 # ------------------------------------------------------------------------------
 
-STYLUA_VERSION := v2.1.0
+STYLUA_VERSION := v2.5.2
 STYLUA_ZIP := stylua-$(STYLUA_PLATFORM).zip
 STYLUA_URL := https://github.com/JohnnyMorganz/StyLua/releases/download/$(STYLUA_VERSION)/$(STYLUA_ZIP)
 STYLUA := deps/stylua
