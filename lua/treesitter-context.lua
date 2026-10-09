@@ -89,9 +89,13 @@ local function cannot_open(winid)
     or api.nvim_win_get_height(winid) < config.min_window_height
 end
 
+local pending_hl_updates = {} --- @type table<integer,true>
+
 --- @param winid integer
---- @param force_hl_update? boolean
-local update_win = throttle_by_id(function(winid, force_hl_update)
+local update_win = throttle_by_id(function(winid)
+  local force_hl_update = pending_hl_updates[winid]
+  pending_hl_updates[winid] = nil
+
   -- Remove leaked contexts firstly.
   -- Contexts may sometimes leak due to reasons like the use of 'noautocmd'.
   -- In these cases, affected windows might remain visible, and even ToggleContext
@@ -139,7 +143,11 @@ local function update(event)
     or { api.nvim_get_current_win() }
 
   for _, win in ipairs(wins) do
-    update_win(win, force_hl_events[event])
+    -- Keep highlight refreshes until the throttled update runs.
+    if force_hl_events[event] then
+      pending_hl_updates[win] = true
+    end
+    update_win(win)
   end
 end
 
