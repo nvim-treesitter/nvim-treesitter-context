@@ -20,10 +20,24 @@ Here is a basic example for C:
 
 You can look at a node names of a tree using `:InspectTree`.
 
-Additionally an optional `@context.end` capture can also be specified. When
-provided, the text from the start of the `@context` capture to the start of
-`@context.end` capture (exclusive) will be used for the context and joined into
-a single line.
+Optional captures in the same query pattern as `@context` can change the context
+range:
+
+- `@context.start` sets the start of the range to the start of the captured node.
+  By default, the range starts at the start of the `@context` node.
+- `@context.end` sets the end of the range to the start of the captured node
+  (exclusive).
+- `@context.final` sets the end of the range to the end of the captured node,
+  so the range includes that node.
+
+Use either `@context.end` or `@context.final` to set the end of the range. Without
+either capture, the range ends after the first line of the `@context` node. If
+`@context.start` moves the start to a later line, also set an end capture.
+
+The context window shows whole lines from this range and preserves line breaks.
+Text on the same line before or after a captured node can therefore be shown.
+Trailing blank lines are removed, and `multiline_threshold` and `max_lines` limit
+the number of lines shown.
 
 Here's what that looks like for C:
 
@@ -34,6 +48,15 @@ Here's what that looks like for C:
 This query specifies that everything from the `if` keyword up-to the first
 statement (exclusive) should be used for the context. This is useful when an
 if-statement spans multiple lines.
+
+To start at a C function's declarator and include all its parameter lines:
+
+```query
+(function_definition
+  declarator: (_) @context.start @context.final) @context
+```
+
+This omits the return type when it is on an earlier line.
 
 ### Committing your changes
 
