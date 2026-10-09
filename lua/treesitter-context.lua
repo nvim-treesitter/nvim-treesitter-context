@@ -200,6 +200,31 @@ local function is_semantic_tokens_request(req)
     )
 end
 
+local mouse_ns = api.nvim_create_namespace('nvim-treesitter-context-mouse')
+local left_mouse = api.nvim_replace_termcodes('<LeftMouse>', true, false, true)
+
+--- @param key string
+--- @return string?
+local function on_key(key)
+  if key ~= left_mouse or api.nvim_get_mode().mode ~= 'n' then
+    return
+  end
+  local mouse = vim.o.mouse
+  if not mouse:find('[an]') and not (mouse:find('h') and vim.bo.buftype == 'help') then
+    return
+  end
+  local pos = vim.fn.getmousepos()
+  local line = Render.get_source_line(pos.winid, pos.screenrow, pos.screencol)
+  if not line then
+    return
+  end
+
+  api.nvim_set_current_win(pos.winid)
+  vim.cmd([[ normal! m' ]])
+  api.nvim_win_set_cursor(pos.winid, { line, 0 })
+  return ''
+end
+
 function M.enable()
   if enabled then
     -- Some options may have changed.
@@ -251,6 +276,10 @@ function M.enable()
     end
   end)
 
+  -- Earlier versions cannot discard the click that would move the source cursor.
+  if vim.fn.has('nvim-0.11') == 1 then
+    vim.on_key(on_key, mouse_ns)
+  end
   update()
 
   enabled = true
@@ -258,6 +287,7 @@ end
 
 function M.disable()
   augroup('treesitter_context_update', {})
+  vim.on_key(nil, mouse_ns)
   -- We can't close only certain windows based on the config because it might have changed.
   for _, winid in pairs(api.nvim_list_wins()) do
     Render.close(winid)
