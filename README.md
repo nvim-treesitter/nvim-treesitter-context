@@ -430,6 +430,9 @@ vim.keymap.set("n", "[c", function()
 end, { silent = true })
 ```
 
+With `mouse` enabled, left-click a context line or its number in Normal mode to
+jump to that source line. Use `<C-o>` to return.
+
 ## Adding support for other languages
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)

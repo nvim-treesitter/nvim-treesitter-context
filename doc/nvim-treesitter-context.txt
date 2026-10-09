@@ -12,6 +12,9 @@ A plugin that shows the semantic context of the currently visible buffer
 region. Typically this context will be: the current function, if statement
 blocks, loops, etc.
 
+With 'mouse' enabled, left-click a context line or its number in Normal mode to
+jump to that source line. Use |CTRL-O| to return.
+
 ==============================================================================
 CONFIGURATION                                   *nvim-treesitter-context-config*
 

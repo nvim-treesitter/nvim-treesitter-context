@@ -15,6 +15,9 @@ local MAX_BUFFER_POOL_SIZE = 20
 --- @class WindowContext
 --- @field context_winid integer? The context window ID.
 --- @field gutter_winid integer? The gutter window ID.
+--- @field bufnr integer The source buffer displayed in the context window.
+--- @field changedtick integer The source change counter at the last render.
+--- @field ctx_ranges Range4[] The source ranges displayed in the context window.
 
 --- A table mapping window IDs to WindowContext objects.
 --- This table contains mappings for windows where the context is displayed.
@@ -468,6 +471,49 @@ end
 
 local M = {}
 
+--- @param winid integer Source window ID.
+--- @param screenrow integer Screen row, 1-based.
+--- @param screencol integer Screen column, 1-based.
+--- @return integer? line
+function M.get_source_line(winid, screenrow, screencol)
+  local context = window_contexts[winid]
+  if not context then
+    return
+  end
+  -- Source changes can precede the next throttled render.
+  if
+    api.nvim_win_get_buf(winid) ~= context.bufnr
+    or api.nvim_buf_get_changedtick(context.bufnr) ~= context.changedtick
+  then
+    return
+  end
+  local context_winid = context.context_winid
+  if not context_winid or not api.nvim_win_is_valid(context_winid) then
+    return
+  end
+
+  -- Non-focusable context windows pass mouse events to their source window.
+  -- Use screen rows because folds and virtual lines affect buffer line numbers.
+  local row = screenrow - api.nvim_win_get_position(context_winid)[1]
+  local col = screencol - api.nvim_win_get_position(winid)[2]
+  if
+    row < 1
+    or row > api.nvim_win_get_height(context_winid)
+    or col < 1
+    or col > api.nvim_win_get_width(winid)
+  then
+    return
+  end
+
+  for _, range in ipairs(context.ctx_ranges) do
+    local height = util.get_range_height(range)
+    if row <= height then
+      return range[1] + row
+    end
+    row = row - height
+  end
+end
+
 --- @param winid integer
 --- @param ctx_ranges Range4[]
 --- @param ctx_lines string[]
@@ -479,8 +525,11 @@ local function open(winid, ctx_ranges, ctx_lines, force_hl_update)
 
   local win_height = math.max(1, #ctx_lines)
 
-  window_contexts[winid] = window_contexts[winid] or {}
-  local window_context = window_contexts[winid]
+  local window_context = window_contexts[winid] or {}
+  window_context.bufnr = bufnr
+  window_context.changedtick = api.nvim_buf_get_changedtick(bufnr)
+  window_context.ctx_ranges = ctx_ranges
+  window_contexts[winid] = window_context
 
   if gutter_width > 0 then
     window_context.gutter_winid = display_window(
