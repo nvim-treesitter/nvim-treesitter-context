@@ -94,7 +94,7 @@ end
 local function copy_option(name, from_buf, to_buf)
   --- @cast name any
   local current = vim.bo[from_buf][name]
-  -- Only set when necessary to avoid OptionSet events
+  -- Only set when necessary to avoid repeating option side effects.
   if current ~= vim.bo[to_buf][name] then
     vim.bo[to_buf][name] = current
   end
@@ -145,8 +145,6 @@ local function highlight_contexts(bufnr, ctx_bufnr, contexts)
   copy_option('tabstop', bufnr, ctx_bufnr)
 
   if not buf_highlighter then
-    -- Use standard highlighting when TS highlighting is not available
-    copy_option('filetype', bufnr, ctx_bufnr)
     return
   end
 
@@ -474,7 +472,7 @@ local M = {}
 --- @param ctx_ranges Range4[]
 --- @param ctx_lines string[]
 --- @param force_hl_update? boolean
-function M.open(winid, ctx_ranges, ctx_lines, force_hl_update)
+local function open(winid, ctx_ranges, ctx_lines, force_hl_update)
   local bufnr = api.nvim_win_get_buf(winid)
   local gutter_width = get_gutter_width(winid)
   local win_width = math.max(1, api.nvim_win_get_width(winid) - gutter_width)
@@ -531,6 +529,15 @@ function M.open(winid, ctx_ranges, ctx_lines, force_hl_update)
     highlight_bottom(ctx_bufnr, win_height - 1, 'TreesitterContextBottom')
     horizontal_scroll_contexts(winid, window_context.context_winid)
   end
+end
+
+--- @param winid integer
+--- @param ctx_ranges Range4[]
+--- @param ctx_lines string[]
+--- @param force_hl_update? boolean
+function M.open(winid, ctx_ranges, ctx_lines, force_hl_update)
+  -- Rendering our internal UI must not trigger user autocommands.
+  util.with_eventignore('all', open, winid, ctx_ranges, ctx_lines, force_hl_update)
 end
 
 --- @param exclude_winids integer[] The only window for which the context should be displayed.

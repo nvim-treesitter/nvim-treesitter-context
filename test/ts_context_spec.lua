@@ -114,6 +114,54 @@ describe('ts_context', function()
     cmd('sleep 100m')
   end)
 
+  it('does not emit autocommands for internal windows and buffers (#677)', function()
+    exec_lua(function()
+      local api = vim.api
+      local render = require('treesitter-context.render')
+      local winid = api.nvim_get_current_win()
+      api.nvim_buf_set_lines(0, 0, -1, false, { 'int foo(void) {', '}' })
+      vim.wo.number = true
+      vim.bo.filetype = 'c'
+      vim.bo.tabstop = 3
+      vim.o.eventignore = 'BufEnter'
+      assert(not vim.treesitter.highlighter.active[api.nvim_get_current_buf()])
+
+      local events = {}
+      api.nvim_create_autocmd({ 'BufNew', 'FileType', 'Syntax', 'OptionSet' }, {
+        callback = function(args)
+          events[#events + 1] = args.event .. ':' .. args.match
+        end,
+      })
+
+      render.open(winid, { { 0, 0, 1, 0 } }, { 'int foo(void) {' })
+      -- Only restoring the global eventignore setting may emit OptionSet.
+      assert(vim.deep_equal(events, { 'OptionSet:eventignore' }), table.concat(events, ', '))
+      assert(vim.o.eventignore == 'BufEnter', 'Rendering must preserve eventignore')
+
+      local context_winid = vim.tbl_filter(function(win)
+        return vim.w[win].treesitter_context
+      end, api.nvim_list_wins())[1]
+      local context_bufnr = api.nvim_win_get_buf(assert(context_winid))
+      assert(vim.bo[context_bufnr].filetype == '')
+      assert(vim.bo[context_bufnr].syntax == '')
+      assert(
+        vim.deep_equal(api.nvim_buf_get_lines(context_bufnr, 0, -1, false), { 'int foo(void) {' }),
+        'Contexts must still render without a Tree-sitter highlighter'
+      )
+
+      events = {}
+      local ok = pcall(render.open, -1, {}, {})
+      assert(not ok, 'Rendering an invalid window must fail')
+      assert(vim.o.eventignore == 'BufEnter', 'Failed rendering must restore eventignore')
+
+      vim.bo.tabstop = 4
+      assert(
+        vim.deep_equal(events, { 'OptionSet:eventignore', 'OptionSet:tabstop' }),
+        'User option changes must still emit OptionSet'
+      )
+    end)
+  end)
+
   describe('language:', function()
     before_each(function()
       exec_lua(tc_helpers.setup, {
