@@ -11,7 +11,7 @@ end
 --- @param ... any
 function M.with_eventignore(events, callback, ...)
   events = type(events) == 'table' and table.concat(events, ',') or events
-  local eventignore = vim.o.eventignore
+  local eventignore = vim.o.eventignore --[[@as string]]
   vim.o.eventignore = (eventignore == '' or events == 'all') and events
     or eventignore .. ',' .. events
   --- @type boolean, any

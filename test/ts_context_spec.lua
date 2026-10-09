@@ -573,3 +573,42 @@ describe('ts_context', function()
     end)
   end)
 end)
+
+describe('ts_context diagnostics', function()
+  it('refreshes diagnostics without changing context text (#668)', function()
+    clear()
+    exec_lua(tc_helpers.setup)
+    exec_lua(install_langs, 'lua')
+    local screen = Screen.new(30, 16)
+    screen:attach()
+    cmd('edit test/test_file.lua')
+    local ns = exec_lua(function()
+      local ns = vim.api.nvim_create_namespace('test-diagnostics')
+      vim.diagnostic.config({
+        virtual_text = { prefix = '', spacing = 1 },
+        signs = false,
+        underline = false,
+      }, ns)
+      vim.diagnostic.set(ns, 0, { { lnum = 0, col = 15, message = 'unused' } })
+      return ns
+    end)
+
+    -- Scroll the function header out of view so it appears in the context.
+    feed('<C-e>jj')
+    screen:expect({ any = '^local function foo%(%) +unused *|' })
+
+    exec_lua(function(ns)
+      vim.diagnostic.set(ns, 0, { { lnum = 0, col = 15, message = 'changed' } })
+      vim.schedule(function()
+        -- A queued cursor update must not discard the diagnostic refresh.
+        vim.api.nvim_exec_autocmds('CursorMoved', { buffer = 0 })
+      end)
+    end, ns)
+    screen:expect({ any = '^local function foo%(%) +changed *|' })
+
+    exec_lua(function(ns)
+      vim.diagnostic.reset(ns, 0)
+    end, ns)
+    screen:expect({ any = '^local function foo%(%) +|' })
+  end)
+end)
