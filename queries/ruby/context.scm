@@ -40,10 +40,7 @@
     "shared_context" "shared_examples")) @context
 
 (case
-  (when
-    (_) @context.end)*
-  (else
-    (_) @context.end)?) @context
+  value: (_)? @context.final) @context
 
 (for
   (_) @context.end) @context
