@@ -51,6 +51,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `graphql`
   - [x] `groovy`
   - [x] `haskell`
+  - [x] `hcl`
   - [x] `html`
   - [x] `ini`
   - [x] `janet_simple`
@@ -196,7 +197,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `hack`
   - [ ] `hare`
   - [ ] `haskell_persistent`
-  - [ ] `hcl`
   - [ ] `heex`
   - [ ] `helm`
   - [ ] `hjson`
