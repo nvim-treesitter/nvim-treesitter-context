@@ -120,6 +120,7 @@ local lang_to_test_files = {} --- @type table<string,string[]>
 setup(function()
   helpers.clear()
   exec_lua(tc_helpers.setup)
+  api.nvim_set_var('_ts_force_sync_parsing', true)
   exec_lua(tc_helpers.install_langs, 'lua')
 
   local test_files = fn.globpath('test/lang', '*', true, true) --- @type string[]
