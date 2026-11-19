@@ -1,0 +1,70 @@
+{# {{TEST}} #}
+{% block content %} {# {{CONTEXT}} #}
+
+
+
+
+{# {{CURSOR}} #}
+{% endblock %}
+
+{# {{TEST}} #}
+{% call dialog('Name') %} {# {{CONTEXT}} #}
+
+
+
+
+{# {{CURSOR}} #}
+{% endcall %}
+
+{# {{TEST}} #}
+{% for item in items %} {# {{CONTEXT}} #}
+
+
+
+
+{# {{CURSOR}} #}
+{% endfor %}
+
+{# {{TEST}} #}
+{% if user.is_admin %} {# {{CONTEXT}} #}
+{% elif user %} {# {{CONTEXT}} #}
+
+
+
+
+{# {{CURSOR}} #}
+{# {{POPCONTEXT}} #}
+{% else %} {# {{CONTEXT}} #}
+
+
+
+
+{# {{CURSOR}} #}
+{% endif %}
+
+{# {{TEST}} #}
+{% set query %} {# {{CONTEXT}} #}
+
+
+
+
+{# {{CURSOR}} #}
+{% endset %}
+
+{# {{TEST}} #}
+{% set links = {'{{CONTEXT}}': '/',
+
+
+
+
+                'about': '/about'} %} {# {{CURSOR}} #}
+
+{# {{TEST}} #}
+{% macro field(label='{{CONTEXT}}',
+               help='{{CONTEXT}}') %}
+
+
+
+
+{# {{CURSOR}} #}
+{% endmacro %}
