@@ -93,3 +93,15 @@ class Fruit {
 
 
 }
+?>
+
+<!-- {{TEST}} -->
+<ul> <!-- {{CONTEXT}} -->
+<?php foreach ($items as $item) { ?> <!-- {{CONTEXT}} -->
+
+
+
+
+<!-- {{CURSOR}} -->
+<?php } ?>
+</ul>

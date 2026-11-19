@@ -11,3 +11,14 @@ local function foo() -- {{CONTEXT}}
   end
 
 end
+
+-- {{TEST}}
+
+local t = { f = function(a, -- {{CONTEXT}}
+  b) -- {{CONTEXT}}
+
+
+
+  -- {{CURSOR}}
+
+end }

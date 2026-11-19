@@ -258,27 +258,36 @@ local function get_parent_langtrees(bufnr, range)
   return ret
 end
 
---- Iterate Parent nodes of a range of LanguageTree's with a context query
+--- @class TSContext.Parent
+--- @field node TSNode
+--- @field query vim.treesitter.Query
+--- @field order integer
+
+--- Parent nodes of a range in the LanguageTrees with a context query, in document order
 --- @param bufnr integer
 --- @param line_range Range4
---- @return fun(): TSNode[]?, vim.treesitter.Query?
-local function iter_context_parents(bufnr, line_range)
-  local i = 0
-  local trees = get_parent_langtrees(bufnr, line_range)
-  return function()
-    --- @type TSNode[]?, vim.treesitter.Query?
-    local parents, query
-    repeat
-      i = i + 1
-      local tree = trees[i]
-      if not tree then
-        return
+--- @return TSContext.Parent[]
+local function get_context_parents(bufnr, line_range)
+  local ret = {} --- @type TSContext.Parent[]
+  for _, tree in ipairs(get_parent_langtrees(bufnr, line_range)) do
+    local parents = get_parent_nodes(tree, line_range)
+    local query = get_context_query(tree:lang())
+    if parents and query then
+      for _, node in ipairs(parents) do
+        ret[#ret + 1] = { node = node, query = query, order = #ret + 1 }
       end
-      parents = get_parent_nodes(tree, line_range)
-      query = get_context_query(tree:lang())
-    until parents and query
-    return parents, query
+    end
   end
+
+  -- An injected tree's node can start above its host tree's, as an HTML element
+  -- around PHP code does. Ties keep their order, so within a tree the inner of
+  -- two contexts on one row stays last.
+  table.sort(ret, function(a, b)
+    local a_row, b_row = a.node:start(), b.node:start()
+    return a_row < b_row or (a_row == b_row and a.order < b.order)
+  end)
+
+  return ret
 end
 
 --- Creates a copy of a list-like table such that any nested tables are
@@ -361,36 +370,34 @@ function M.get(winid)
     context_lines = {}
     contexts_height = 0
 
-    for parents, query in iter_context_parents(bufnr, line_range) do
-      for _, parent in ipairs(parents) do
-        local parent_start_row = parent:range()
+    for _, parent in ipairs(get_context_parents(bufnr, line_range)) do
+      local parent_start_row = parent.node:range()
 
-        local num_context_lines = math.min(max_lines, contexts_height)
+      local num_context_lines = math.min(max_lines, contexts_height)
 
-        -- NOTE: this avoids covering up context by separator line
-        --  but only when there is a context to display
-        local separator_offset = (num_context_lines > 0 and config.separator) and 1 or 0
+      -- NOTE: this avoids covering up context by separator line
+      --  but only when there is a context to display
+      local separator_offset = (num_context_lines > 0 and config.separator) and 1 or 0
 
-        local contexts_end_row = top_row + separator_offset + num_context_lines
+      local contexts_end_row = top_row + separator_offset + num_context_lines
 
-        -- Only process the parent if it is not in view.
-        if parent_start_row < contexts_end_row then
-          local range0 = context_range(parent, bufnr, query)
-          if range0 and range_is_valid(range0) then
-            local range, lines = get_text_for_range(range0, bufnr)
-            if range_is_valid(range) then
-              local last_context = context_ranges[#context_ranges]
-              if last_context and parent_start_row == last_context[1] then
-                -- If there are multiple contexts on the same row, then prefer the inner
-                contexts_height = contexts_height - util.get_range_height(last_context)
-                context_ranges[#context_ranges] = nil
-                context_lines[#context_lines] = nil
-              end
-
-              contexts_height = contexts_height + util.get_range_height(range)
-              context_ranges[#context_ranges + 1] = range
-              context_lines[#context_lines + 1] = lines
+      -- Only process the parent if it is not in view.
+      if parent_start_row < contexts_end_row then
+        local range0 = context_range(parent.node, bufnr, parent.query)
+        if range0 and range_is_valid(range0) then
+          local range, lines = get_text_for_range(range0, bufnr)
+          if range_is_valid(range) then
+            local last_context = context_ranges[#context_ranges]
+            if last_context and parent_start_row == last_context[1] then
+              -- If there are multiple contexts on the same row, then prefer the inner
+              contexts_height = contexts_height - util.get_range_height(last_context)
+              context_ranges[#context_ranges] = nil
+              context_lines[#context_lines] = nil
             end
+
+            contexts_height = contexts_height + util.get_range_height(range)
+            context_ranges[#context_ranges + 1] = range
+            context_lines[#context_lines + 1] = lines
           end
         end
       end
