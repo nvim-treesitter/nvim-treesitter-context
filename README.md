@@ -58,6 +58,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `janet_simple`
   - [x] `java`
   - [x] `javascript`
+  - [x] `jinja`
   - [x] `json`
   - [x] `jsonnet`
   - [x] `julia`
@@ -216,7 +217,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `ipkg`
   - [ ] `ispc`
   - [ ] `javadoc`
-  - [ ] `jinja`
   - [ ] `jinja_inline`
   - [ ] `jjdescription`
   - [ ] `jq`
