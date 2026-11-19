@@ -88,6 +88,7 @@ Note: support for specific languages is strictly community maintained and can br
   - [x] `scss`
   - [x] `smali`
   - [x] `solidity`
+  - [x] `sql`
   - [x] `starlark`
   - [x] `svelte`
   - [x] `swift`
@@ -316,7 +317,6 @@ Note: support for specific languages is strictly community maintained and can br
   - [ ] `sourcepawn`
   - [ ] `sparql`
   - [ ] `sproto`
-  - [ ] `sql`
   - [ ] `squirrel`
   - [ ] `ssh_config`
   - [ ] `strace`
